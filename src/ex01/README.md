@@ -5,7 +5,7 @@ a video or a directory containing the frames extracted from the video.
 
 Query Image/Frame |  Video (Shown as GIF) | Result |
 ------------------|-----------------------|--------|
-[!Query](../../data/frames/000100.jpg "Frame 100") | [!Video](../../assets/ex01-test.gif "Video") | () | 
+[!Query](../../data/testframes/000100.jpg "Frame 100") | [!Video](../../assets/ex01-test.gif "Video") | () | 
 
 ### Data Preparation
 
