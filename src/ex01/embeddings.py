@@ -47,11 +47,11 @@ class Embeddings:
         
         # Load the model
         if model_name == 'resnet50':
-            self.model = models.resnet50(pretrained=False)
+            self.model = models.resnet50(weights=None)
             if local_weight_path and os.path.exists(local_weight_path):
                 self.model.load_state_dict(torch.load(local_weight_path))
         elif model_name == 'resnet18':
-            self.model = models.resnet18(pretrained=False)
+            self.model = models.resnet18(weights=None)
             if local_weight_path and os.path.exists(local_weight_path):
                 self.model.load_state_dict(torch.load(local_weight_path))
         
