@@ -5,10 +5,42 @@ a video or a directory containing the frames extracted from the video.
 
 Query Image/Frame |  Video (Shown as GIF) | Result |
 ------------------|-----------------------|--------|
-[!Query](../../data/testframes/000100.jpg "Frame 100") | [!Video](../../assets/ex01-test.gif "Video") | () | 
+![Query](../../data/ex01/testframes/000100.jpg "Frame 100") | ![Video](../../assets/ex01-test.gif "Video") | Frame Number: 99 | 
 
 ### Data Preparation
 
+1. Downloading query and dataset
+
+```shell
+# Download test data (video file)
+yt-dlp -S ext:mp4:m4a https://www.youtube.com/watch?v=rTDaZoDDW5g -o rTDaZoDDW5g.mp4
+```
+
+```shell
+# Extract all frames from video
+ffmpeg -hide_banner -thread_queue_size 8192 -i rTDaZoDDW5g.mp4 frames/%06d.jpg
+```
+
+```shell
+# Create small testset for quick testing
+ffmpeg -i rTDaZoDDW5g.mp4 -ss 00:00:20 -to 00:00:30 test.mp4
+ffmpeg -i test.mp4 testframes/%06d.jpg 
+```
+2. Data Organization
+```shell
+tree -L 1 
+
+├── frames
+├── rTDaZoDDW5g.mp4
+├── testframes
+├── testIndex-f.json
+├── testIndex-v.json
+└── test.mp4
+
+2 directories, 4 files
+```
+
+3. Useful transcode for visualization 
 ```shell
 # Generating GIF from frames
 OPTS="fps=25000/10001,scale=1080:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse"
@@ -18,7 +50,20 @@ ffmpeg -ss 05 -t 2 -i $IP -vf $OPTS -loop 0 $OP
 ```
 
 ### Code Organization
+```shell
+tree
 
+├── buildIndex.py
+├── embeddings.py
+├── getSimilarity.py
+├── __pycache__
+│   └── embeddings.cpython-310.pyc
+├── queryDataset.py
+└── README.md
+
+1 directory, 6 files
+
+```
 ### Test cases
 
 ### Further Optimizations and improvements
