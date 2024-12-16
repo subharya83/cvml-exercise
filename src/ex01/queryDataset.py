@@ -9,19 +9,54 @@ import torchvision.transforms as transforms
 import cv2
 
 class ImageEmbeddingGenerator:
-    def __init__(self, model_name='resnet50'):
+    def __init__(self, model_name='resnet50', download_weights=True):
         """
         Initialize the embedding generator with a pre-trained model.
         
         :param model_name: Name of the model to use for feature extraction
+        :param download_weights: Whether to download weights if not present
         """
-        # Load the pre-trained model
-        if model_name == 'resnet50':
-            self.model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
-        elif model_name == 'resnet18':
-            self.model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
-        else:
+        # Determine weights file path
+        weights_dir = os.path.join(os.getcwd(), '../weights')
+        os.makedirs(weights_dir, exist_ok=True)
+        
+        # Mapping of model names to their weight URLs and local filenames
+        model_weights = {
+            'resnet50': {
+                'url': 'https://download.pytorch.org/models/resnet50-0676ba61.pth',
+                'filename': 'resnet50.pth'
+            },
+            'resnet18': {
+                'url': 'https://download.pytorch.org/models/resnet18-f37072fd.pth',
+                'filename': 'resnet18.pth'
+            }
+        }
+        
+        if model_name not in model_weights:
             raise ValueError(f"Unsupported model: {model_name}")
+        
+        # Path for local weight file
+        local_weight_path = os.path.join(weights_dir, model_weights[model_name]['filename'])
+        
+        # Download weights if requested and not already present
+        if download_weights and not os.path.exists(local_weight_path):
+            try:
+                print(f"Downloading weights for {model_name}...")
+                torch.hub.download_url_to_file(model_weights[model_name]['url'], local_weight_path)
+                print(f"Weights downloaded to {local_weight_path}")
+            except Exception as e:
+                print(f"Error downloading weights: {e}")
+                local_weight_path = None
+        
+        # Load the model
+        if model_name == 'resnet50':
+            self.model = models.resnet50(pretrained=False)
+            if local_weight_path and os.path.exists(local_weight_path):
+                self.model.load_state_dict(torch.load(local_weight_path))
+        elif model_name == 'resnet18':
+            self.model = models.resnet18(pretrained=False)
+            if local_weight_path and os.path.exists(local_weight_path):
+                self.model.load_state_dict(torch.load(local_weight_path))
         
         # Remove the final classification layer
         self.model = torch.nn.Sequential(*list(self.model.children())[:-1])
@@ -108,10 +143,7 @@ def search_most_similar_frame(query_image, index_file):
     
     for frame_info in frame_index:
         # Compute similarity
-        similarity = ImageEmbeddingGenerator.compute_cosine_similarity(
-            query_embedding, 
-            frame_info['embedding']
-        )
+        similarity = ImageEmbeddingGenerator.compute_cosine_similarity(query_embedding, frame_info['embedding'])
         
         # Update best match
         if similarity > best_similarity:
@@ -123,17 +155,14 @@ def search_most_similar_frame(query_image, index_file):
 def main():
     # Set up argument parsing
     parser = argparse.ArgumentParser(description='Search for most similar video frame')
-    parser.add_argument('query_image', help='Path to query image')
-    parser.add_argument('index_file', help='Path to video frame embedding index')
+    parser.add_argument('-q', required=True, help='Path to query image')
+    parser.add_argument('-i', required=True, help='Path to video frame embedding index')
     
     # Parse arguments
     args = parser.parse_args()
     
     # Perform search
-    best_frame, similarity = search_most_similar_frame(
-        args.query_image, 
-        args.index_file
-    )
+    best_frame, similarity = search_most_similar_frame(args.q, args.i)
     
     # Print results
     print(f"Most Similar Frame:")
