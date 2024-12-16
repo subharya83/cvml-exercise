@@ -1,3 +1,4 @@
+import argparse
 import os
 import torch
 import torchvision.models as models
@@ -14,18 +15,18 @@ class ImageEmbeddingGenerator:
         :param download_weights: Whether to download weights if not present
         """
         # Determine weights file path
-        weights_dir = os.path.join(os.getcwd(), 'model_weights')
+        weights_dir = os.path.join(os.getcwd(), '../weights')
         os.makedirs(weights_dir, exist_ok=True)
         
         # Mapping of model names to their weight URLs and local filenames
         model_weights = {
             'resnet50': {
                 'url': 'https://download.pytorch.org/models/resnet50-0676ba61.pth',
-                'filename': 'resnet50-pretrained.pth'
+                'filename': 'resnet50.pth'
             },
             'resnet18': {
                 'url': 'https://download.pytorch.org/models/resnet18-f37072fd.pth',
-                'filename': 'resnet18-pretrained.pth'
+                'filename': 'resnet18.pth'
             }
         }
         
@@ -39,10 +40,7 @@ class ImageEmbeddingGenerator:
         if download_weights and not os.path.exists(local_weight_path):
             try:
                 print(f"Downloading weights for {model_name}...")
-                torch.hub.download_url_to_file(
-                    model_weights[model_name]['url'], 
-                    local_weight_path
-                )
+                torch.hub.download_url_to_file(model_weights[model_name]['url'], local_weight_path)
                 print(f"Weights downloaded to {local_weight_path}")
             except Exception as e:
                 print(f"Error downloading weights: {e}")
@@ -116,6 +114,13 @@ class ImageEmbeddingGenerator:
 
 # Example usage
 def main():
+    # Set up argument parsing
+    parser = argparse.ArgumentParser(description='Get similarity between two images')
+    parser.add_argument('-q', required=True, help='Path to query image')
+    parser.add_argument('-t', required=True, help='Path to test image')
+    
+    # Parse arguments
+    args = parser.parse_args()
     # Create an embedding generator with local weight download
     embedding_generator = ImageEmbeddingGenerator(
         model_name='resnet50',  # or 'resnet18'
@@ -123,11 +128,11 @@ def main():
     )
     
     # Generate embeddings for two images
-    image1_embedding = embedding_generator.generate_embedding('image1.jpg')
-    image2_embedding = embedding_generator.generate_embedding('image2.jpg')
+    qe = embedding_generator.generate_embedding(args.q)
+    te = embedding_generator.generate_embedding(args.t)
     
     # Compute similarity
-    similarity = embedding_generator.compute_similarity(image1_embedding, image2_embedding)
+    similarity = embedding_generator.compute_similarity(qe, te)
     print(f"Image Similarity: {similarity}")
 
 if __name__ == '__main__':
