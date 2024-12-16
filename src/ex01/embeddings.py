@@ -72,7 +72,7 @@ class Embeddings:
             )
         ])
     
-    def generate_embedding(self, img):
+    def generate_embedding(self, img=None):
         """
         Generate an embedding for a given image.
         
