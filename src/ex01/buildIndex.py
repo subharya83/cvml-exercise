@@ -14,7 +14,7 @@ def process_input(input_sequence, output_index):
     :param output_index: Path to output index file
     """
     # Initialize embedding generator
-    embedding_generator = Embeddings(model_name='resnet50', download_weights=True)
+    emb_gen = Embeddings(model_name='resnet50', download_weights=True)
     
     seq = None
     isVideo = False
@@ -39,16 +39,16 @@ def process_input(input_sequence, output_index):
                     break
                 frame = Image.fromarray(frame)
             else:
-                if frame_count >= len(seq):
+                if frame_count == len(seq):
                     break
                 filename = os.path.join(input_sequence, seq[frame_count])
                 frame = Image.open(filename).convert('RGB')
 
-            embedding = embedding_generator.generate_embedding(frame)
+            e = emb_gen.generate_embedding(frame)
             # Store frame information
             frame_info = {
                 'frame_number': frame_count,
-                'embedding': embedding.tolist()
+                'embedding': e.tolist()
             }
             frame_index.append(frame_info)
             frame_count += 1

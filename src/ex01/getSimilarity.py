@@ -1,7 +1,7 @@
 import argparse
+from PIL import Image
 from embeddings import Embeddings
 
-# Example usage
 def main():
     # Set up argument parsing
     parser = argparse.ArgumentParser(description='Get similarity between two images')
@@ -17,8 +17,10 @@ def main():
     )
     
     # Generate embeddings for two images
-    qe = embedding_generator.generate_embedding(args.q)
-    te = embedding_generator.generate_embedding(args.t)
+    qi = Image.open(args.q).convert('RGB')
+    qe = embedding_generator.generate_embedding(qi)
+    ti = Image.open(args.t).convert('RGB')
+    te = embedding_generator.generate_embedding(ti)
     
     # Compute similarity
     similarity = embedding_generator.compute_similarity(qe, te)

@@ -72,18 +72,16 @@ class Embeddings:
             )
         ])
     
-    def generate_embedding(self, image_path):
+    def generate_embedding(self, img):
         """
         Generate an embedding for a given image.
         
-        :param image_path: Path to the image file
+        :param img: image object Pillow
         :return: Numpy array representing the image embedding
         """
-        # Open the image
-        image = Image.open(image_path).convert('RGB')
         
         # Transform the image
-        input_tensor = self.transform(image).unsqueeze(0)
+        input_tensor = self.transform(img).unsqueeze(0)
         
         # Generate embedding
         with torch.no_grad():
