@@ -69,10 +69,14 @@ def process_input(input_sequence, output_index):
     # Initialize embedding generator
     embedding_generator = VideoEmbeddingGenerator()
     
-    # Open video
+    seq = None
+    isVideo = False
     if os.path.exists(input_sequence):
-        
-    video = cv2.VideoCapture(input_video)
+        if os.path.isfile(input_sequence):
+            seq = cv2.VideoCapture(input_sequence)
+            isVideo = True
+        elif os.path.isdir(input_sequence):
+            seq = sorted(os.listdir(input_sequence))
     
     # Prepare output data structure
     frame_index = []
@@ -81,29 +85,26 @@ def process_input(input_sequence, output_index):
         frame_count = 0
         while True:
             # Read frame
-            ret, frame = video.read()
-            
-            # Break if no more frames
-            if not ret:
-                break
-            
-            # Sample frames
-            if frame_count % sample_rate == 0:
-                # Generate embedding
-                embedding = embedding_generator.generate_embedding(frame)
-                
-                # Store frame information
-                frame_info = {
-                    'frame_number': frame_count,
-                    'embedding': embedding.tolist()
-                }
-                frame_index.append(frame_info)
-            
+            if isVideo:
+                ret, frame = seq.read()
+                # Break if no more frames
+                if not ret:
+                    break
+            else:
+                frame = cv2.imread(seq[frame_count])
+            embedding = embedding_generator.generate_embedding(frame)
+            # Store frame information
+            frame_info = {
+                'frame_number': frame_count,
+                'embedding': embedding.tolist()
+            }
+            frame_index.append(frame_info)
             frame_count += 1
-    
+
     finally:
         # Release video capture
-        video.release()
+        if isVideo:
+            seq.release()
     
     # Save index to file
     with open(output_index, 'w') as f:
@@ -121,7 +122,7 @@ def main():
     args = parser.parse_args()
     
     # Process video
-    process_video(args.input_video, args.output_index, args.sample_rate)
+    process_input(args.i, args.o)
 
 if __name__ == '__main__':
     main()
