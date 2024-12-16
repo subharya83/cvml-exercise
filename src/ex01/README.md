@@ -66,4 +66,38 @@ tree
 ```
 ### Test cases
 
+1. Image Similarity
+
+```shell
+python3 getSimilarity.py -q ../../data/ex01/testframes/000010.jpg -t ../../data/ex01/testframes/000011.jpg
+Image Similarity: 0.9946704506874084
+```
+2. Building index for future query
+```shell
+# Using sequence of images as input
+python3 buildIndex.py -i ../../data/ex01/testframes/ -o ../../data/ex01/testIndex-f.json
+Image sequence processed
+Processed 300 frames. Index saved to ../../data/ex01/testIndex-f.json
+
+# Using video as input
+python3 buildIndex.py -i ../../data/ex01/test.mp4 -o ../../data/ex01/testIndex-v.json
+Video processed
+Processed 300 frames. Index saved to ../../data/ex01/testIndex-v.json
+```
+3. Search and retrieval
+
+```shell
+# Query against frame based imdex
+python3 queryDataset.py -q ../../data/ex01/testframes/000100.jpg -i ../../data/ex01/testIndex-v.json
+Most Similar Frame:
+Frame Number: 99
+Cosine Similarity: 0.8103252220706153
+
+# Query against video based index 
+python3 queryDataset.py -q ../../data/ex01/testframes/000100.jpg -i ../../data/ex01/testIndex-f.json
+Most Similar Frame:
+Frame Number: 99
+Cosine Similarity: 1.0000000046178263
+```
+
 ### Further Optimizations and improvements
