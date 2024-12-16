@@ -59,18 +59,19 @@ class VideoEmbeddingGenerator:
         
         return embedding_np
 
-def process_video(input_video, output_index, sample_rate=1):
+def process_input(input_sequence, output_index):
     """
     Process video and generate embeddings for sampled frames.
     
-    :param input_video: Path to input video file
+    :param input_sequence: Path to input video file or directory containing images
     :param output_index: Path to output index file
-    :param sample_rate: Sample one frame every `sample_rate` frames
     """
     # Initialize embedding generator
     embedding_generator = VideoEmbeddingGenerator()
     
     # Open video
+    if os.path.exists(input_sequence):
+        
     video = cv2.VideoCapture(input_video)
     
     # Prepare output data structure
@@ -113,11 +114,9 @@ def process_video(input_video, output_index, sample_rate=1):
 def main():
     # Set up argument parsing
     parser = argparse.ArgumentParser(description='Generate embeddings for video frames')
-    parser.add_argument('input_video', help='Path to input video file')
-    parser.add_argument('output_index', help='Path to output embedding index file')
-    parser.add_argument('--sample_rate', type=int, default=1, 
-                        help='Sample one frame every n frames (default: 1)')
-    
+    parser.add_argument('-i', help='Path to input video or directory containing images')
+    parser.add_argument('-o', help='Path to output embedding index file')
+   
     # Parse arguments
     args = parser.parse_args()
     
