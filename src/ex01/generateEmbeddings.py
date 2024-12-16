@@ -127,8 +127,11 @@ def process_input(input_sequence, output_index):
                     break
                 frame = Image.fromarray(frame)
             else:
-                frame = Image.open(seq[frame_count]).convert('RGB')
-                
+                if frame_count >= len(seq):
+                    break
+                filename = os.path.join(input_sequence, seq[frame_count])
+                frame = Image.open(filename).convert('RGB')
+
             embedding = embedding_generator.generate_embedding(frame)
             # Store frame information
             frame_info = {
@@ -141,7 +144,10 @@ def process_input(input_sequence, output_index):
     finally:
         # Release video capture
         if isVideo:
+            print('Video processed')
             seq.release()
+        else:
+            print('Image sequence processed')
     
     # Save index to file
     with open(output_index, 'w') as f:
