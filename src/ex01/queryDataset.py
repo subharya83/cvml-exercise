@@ -29,7 +29,7 @@ def search_most_similar_frame(query_image, index_file):
     
     for frame_info in frame_index:
         # Compute similarity
-        similarity = emb_gen.compute_cosine_similarity(query_embedding, frame_info['embedding'])
+        similarity = emb_gen.compute_similarity(query_embedding, frame_info['embedding'])
         
         # Update best match
         if similarity > best_similarity:
