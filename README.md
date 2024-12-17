@@ -1,7 +1,6 @@
 # Base repository for CV/ML exercises
+This repository contains interesting Computer Vision and Machine Learning problems I have encountered while being in the industry. Each problem is formulated at its core level to encourage first principles thinking. 
 
-
-## Video search with image query
 
 ### Data Preparation
 
