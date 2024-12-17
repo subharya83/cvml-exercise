@@ -42,6 +42,8 @@ representation. Some key attributes of the ResNet50 architecture are summarized 
 - Middle layers: Detect more complex patterns like shapes, parts of objects
 - Later layers: Detect high-level semantic features like object types
 
+![Semantic Feature embedding](../../assets/Resnet50-viz.png)
+
 #### Facilitate Search 
 Once embeddings for each image in the collection is computed, these need to be properly stored and indexed 
 for efficient search and retrieval for future use. 
@@ -58,6 +60,8 @@ The following criterial should be considered:
 - FAISS (Facebook AI Similarity Search)
 - Annoy (Approximate Nearest Neighbors Oh Yeah)
 - ScaNN (Google's Scalable Nearest Neighbors)
+
+![Image search](../../assets/imgSearch.png)
 
 ### Data Preparation
 
