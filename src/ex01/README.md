@@ -16,6 +16,7 @@ aforementioned dictionary is comprised of a combination of letters from the alph
 entry in our pictorial dictionary will be created using a combination of "visual letters". This visual 
 letter corpus forms the basis of our representation. 
 
+#### Find optimal representation
 To build this representation, the following criteria should be considered:
 1. Image transformation invariance (rotation, scaling, translation, skew)
 2. Image intensity/colorspace invariance (B/W, RGB etc)
@@ -41,7 +42,22 @@ representation. Some key attributes of the ResNet50 architecture are summarized 
 - Middle layers: Detect more complex patterns like shapes, parts of objects
 - Later layers: Detect high-level semantic features like object types
 
+#### Facilitate Search 
+Once embeddings for each image in the collection is computed, these need to be properly stored and indexed 
+for efficient search and retrieval for future use. 
 
+The following criterial should be considered:
+1. Embedding Storage:
+- The embedding vector (2048-dimensional array)
+- Metadata associated with the embedding (e.g., image path, frame number)
+2. Similarity Search Techniques:
+- Brute force (O(n) complexity)
+- Approximate nearest neighbor search (O(logn) to O(1))
+- Distance metric (Euclidean/Cosine etc.)
+3. Libraries for search:
+- FAISS (Facebook AI Similarity Search)
+- Annoy (Approximate Nearest Neighbors Oh Yeah)
+- ScaNN (Google's Scalable Nearest Neighbors)
 
 ### Data Preparation
 
