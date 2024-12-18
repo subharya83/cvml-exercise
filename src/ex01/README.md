@@ -64,8 +64,10 @@ The following criterial should be considered:
 ![Image search](../../assets/imgSearch.png)
 
 ### Data Preparation
+1. Prerequisites
+   ffmpeg, yt-dlp
 
-1. Downloading query and dataset
+3. Downloading query and dataset
 
 ```shell
 # Download test data (video file)
