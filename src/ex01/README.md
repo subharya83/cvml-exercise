@@ -65,7 +65,8 @@ The following criterial should be considered:
 
 ### Data Preparation
 1. Prerequisites
-   ffmpeg, yt-dlp
+- `ffmpeg` [For video encoding/decoding/pre-processing] 
+- `yt-dlp` [For video download from YouTube]
 
 3. Downloading query and dataset
 
