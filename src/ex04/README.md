@@ -45,3 +45,24 @@ qa_data = converter.process_pdf("your_pdf.pdf", "json")
 
 ## Convert YouTube Transcripts
 
+1. Get list of YouTube Ids from a specific channel
+```shell
+youtube-dl --flat-playlist https://www.youtube.com/@samharrisorg/videos --get-id > example/example.ytid
+```
+
+2. Download text and subtitle files (corresponding to the IDs)
+```shell
+for i in $(cat example/example.ytid);do 
+    youtube_transcript_api $i --format text > example/txt/YTID_$i.txt; 
+    youtube_transcript_api $i --format srt > example/srt/YTID_$i.srt; 
+done
+```
+
+3. Preprocessing the collected transcripts 
+
+```shell
+python3 prepro_ytxscrips.py -i example/txt -o example -p
+Generating dataset from txt files in example
+Saved 32768 tokens to example/val.bin
+Saved 1827300 tokens to example/train.bin
+```
