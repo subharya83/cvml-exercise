@@ -1,0 +1,48 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+video {
+    width: 1280px;
+    height: 960px;
+    border: 1px solid #ccc;
+}
+
+#alerts {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 18px;
+}
+
+.alert {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Media query for mobile devices in portrait mode */
+@media only screen and (max-width: 768px) and (orientation: portrait) {
+    video {
+        width: 98% !important; /* High specificity */
+        height: 90vh !important; /* 90% of the viewport height */
+        max-height: 90vh !important; /* Ensure it doesn't exceed 90vh */
+        border: 1px solid #ccc;
+    }
+}
+
+/* Optional: Media query for mobile devices in landscape mode */
+@media only screen and (max-width: 768px) and (orientation: landscape) {
+    video {
+        width: 98% !important; /* High specificity */
+        height: 80vh !important; /* Adjust height as needed for landscape mode */
+        max-height: 80vh !important; /* Ensure it doesn't exceed 80vh */
+        border: 1px solid #ccc;
+    }
+}
