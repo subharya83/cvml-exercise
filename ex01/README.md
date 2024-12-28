@@ -5,7 +5,7 @@ a video or a directory containing the frames extracted from the video.
 
 Query Image/Frame |  Video (Shown as GIF) | Result |
 ------------------|-----------------------|--------|
-![Query](../../data/ex01/testframes/000100.jpg "Frame 100") | ![Video](../../assets/ex01-test.gif "Video") | Frame Number: 99 | 
+![Query](./data/000100.jpg "Frame 100") | ![Video](../assets/ex01-test.gif "Video") | Frame Number: 99 | 
 
 ### Problem formulation
 
@@ -42,7 +42,7 @@ representation. Some key attributes of the ResNet50 architecture are summarized 
 - Middle layers: Detect more complex patterns like shapes, parts of objects
 - Later layers: Detect high-level semantic features like object types
 
-![Semantic Feature embedding](../../assets/Resnet50-viz.png)
+![Semantic Feature embedding](../assets/Resnet50-viz.png)
 
 #### Facilitate Search 
 Once embeddings for each image in the collection is computed, these need to be properly stored and indexed 
@@ -61,7 +61,7 @@ The following criterial should be considered:
 - Annoy (Approximate Nearest Neighbors Oh Yeah)
 - ScaNN (Google's Scalable Nearest Neighbors)
 
-![Image search](../../assets/imgSearch.png)
+![Image search](../assets/imgSearch.png)
 
 ### Data Preparation
 1. Prerequisites
@@ -92,11 +92,9 @@ tree -L 1
 ├── frames
 ├── rTDaZoDDW5g.mp4
 ├── testframes
-├── testIndex-f.json
-├── testIndex-v.json
 └── test.mp4
 
-2 directories, 4 files
+2 directories, 2 files
 ```
 
 3. Useful transcode for visualization 
@@ -128,32 +126,32 @@ tree
 1. Image Similarity
 
 ```shell
-python3 getSimilarity.py -q ../../data/ex01/testframes/000010.jpg -t ../../data/ex01/testframes/000011.jpg
+python3 getSimilarity.py -q ./data/000010.jpg -t ./data/000011.jpg
 Image Similarity: 0.9946704506874084
 ```
 2. Building index for future query
 ```shell
 # Using sequence of images as input
-python3 buildIndex.py -i ../../data/ex01/testframes/ -o ../../data/ex01/testIndex-f.json
+python3 buildIndex.py -i ./data/testframes/ -o ./output/testIndexF.json
 Image sequence processed
-Processed 300 frames. Index saved to ../../data/ex01/testIndex-f.json
+Processed 300 frames. Index saved to ./output/testIndexF.json
 
 # Using video as input
-python3 buildIndex.py -i ../../data/ex01/test.mp4 -o ../../data/ex01/testIndex-v.json
+python3 buildIndex.py -i ./data/test.mp4 -o ./output/testIndexV.json
 Video processed
-Processed 300 frames. Index saved to ../../data/ex01/testIndex-v.json
+Processed 300 frames. Index saved to ./output/testIndexV.json
 ```
 3. Search and retrieval
 
 ```shell
 # Query against frame based imdex
-python3 queryDataset.py -q ../../data/ex01/testframes/000100.jpg -i ../../data/ex01/testIndex-v.json
+python3 queryDataset.py -q ./data/000100.jpg -i ./output/testIndexV.json
 Most Similar Frame:
 Frame Number: 99
 Cosine Similarity: 0.8103252220706153
 
 # Query against video based index 
-python3 queryDataset.py -q ../../data/ex01/testframes/000100.jpg -i ../../data/ex01/testIndex-f.json
+python3 queryDataset.py -q ./data/000100.jpg -i ./output/testIndexF.json
 Most Similar Frame:
 Frame Number: 99
 Cosine Similarity: 1.0000000046178263
