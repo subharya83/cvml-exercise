@@ -21,7 +21,33 @@ Write a program to binarize a grayscale image using the following approach:
 #### Output
 - A binarized image (2D array of binary values: 0 for black, 255 for white).
 
----
+### Problem Statement: Fast Detection of Bright Regions in Satellite Images
+
+You are analyzing high-resolution satellite images to identify regions with high reflectance, such as snow-covered areas, water bodies, or urban regions with bright rooftops. The task is to locate and highlight all areas in the image where the average pixel intensity within a given rectangular region exceeds a certain threshold.
+
+#### Task
+Write a program that:
+1. Divides the satellite image into overlapping rectangular regions of size \( w \times h \).
+2. Calculates the average intensity of each region.
+3. Highlights all regions where the average intensity exceeds a specified threshold \( T \).
+
+#### Constraints
+- The satellite images are large (e.g., 8K resolution), so the solution must be efficient.
+- The regions may overlap, and the calculations for each region should be performed quickly.
+
+#### Input
+- A grayscale satellite image represented as a 2D array of pixel intensities.
+- Parameters \( w \) (width of the region), \( h \) (height of the region), and \( T \) (intensity threshold).
+
+#### Output
+- An image where the bright regions are highlighted, with all other regions darkened.
+
+
+### Practical Applications
+- **Environmental Monitoring**: Detecting snow-covered areas, drought-affected regions, or water bodies.
+- **Urban Planning**: Identifying areas with reflective rooftops or high urban density.
+- **Agriculture**: Monitoring crop health through reflectance patterns. 
+
 
 ### Solution Using Integral Images
 
