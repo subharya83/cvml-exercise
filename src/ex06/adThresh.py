@@ -115,7 +115,7 @@ if __name__ == "__main__":
     # Set up argument parsing
     parser = argparse.ArgumentParser(description='Integral image practical usecases')
     parser.add_argument('-i', required=True, help='Path to input image')
-    
+    parser.add_argument('-m', default=1, help='Mode')
     parser.add_argument('-o', required=True, help='Path to output image')
     
     # Parse arguments
@@ -128,14 +128,14 @@ if __name__ == "__main__":
         print("Error: Image not found.")
         exit()
 
-    if args.m == 0:
+    if int(args.m) == 0:
         # Parameters
         k = 15  # Size of the region
         C = 10  # Constant to subtract from the mean
 
         # Apply adaptive thresholding
         output_image = adaptive_thresholding(image, k, C)
-    elif args.m == 1: 
+    elif int(args.m) == 1: 
         # Parameters
         w = 50  # Width of the region
         h = 50  # Height of the region
