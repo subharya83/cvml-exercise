@@ -61,8 +61,16 @@ def adaptive_thresholding(image, k, C):
 
 # Example usage
 if __name__ == "__main__":
+    # Set up argument parsing
+    parser = argparse.ArgumentParser(description='Binarize grayscale image using adaptive thresholding')
+    parser.add_argument('-i', required=True, help='Path to input image')
+    parser.add_argument('-o', required=True, help='Path to output image')
+    
+    # Parse arguments
+    args = parser.parse_args()
+  
     # Load a grayscale image
-    image = cv2.imread("example_image.jpg", cv2.IMREAD_GRAYSCALE)
+    image = cv2.imread(args.i, cv2.IMREAD_GRAYSCALE)
     
     if image is None:
         print("Error: Image not found.")
@@ -74,7 +82,8 @@ if __name__ == "__main__":
 
     # Apply adaptive thresholding
     binary_image = adaptive_thresholding(image, k, C)
-
+    cv2.imwrite(args.o, binary_image)
+    
     # Display the results
     cv2.imshow("Original Image", image)
     cv2.imshow("Binarized Image", binary_image)
