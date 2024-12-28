@@ -11,4 +11,4 @@ This repository contains interesting Computer Vision and Machine Learning proble
 
 ### Further Optimizations and improvements
 
-An example is provided [here](./src/ex01/README.md)
+An example is provided [here](./ex01/README.md)

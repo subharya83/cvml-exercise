@@ -1,5 +1,6 @@
 import argparse
 import os
+import shutil
 from deepmultilingualpunctuation import PunctuationModel
 
 def punc_dir(data_dir=None, out_dir=None):
@@ -26,4 +27,4 @@ if __name__ == "__main__":
     parser.add_argument('-i', type=str, help="Input dir", required=True)
     parser.add_argument('-o', type=str, help="Output dir", required=True)
     args = parser.parse_args()
-    punc(input_file=args.i, output_file=args.o)
+    punc_dir(input_file=args.i, output_file=args.o)
