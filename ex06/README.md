@@ -1,4 +1,5 @@
-## Summed-Area-Tables(SAT)/Integral Images
+## Outlier Detection 
+We are going to use Summed-Area-Tables(SAT)/Integral Images for outlier detection in Images. 
 
 ### Problem Statement: Fast Image Smoothing with Adaptive Thresholding
 

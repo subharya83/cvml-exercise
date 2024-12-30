@@ -41,7 +41,7 @@ solution remains effective and robust over time.
 
 5. []
 
-6. [Summed-Area-Tables(SAT)/Integral Images](./ex06/README.md)
+6. [Outlier detection](./ex06/README.md)
 
 7. []
 
