@@ -34,3 +34,5 @@ The output CSV includes:
 - relevance_score (similarity to video content)
 
 Adjust the `similarity_threshold` parameter to make the filtering more or less strict. A higher threshold means comments must be more relevant to be included.
+
+## Todo : Add test cases
