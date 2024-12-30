@@ -31,7 +31,7 @@ solution remains effective and robust over time.
 
 ## Table of Contents
 
-1. [Video search with image query] (./ex01/README.md)
+1. [Video search with image query](./ex01/README.md)
 
-2. [Cycle detection in human joint movements] (./ex02/README.md)
+2. [Cycle detection in human joint movements](./ex02/README.md)
 
