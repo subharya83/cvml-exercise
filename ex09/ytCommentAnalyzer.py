@@ -1,4 +1,5 @@
 import os
+import argparse
 from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
 import pandas as pd
@@ -120,16 +121,10 @@ class YouTubeCommentAnalyzer:
         except Exception as e:
             print(f"Error saving to CSV: {str(e)}")
 
-    def analyze_video(self, video_url, output_file='relevant_comments.csv', similarity_threshold=0.1):
+    def analyze_video(self, video_id, output_file='relevant_comments.csv', similarity_threshold=0.1):
         """
         Main function to analyze a YouTube video
         """
-        # Extract video ID
-        video_id = self.extract_video_id(video_url)
-        if not video_id:
-            print("Invalid YouTube URL")
-            return
-        
         # Get subtitles
         print("Downloading subtitles...")
         subtitle_text = self.get_subtitles(video_id)
@@ -156,10 +151,20 @@ class YouTubeCommentAnalyzer:
         print(f"Saving {len(relevant_comments)} relevant comments...")
         self.save_to_csv(relevant_comments, output_file)
 
-# Example usage
-if __name__ == "__main__":
-    API_KEY = "YOUR_YOUTUBE_API_KEY"  # Replace with your API key
-    analyzer = YouTubeCommentAnalyzer(API_KEY)
+def main():
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Analyze YouTube video comments and subtitles')
+    parser.add_argument('-i', help='YouTube video ID')
+    parser.add_argument('-a', required=True, help='YouTube Data API key')
+    parser.add_argument('-o', default='relevant_comments.csv', help='Output CSV file path')
+    parser.add_argument('-t', type=float, default=0.1, help='Similarity threshold (default: 0.1)')
     
-    video_url = "https://www.youtube.com/watch?v=EXAMPLE_VIDEO_ID"
-    analyzer.analyze_video(video_url)
+    # Parse arguments
+    args = parser.parse_args()
+    
+    # Initialize analyzer and process video
+    analyzer = YouTubeCommentAnalyzer(args.ap)
+    analyzer.analyze_video(args.i, args.o, args.t)
+
+if __name__ == "__main__":
+    main()
