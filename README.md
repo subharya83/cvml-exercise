@@ -43,8 +43,8 @@ solution remains effective and robust over time.
 
 6. [Outlier detection](./ex06/README.md)
 
-7. []
+7. [Counting similar objects](./ex07/README.md)
 
-8. [] 
+8. [Deduplication of textual content](./ex08/README.md) 
 
-9. []
+9. [Mining Relevant Contents to a Topic](./ex09/README.md) 

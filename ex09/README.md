@@ -1,4 +1,4 @@
-## Find relevant comments for a given YouTube video
+## Mining Relevant Contents to a Topic
 
 ### Problem statement
 For a given youtube video link, 

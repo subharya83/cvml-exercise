@@ -1,4 +1,6 @@
-### Problem Statement : Counting similar objects
+## Counting similar objects
+
+### Problem Statement
 
 You are tasked with developing a solution to count the number of U.S. pennies in an image. The input is an image containing coins scattered on a flat surface. Your goal is to identify and count the pennies while ignoring other types of coins or objects in the image.
 
