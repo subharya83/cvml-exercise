@@ -1,3 +1,1 @@
-# Introduction
-
-Cycle detection in human joint movements
+## Cycle detection in human joint movements
