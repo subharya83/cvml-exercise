@@ -28,4 +28,10 @@ Further optimizations and improvements focus on refining the solution to enhance
 This includes performance tuning, algorithm refinement, and incorporating feedback for iterative enhancements, ensuring the 
 solution remains effective and robust over time.
 
-An example is provided [here](./src/ex01/README.md)
+
+## Table of Contents
+
+1. [Video search with image query] (./ex01/README.md)
+
+2. [Cycle detection in human joint movements] (./ex02/README.md)
+
