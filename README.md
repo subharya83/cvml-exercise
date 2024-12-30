@@ -35,3 +35,16 @@ solution remains effective and robust over time.
 
 2. [Cycle detection in human joint movements](./ex02/README.md)
 
+3. [OCR based webpage parsing](./ex03/README.md)
+
+4. [LLM fine-tuning Data Preparation](./ex04/README.md)
+
+5. []
+
+6. [Summed-Area-Tables(SAT)/Integral Images](./ex06/README.md)
+
+7. []
+
+8. [] 
+
+9. []
