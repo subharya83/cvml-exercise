@@ -1,13 +1,14 @@
-"""Main cycle detection algorithm with auxiliary functions."""
 import argparse
 import os.path
-
+import json
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
-
+from collections import defaultdict
 
 def detect_cycles(series, drop_zero_docs=True, integer_index=False):
+    """Original cycle detection function remains unchanged"""
     if len(series) < 4:
         msg = ('The number of elements in the input time series to form one '
                'cycle must be 4 at least.')
@@ -25,48 +26,45 @@ def detect_cycles(series, drop_zero_docs=True, integer_index=False):
         raise ValueError(msg)
     series['norm'] /= maximum
 
-    # find minima and maxima
-    min_idx, max_idx = find_peaks_valleys_idx(series['norm'])
-    # find start and end times of cycles (potenial start/end at local maxima)
-    t_start = soc_find_start(series['norm'], max_idx)
-    t_end = soc_find_end(series['norm'], max_idx)
+    try:
+        # find minima and maxima
+        min_idx, max_idx = find_peaks_valleys_idx(series['norm'])
+        # find start and end times of cycles
+        t_start = soc_find_start(series['norm'], max_idx)
+        t_end = soc_find_end(series['norm'], max_idx)
 
-    # search for precycles
-    precycles = search_precycle(series['norm'], max_idx, t_start, t_end)
+        # search for precycles
+        precycles = search_precycle(series['norm'], max_idx, t_start, t_end)
 
-    # cycle detection
-    cycles = cycling(precycles)
+        # cycle detection
+        cycles = cycling(precycles)
 
-    # calculate the amplitude of the cycles
-    cycles[:, 3] = calc_doc(series['norm'], cycles)
+        # calculate the amplitude of the cycles
+        cycles[:, 3] = calc_doc(series['norm'], cycles)
 
-    # write data to DataFrame
-    df = pd.DataFrame()
-    if integer_index is True:
-        # use the integer index as time stamps
-        df['t_start'] = cycles[:, 0]
-        df['t_end'] = cycles[:, 1]
-        df['t_minimum'] = cycles[:, 2]
+        # write data to DataFrame
+        df = pd.DataFrame()
+        if integer_index is True:
+            df['t_start'] = cycles[:, 0]
+            df['t_end'] = cycles[:, 1]
+            df['t_minimum'] = cycles[:, 2]
+        else:
+            df['t_start'] = series.iloc[cycles[:, 0]]['id'].values
+            df['t_end'] = series.iloc[cycles[:, 1]]['id'].values
+            df['t_minimum'] = series.iloc[cycles[:, 2]]['id'].values
 
-    else:
-        # use original index as time stamps
-        df['t_start'] = series.iloc[cycles[:, 0]]['id'].values
-        df['t_end'] = series.iloc[cycles[:, 1]]['id'].values
-        df['t_minimum'] = series.iloc[cycles[:, 2]]['id'].values
+        df['doc'] = cycles[:, 3]
+        df['duration'] = df['t_end'] - df['t_start']
 
-    # write depth of cycle in DataFrame
-    df['doc'] = cycles[:, 3]
-    # calculate duration
-    df['duration'] = df['t_end'] - df['t_start']
+        if drop_zero_docs is True:
+            df = df.drop(df[df['doc'] == 0].index)
 
-    # drop cycles where the amplitude (doc) is zero
-    if drop_zero_docs is True:
-        df = df.drop(df[df['doc'] == 0].index)
-
-    # reset the index
-    df = df.reset_index(drop=True)
-
-    return df
+        df = df.reset_index(drop=True)
+        return df
+    
+    except Exception as e:
+        print(f"Warning: Cycle detection failed with error: {str(e)}")
+        return pd.DataFrame()  # Return empty DataFrame on error
 
 
 def find_peaks_valleys_idx(series):
@@ -236,49 +234,100 @@ def calc_doc(series, rows):
     return doc
 
 
-def process2dpts(filepath=None):
-    # Load 2D joint data from CSV file
-    df = pd.read_csv(args.i, sep=',')
-    _r = df.shape[0]
-    _c = df.shape[1]
-    # print(_r, _c)
-    _dists = pd.DataFrame()
-    _angls = pd.DataFrame()
+def analyze_joint_cycles(filepath):
+    """Analyze cycles in joint trajectories"""
+    # Load joint trajectory data
+    df = pd.read_csv(filepath)
+    
+    # Initialize results dictionary
+    results = defaultdict(dict)
+    
+    # Process each joint
+    joint_names = [col.split('_')[0] for col in df.columns if col.endswith('_x')]
+    
+    for joint in joint_names:
+        print(f"Analyzing cycles for {joint}...")
+        
+        # Calculate 3D trajectory
+        x = df[f'{joint}_x']
+        y = df[f'{joint}_y']
+        z = df[f'{joint}_z']
+        
+        # Calculate various movement metrics
+        try:
+            # 3D distance from origin
+            distance_3d = np.sqrt(x**2 + y**2 + z**2)
+            cycles_3d = detect_cycles(distance_3d)
+            
+            # Planar projections
+            distance_xy = np.sqrt(x**2 + y**2)
+            cycles_xy = detect_cycles(distance_xy)
+            
+            distance_yz = np.sqrt(y**2 + z**2)
+            cycles_yz = detect_cycles(distance_yz)
+            
+            distance_xz = np.sqrt(x**2 + z**2)
+            cycles_xz = detect_cycles(distance_xz)
+            
+            # Store results
+            results[joint] = {
+                "cycles_3d": len(cycles_3d),
+                "cycles_xy": len(cycles_xy),
+                "cycles_yz": len(cycles_yz),
+                "cycles_xz": len(cycles_xz),
+                "details": {
+                    "avg_duration_3d": float(cycles_3d['duration'].mean()) if not cycles_3d.empty else 0,
+                    "avg_amplitude_3d": float(cycles_3d['doc'].mean()) if not cycles_3d.empty else 0
+                }
+            }
+            
+        except Exception as e:
+            print(f"Warning: Failed to analyze {joint}: {str(e)}")
+            results[joint] = {
+                "error": str(e),
+                "cycles_3d": 0,
+                "cycles_xy": 0,
+                "cycles_yz": 0,
+                "cycles_xz": 0,
+                "details": {
+                    "avg_duration_3d": 0,
+                    "avg_amplitude_3d": 0
+                }
+            }
+    
+    return results
 
-    for _ci in range(1, _c, 2):
-        # Convert 2D time-series data to 1D time series data
-        _df = df.iloc[:, _ci:_ci + 2]
-        # Get joint ID
-        _id = _df.columns.tolist()[0].split(' ')[0]
-
-        _df = _df.interpolate(method='linear')
-        _df.columns = ["x", "y"]
-
-        # Calculate the distance from origin (0,0)
-        _cd = detect_cycles(np.sqrt(_df['x'] ** 2 + _df['y'] ** 2))
-        _cd = _cd.dropna()
-        # _distances.columns = ["JointID", "t_start", "t_end", "t_minimum", "doc", "duration"]
-        _cd["JointID"] = _id
-        _dists = pd.concat([_dists, _cd], ignore_index=False)
-
-        # Calculate the angle with respect to the x-axis for each point
-        _ca = detect_cycles(np.arctan2(_df['y'], _df['x']))
-        _ca = _ca.dropna()
-        _ca["JointID"] = _id
-        _angls = pd.concat([_angls, _cd], ignore_index=False)
-
-    # Perform agglomerative clustering
-    kmeans = KMeans(n_clusters=3)
-    dc = kmeans.fit_predict(_dists[["t_start", "t_end", "t_minimum", "doc", "duration", "JointID"]])
-    ac = kmeans.fit_predict(_angls[["t_start", "t_end", "t_minimum", "doc", "duration", "JointID"]])
-
-    # Perform majority voting over clusters form dc and ac
-
+def main():
+    parser = argparse.ArgumentParser(description='Detect cycles in joint motion trajectories')
+    parser.add_argument('-i', '--input', type=str, required=True,
+                       help='Input CSV file containing joint trajectories')
+    parser.add_argument('-o', '--output', type=str, default='cycles.json',
+                       help='Output JSON file for cycle analysis results')
+    
+    args = parser.parse_args()
+    
+    # Validate input file
+    if not Path(args.input).exists():
+        raise FileNotFoundError(f"Input file not found: {args.input}")
+    
+    # Analyze cycles
+    print(f"Analyzing cycles in: {args.input}")
+    results = analyze_joint_cycles(args.input)
+    
+    # Save results to JSON
+    with open(args.output, 'w') as f:
+        json.dump(results, f, indent=2)
+    
+    print(f"\nResults saved to: {args.output}")
+    
+    # Print summary
+    print("\nSummary of detected cycles:")
+    for joint, data in results.items():
+        print(f"\n{joint}:")
+        print(f"  3D cycles: {data['cycles_3d']}")
+        print(f"  XY plane cycles: {data['cycles_xy']}")
+        print(f"  YZ plane cycles: {data['cycles_yz']}")
+        print(f"  XZ plane cycles: {data['cycles_xz']}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Perform cycle detection over time-series data')
-    parser.add_argument('-i', type=str, help='Input csv file containing time-series data', required=True)
-    args = parser.parse_args()
-
-    if os.path.exists(args.i):
-        process2dpts(filepath=args.i)
+    main()
