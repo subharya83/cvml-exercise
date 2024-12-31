@@ -2,6 +2,11 @@
 
 A Python-based solution for tracking human body joints in videos and detecting motion cycles.
 
+Input Video                        |  Joint Tracked                     |
+-----------------------------------|------------------------------------|
+![Input](../assets/ex02-input.gif) | ![Joints](../assets/ex02-debug.gif)| 
+
+
 ## Problem Design
 
 ### Objectives
@@ -161,7 +166,7 @@ pip install opencv-python mediapipe numpy pandas scikit-learn tqdm
 ### Running the Analysis
 ```shell
 # Step 1: Track joints in video
-python3 getPoseLandmarks.py  -i input/DftBUdHgr9Q.mp4 -o output/trajectories.csv
+python3 getPoseLandmarks.py  -i input/DftBUdHgr9Q.mp4 -o output/trajectories.csv [-d]
 
 # Step 2: Detect motion cycles
 python3 CycleDetection.py -i output/trajectories.csv -o output/cycles.json
