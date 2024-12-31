@@ -147,7 +147,7 @@ def main():
     args = parser.parse_args()
     
     # Validate input video path
-    if not Path(args.input_video).exists():
+    if not Path(args.i).exists():
         raise FileNotFoundError(f"Input video file not found: {args.i}")
     
     # Create tracker and process video

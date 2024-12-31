@@ -1,0 +1,122 @@
+{
+  "left_ankle": {
+    "cycles_3d": 30,
+    "cycles_xy": 14,
+    "cycles_yz": 35,
+    "cycles_xz": 32,
+    "details": {
+      "avg_duration_3d": 13.133333333333333,
+      "avg_amplitude_3d": 0.06508101633480909
+    }
+  },
+  "left_elbow": {
+    "cycles_3d": 37,
+    "cycles_xy": 18,
+    "cycles_yz": 40,
+    "cycles_xz": 38,
+    "details": {
+      "avg_duration_3d": 10.621621621621621,
+      "avg_amplitude_3d": 0.11942959777138788
+    }
+  },
+  "left_hip": {
+    "cycles_3d": 17,
+    "cycles_xy": 9,
+    "cycles_yz": 22,
+    "cycles_xz": 13,
+    "details": {
+      "avg_duration_3d": 17.11764705882353,
+      "avg_amplitude_3d": 0.11244249097224689
+    }
+  },
+  "left_knee": {
+    "cycles_3d": 28,
+    "cycles_xy": 18,
+    "cycles_yz": 38,
+    "cycles_xz": 27,
+    "details": {
+      "avg_duration_3d": 15.285714285714286,
+      "avg_amplitude_3d": 0.141359846684352
+    }
+  },
+  "left_shoulder": {
+    "cycles_3d": 28,
+    "cycles_xy": 10,
+    "cycles_yz": 35,
+    "cycles_xz": 29,
+    "details": {
+      "avg_duration_3d": 14.357142857142858,
+      "avg_amplitude_3d": 0.09009016282792233
+    }
+  },
+  "left_wrist": {
+    "cycles_3d": 36,
+    "cycles_xy": 16,
+    "cycles_yz": 39,
+    "cycles_xz": 36,
+    "details": {
+      "avg_duration_3d": 10.88888888888889,
+      "avg_amplitude_3d": 0.1506269517974452
+    }
+  },
+  "right_ankle": {
+    "cycles_3d": 35,
+    "cycles_xy": 23,
+    "cycles_yz": 33,
+    "cycles_xz": 35,
+    "details": {
+      "avg_duration_3d": 11.428571428571429,
+      "avg_amplitude_3d": 0.1992272976710816
+    }
+  },
+  "right_elbow": {
+    "cycles_3d": 26,
+    "cycles_xy": 17,
+    "cycles_yz": 34,
+    "cycles_xz": 25,
+    "details": {
+      "avg_duration_3d": 16.23076923076923,
+      "avg_amplitude_3d": 0.0887200511198097
+    }
+  },
+  "right_hip": {
+    "cycles_3d": 19,
+    "cycles_xy": 14,
+    "cycles_yz": 22,
+    "cycles_xz": 19,
+    "details": {
+      "avg_duration_3d": 18.842105263157894,
+      "avg_amplitude_3d": 0.11229086030803273
+    }
+  },
+  "right_knee": {
+    "cycles_3d": 39,
+    "cycles_xy": 17,
+    "cycles_yz": 40,
+    "cycles_xz": 38,
+    "details": {
+      "avg_duration_3d": 11.025641025641026,
+      "avg_amplitude_3d": 0.18864618677346587
+    }
+  },
+  "right_shoulder": {
+    "cycles_3d": 22,
+    "cycles_xy": 18,
+    "cycles_yz": 24,
+    "cycles_xz": 22,
+    "details": {
+      "avg_duration_3d": 17.545454545454547,
+      "avg_amplitude_3d": 0.07993790099427682
+    }
+  },
+  "right_wrist": {
+    "cycles_3d": 36,
+    "cycles_xy": 10,
+    "cycles_yz": 34,
+    "cycles_xz": 39,
+    "details": {
+      "avg_duration_3d": 12.277777777777779,
+      "avg_amplitude_3d": 0.09508737894396112
+    }
+  }
+}

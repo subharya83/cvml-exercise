@@ -66,7 +66,6 @@ def detect_cycles(series, drop_zero_docs=True, integer_index=False):
         print(f"Warning: Cycle detection failed with error: {str(e)}")
         return pd.DataFrame()  # Return empty DataFrame on error
 
-
 def find_peaks_valleys_idx(series):
     # calculate difference between neighboring values
     diff = np.diff(np.concatenate(([0], series, [0])))
@@ -242,19 +241,20 @@ def analyze_joint_cycles(filepath):
     # Initialize results dictionary
     results = defaultdict(dict)
     
-    # Process each joint
-    joint_names = [col.split('_')[0] for col in df.columns if col.endswith('_x')]
+    # Get unique joint names by looking at the column names
+    # Extract joint names from columns that end with '_x' and remove the '_x' suffix
+    joint_names = sorted(list(set([col.rsplit('_', 1)[0] for col in df.columns if col.endswith('_x')])))
     
     for joint in joint_names:
         print(f"Analyzing cycles for {joint}...")
         
         # Calculate 3D trajectory
-        x = df[f'{joint}_x']
-        y = df[f'{joint}_y']
-        z = df[f'{joint}_z']
-        
-        # Calculate various movement metrics
         try:
+            x = df[f'{joint}_x']
+            y = df[f'{joint}_y']
+            z = df[f'{joint}_z']
+            
+            # Calculate various movement metrics
             # 3D distance from origin
             distance_3d = np.sqrt(x**2 + y**2 + z**2)
             cycles_3d = detect_cycles(distance_3d)
