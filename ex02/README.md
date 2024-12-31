@@ -25,7 +25,10 @@ The project focuses on:
 - Minimum of 4 data points required for cycle detection
 
 ## Data Preparation
-
+```shell
+# Download example video
+yt-dlp -S ext:mp4:m4a https://www.youtube.com/shorts/DftBUdHgr9Q -o DftBUdHgr9Q.mp4
+```
 ### Input Requirements
 - Video file featuring a single person
 - Clear visibility of body joints
@@ -53,9 +56,15 @@ The project focuses on:
 
 ### Project Structure
 ```
-├── CycleDetection.py      # Cycle detection algorithm 
-├── getPoseLandmarks.py    # Joint tracking implementation
-└── README.md              # Project documentation
+|── CycleDetection.py
+├── getPoseLandmarks.py
+├── input
+│   └── DftBUdHgr9Q.mp4
+├── output
+│   ├── cycles.json
+│   └── trajectories.csv
+└── README.md
+
 ```
 
 ### Key Components
@@ -152,10 +161,10 @@ pip install opencv-python mediapipe numpy pandas scikit-learn tqdm
 ### Running the Analysis
 ```shell
 # Step 1: Track joints in video
-python getPoseLandmarks.py  -i input_video.mp4 -o trajectories.csv
+python3 getPoseLandmarks.py  -i input/DftBUdHgr9Q.mp4 -o output/trajectories.csv
 
 # Step 2: Detect motion cycles
-python CycleDetection.py -i trajectories.csv -o cycles.json
+python3 CycleDetection.py -i output/trajectories.csv -o output/cycles.json
 ```
 
 ### Output Files
