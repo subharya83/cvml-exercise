@@ -35,6 +35,11 @@ I have a video of screen capture that records a user browsing news articles from
 
 ## Data Preparation
 
+### Converting screen grab to suitable encoding format
+```shell
+ffmpeg -i /path/to/screen.webm -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -c:v libx264 -crf 18 -preset slow -c:a aac -b:a 192k testdata.mp4
+```
+
 ### Input Requirements
 - Video Format: MP4, AVI, or other common video formats
 - Resolution: Minimum 720p recommended for optimal OCR performance
