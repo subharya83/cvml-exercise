@@ -66,27 +66,24 @@ ffmpeg -i /path/to/screen.webm -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -c:v libx264 
 ## Code Organization
 
 ```
-news_video_analyzer/
+|── input
+│   └── testdata.mp4
+├── output
+│   └── results.json
 ├── README.md
-├── requirements.txt
-├── src/
-│   ├── __init__.py
-│   ├── analyzer.py        # Main NewsVideoAnalyzer class
-│   ├── scene_detector.py  # Scene detection utilities
-│   ├── ocr_processor.py   # OCR related functions
-│   ├── caption_gen.py     # Image captioning utilities
-│   └── utils/
-│       ├── __init__.py
-│       ├── text_processor.py
-│       └── video_utils.py
-├── tests/
-│   ├── __init__.py
-│   ├── test_analyzer.py
-│   ├── test_scene_detector.py
-│   └── test_ocr.py
-└── examples/
-    ├── sample_videos/
-    └── sample_output/
+├── ScreenGrabAnalyzer.py
+└── weights
+    ├── Download.md
+    └── git-base-textcaps
+        ├── config.json
+        ├── generation_config.json
+        ├── preprocessor_config.json
+        ├── pytorch_model.bin
+        ├── special_tokens_map.json
+        ├── tokenizer_config.json
+        ├── tokenizer.json
+        └── vocab.txt
+
 ```
 
 ### Key Components
