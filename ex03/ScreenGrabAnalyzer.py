@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from scenedetect import detect, ContentDetector
 from PIL import Image
-import pytesseract
+import easyocr
 from transformers import pipeline
 import spacy
 from dateutil import parser
@@ -15,11 +15,10 @@ import torch
 from huggingface_hub import hf_hub_download
 
 class NewsVideoAnalyzer:
-    def __init__(self, weights_dir="weights", debug=False, debug_dir=None):
-        # Initialize debug settings
-        self.debug = debug
-        self.debug_dir = Path(debug_dir) if debug_dir else Path("debug_output")
-        if self.debug:
+    def __init__(self, weights_dir="weights", debug_dir=None):
+        # Initialize debug setting
+        self.debug_dir = Path(debug_dir) if debug_dir else None
+        if self.debug_dir:
             self.debug_dir.mkdir(parents=True, exist_ok=True)
             print(f"Debug mode enabled. Output directory: {self.debug_dir}")
         
@@ -31,6 +30,9 @@ class NewsVideoAnalyzer:
         # Initialize models
         self.image_captioner = self._setup_image_captioner()
         self.nlp = spacy.load("en_core_web_sm")
+        # Initialize EasyOCR reader
+        print("Initializing EasyOCR...")
+        self.reader = easyocr.Reader(['en'], gpu=torch.cuda.is_available())
         print("Models initialized successfully")
         
     def _setup_image_captioner(self):
@@ -86,7 +88,7 @@ class NewsVideoAnalyzer:
         
         if ret:
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            if self.debug:
+            if self.debug_dir:
                 frame_path = self.debug_dir / f"frame_{timestamp:.2f}.jpg"
                 cv2.imwrite(str(frame_path), cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR))
                 print(f"Saved frame at timestamp {timestamp:.2f}s to {frame_path}")
@@ -96,12 +98,15 @@ class NewsVideoAnalyzer:
         return None
 
     def perform_ocr(self, frame):
-        """Perform OCR on the frame"""
+        """Perform OCR on the frame using EasyOCR"""
         print("Performing OCR on frame...")
-        pil_image = Image.fromarray(frame)
-        text = pytesseract.image_to_string(pil_image)
+        # EasyOCR works with numpy arrays directly
+        results = self.reader.readtext(frame)
         
-        if self.debug:
+        # Extract text from results and combine
+        text = ' '.join([result[1] for result in results])
+        
+        if self.debug_dir:
             ocr_path = self.debug_dir / f"ocr_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
             ocr_path.write_text(text)
             print(f"Saved OCR text to {ocr_path}")
@@ -114,7 +119,7 @@ class NewsVideoAnalyzer:
         pil_image = Image.fromarray(frame)
         caption = self.image_captioner(pil_image)[0]['generated_text']
         
-        if self.debug:
+        if self.debug_dir:
             caption_path = self.debug_dir / f"caption_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
             caption_path.write_text(caption)
             print(f"Saved image caption to {caption_path}")
@@ -199,7 +204,7 @@ class NewsVideoAnalyzer:
                 "image_caption": image_caption
             }
             
-            if self.debug:
+            if self.debug_dir:
                 scene_debug_path = self.debug_dir / f"scene_{i}_data.json"
                 with open(scene_debug_path, 'w', encoding='utf-8') as f:
                     json.dump(scene_data, f, indent=2, ensure_ascii=False)
@@ -224,11 +229,7 @@ def main():
     
     args = parser.parse_args()
     
-    analyzer = NewsVideoAnalyzer(
-        weights_dir="./weights",
-        debug=args.d,
-        debug_dir=args.o
-    )
+    analyzer = NewsVideoAnalyzer(weights_dir="./weights", debug_dir=args.d)
     analyzer.analyze_video(args.i, args.o)
 
 if __name__ == "__main__":
