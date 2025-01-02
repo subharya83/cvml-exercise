@@ -38,8 +38,13 @@ class NewsVideoAnalyzer:
         files_to_download = [
             "config.json",
             "pytorch_model.bin",
-            "vocab.json",
-            "merges.txt"
+            "vocab.txt",
+            "generation_config.json",
+            "preprocessor_config.json",
+            "special_tokens_map.json",  
+            "tokenizer_config.json",
+            "tokenizer.json",
+            "vocab.txt"
         ]
         
         for file in files_to_download:
@@ -55,11 +60,7 @@ class NewsVideoAnalyzer:
                     raise
         
         # Initialize the pipeline with local weights
-        return pipeline(
-            "image-to-text",
-            model=str(model_path),
-            local_files_only=True
-        )
+        return pipeline("image-to-text", model=str(model_path))
     
     def detect_scenes(self, video_path):
         """Detect scene changes in the video"""
@@ -163,10 +164,10 @@ def main():
     parser = argparse.ArgumentParser(description='Analyze news video and generate JSON output')
     parser.add_argument('-i', help='Path to input video file')
     parser.add_argument('-o', help='Path for the output JSON file')
-    parser.add_argument('--weights-dir', default='weights', help='Directory to store model weights')
+
     args = parser.parse_args()
     
-    analyzer = NewsVideoAnalyzer(weights_dir=args.weights_dir)
+    analyzer = NewsVideoAnalyzer(weights_dir="./weights")
     analyzer.analyze_video(args.i, args.o)
 
 if __name__ == "__main__":
