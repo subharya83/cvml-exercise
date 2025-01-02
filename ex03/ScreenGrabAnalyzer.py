@@ -72,7 +72,7 @@ class NewsVideoAnalyzer:
     def detect_scenes(self, video_path):
         """Detect scene changes in the video"""
         print("Detecting scenes in video...")
-        scenes = detect(video_path, ContentDetector())
+        scenes = detect(video_path, ContentDetector(threshold=18))
         scene_list = [(scene[0].get_seconds(), scene[1].get_seconds()) for scene in scenes]
         print(f"Number of scenes detected: {len(scene_list)}")
         return scene_list
