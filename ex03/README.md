@@ -4,7 +4,7 @@
 
 For this I used the following tools and open source libraries, which can be installed as 
 follows:
-```commandline
+```shell
 apt install ffmpeg
 pip install scenedetect
 pip install paddlepaddle
@@ -15,7 +15,7 @@ Once installed, the script `run.sh` provided can be executed.
 The shell script has comments describing the actions of commands.
 After the execution of `run.sh`, we can obtain the relevant products discussed in the 
 screen recording session using:
-```commandline
+```shell
 # Filter output based on NER S-ORG
 cat output/tokens.json|grep S-ORG|cut -d' ' -f2|sort |uniq
 ```
@@ -27,7 +27,7 @@ I spent around 5 hours to design the first part. For the second part, one can pe
 following:
 
 #### 1. Get coarse weights for every scene from input video, select top 5:
-```commandline
+```shell
 tail -n +3 home_gym-Scenes.csv|cut -d, -f1,8|sort -k 2,2 -rn -k 1,1|head -5
 20,1409
 8,1587
@@ -36,7 +36,7 @@ tail -n +3 home_gym-Scenes.csv|cut -d, -f1,8|sort -k 2,2 -rn -k 1,1|head -5
 16,349
 ```
 #### 2. From these, find relevant bounding box information 
-```commandline
+```shell
 grep -e 'home_gym-Scene-020\|home_gym-Scene-008' analysis.log
 ...
 home_gym-Scene-008-02.jpg [1199, 480, 1594, 480, 1594, 497, 1199, 497] Rogue Flat Utility Bench 2.0-Premium Textured Pad +$195 
