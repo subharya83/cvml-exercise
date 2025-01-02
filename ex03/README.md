@@ -15,6 +15,11 @@ I have a video of screen capture that records a user browsing news articles from
 - Generate structured data about news stories including headlines, summaries, and metadata
 - Process various media types including text, images, and video content
 
+### Choice of model
+- GIT (Generative Image-to-text Transformer) is open-source and has comparable performance to BLIP
+- The textcaps variant is specifically trained for caption generation
+- Has a permissive license for commercial use
+
 ### Constraints
 - Minimum video duration: 5 minutes
 - Input must be screen capture footage of news browsing
@@ -170,5 +175,3 @@ news_video_analyzer/
    - Comprehensive error logging
    - Recovery mechanisms
    - Validation checks
-
-To contribute or report issues, please follow the standard GitHub workflow and adhere to the project's coding standards.
