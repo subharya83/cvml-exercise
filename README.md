@@ -31,20 +31,22 @@ solution remains effective and robust over time.
 
 ## Table of Contents
 
-1. [Video search with image query](./ex01/README.md)
+01. [Video search with image query](./ex01/README.md)
 
-2. [Cycle detection in human joint movements](./ex02/README.md)
+02. [Cycle detection in human joint movements](./ex02/README.md)
 
-3. [OCR based webpage parsing](./ex03/README.md)
+03. [Screen Capture Video Analysis](./ex03/README.md)
 
-4. [LLM fine-tuning Data Preparation](./ex04/README.md)
+04. [LLM fine-tuning Data Preparation](./ex04/README.md)
 
-5. []
+05. []
 
-6. [Outlier detection](./ex06/README.md)
+06. [Outlier detection](./ex06/README.md)
 
-7. [Counting similar objects](./ex07/README.md)
+07. [Counting similar objects](./ex07/README.md)
 
-8. [Deduplication of textual content](./ex08/README.md) 
+08. [Deduplication of textual content](./ex08/README.md) 
 
-9. [Mining Relevant Contents to a Topic](./ex09/README.md) 
+09. [Mining Relevant Contents to a Topic](./ex09/README.md) 
+
+10. [Image Captioning with ResNet50 and LSTM](./ex10/README.md) 
