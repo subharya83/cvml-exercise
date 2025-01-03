@@ -12,6 +12,8 @@ from bs4 import BeautifulSoup
 import chardet
 import srt
 import datetime
+from difflib import SequenceMatcher
+import csv
 
 class DocumentQA:
     def __init__(self):
@@ -148,6 +150,52 @@ class DocumentQA:
             "output": pair["answer"]
         } for pair in qa_pairs]
 
+    def detect_duplicates(self, qa_pairs: List[Dict[str, str]], similarity_threshold: float = 0.85) -> List[Dict[str, str]]:
+        """
+        Detect and remove near-duplicate QA pairs based on similarity threshold.
+        
+        Args:
+            qa_pairs: List of dictionaries containing QA pairs
+            similarity_threshold: Threshold for considering entries as duplicates (0.0 to 1.0)
+            
+        Returns:
+            List of unique QA pairs
+        """
+        def calculate_similarity(str1: str, str2: str) -> float:
+            """Calculate string similarity using SequenceMatcher."""
+            return SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
+        
+        def is_duplicate(current: Dict[str, str], others: List[Dict[str, str]]) -> bool:
+            """Check if current QA pair is similar to any in others."""
+            current_q = current["instruction"]
+            current_a = current["output"]
+            
+            for other in others:
+                other_q = other["instruction"]
+                other_a = other["output"]
+                
+                # Check both question and answer similarity
+                q_similarity = calculate_similarity(current_q, other_q)
+                a_similarity = calculate_similarity(current_a, other_a)
+                
+                # Consider it duplicate if either question or answer is very similar
+                if q_similarity > similarity_threshold or a_similarity > similarity_threshold:
+                    return True
+            return False
+        
+        unique_pairs = []
+        duplicates_found = 0
+        
+        # Process each QA pair
+        for qa_pair in qa_pairs:
+            if not is_duplicate(qa_pair, unique_pairs):
+                unique_pairs.append(qa_pair)
+            else:
+                duplicates_found += 1
+        
+        print(f"Found and removed {duplicates_found} duplicate entries")
+        return unique_pairs
+    
     def generate_qa_pairs(self, segments: List[str]) -> List[Dict[str, str]]:
         qa_pairs = []
         for segment in segments:
@@ -199,8 +247,12 @@ class DocumentQA:
             }
         return None
 
-def write_output(data: List[Dict[str, str]], output_path: str):
+def write_output(data: List[Dict[str, str]], output_path: str, similarity_threshold: float = None):
     """Write the QA pairs to either JSON or CSV file based on the file extension."""
+    if similarity_threshold is not None:
+        qa_processor = DocumentQA()
+        data = qa_processor.detect_duplicates(data, similarity_threshold)
+    
     file_extension = os.path.splitext(output_path)[1].lower()
     
     if file_extension == '.json':
@@ -208,7 +260,6 @@ def write_output(data: List[Dict[str, str]], output_path: str):
             json.dump(data, f, indent=2, ensure_ascii=False)
             
     elif file_extension == '.csv':
-        import csv
         with open(output_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(["instruction", "input", "output"])
