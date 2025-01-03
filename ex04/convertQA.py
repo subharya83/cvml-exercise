@@ -1,3 +1,4 @@
+import argparse
 import pypdf
 import spacy
 import re
@@ -6,6 +7,7 @@ import numpy as np
 from typing import List, Dict, Tuple
 import os
 from huggingface_hub import snapshot_download
+import json
 from bs4 import BeautifulSoup
 import chardet
 import srt
@@ -202,14 +204,18 @@ class DocumentQA:
         else:
             raise ValueError(f"Unsupported output format: {output_format}")
 
-def main():
-    converter = DocumentQA()
-    for file_path in ["example.pdf", "example.txt", "example.srt", "example.html"]:
-        if os.path.exists(file_path):
-            print(f"\nProcessing {file_path}:")
-            qa_data = converter.process_document(file_path, "json")
-            print(qa_data)
 
 if __name__ == "__main__":
-    main()
-    
+    parser = argparse.ArgumentParser(description='Parse document to generate QA')
+    parser.add_argument('-i', required=True, help='Path to input document file')
+    parser.add_argument('-o', required=True, help='Path for the output JSON file')
+
+    converter = DocumentQA()
+    args = parser.parse_args()
+    if os.path.exists(args.i):
+        print(f"\nProcessing {args.i}:")
+        qa_data = converter.process_document(args.i, "json")
+        print(f"Writing results to {args.o}")
+        
+        with open(args.o, 'w', encoding='utf-8') as f:
+            json.dump(qa_data, f, indent=2, ensure_ascii=False)
