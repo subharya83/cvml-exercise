@@ -72,13 +72,26 @@ class DocumentQA:
         try:
             with open(file_path, 'rb') as file:
                 raw_data = file.read()
-                encoding = chardet.detect(raw_data)['encoding']
-            with open(file_path, 'r', encoding=encoding) as file:
-                soup = BeautifulSoup(file, 'html.parser')
-                # Remove script and style elements
-                for script in soup(["script", "style"]):
-                    script.decompose()
-                return soup.get_text(separator=" ")
+                
+            encodings = [chardet.detect(raw_data)['encoding'], 'utf-8', 'latin-1', 'cp1252', 'ascii']
+            
+            text = None
+            for encoding in encodings:
+                try:
+                    text = raw_data.decode(encoding, errors='ignore')
+                    break
+                except (UnicodeDecodeError, TypeError):
+                    continue
+                    
+            if text is None:
+                print(f"HTML extraction error: Could not decode file with any encoding")
+                return ""
+                
+            soup = BeautifulSoup(text, 'html.parser')
+            for script in soup(["script", "style"]):
+                script.decompose()
+            return soup.get_text(separator=" ")
+            
         except Exception as e:
             print(f"HTML extraction error: {e}")
             return ""
@@ -104,7 +117,7 @@ class DocumentQA:
             segments.append(current_segment.strip())
         return segments
 
-    def process_document(self, file_path: str, output_format: str = "json") -> str:
+    def process_document(self, file_path: str, output_format: str = "json") -> List[Dict[str, str]]:
         """Process any supported document type and generate QA pairs."""
         file_extension = os.path.splitext(file_path)[1].lower()
         
@@ -122,14 +135,19 @@ class DocumentQA:
         
         text = extractor(file_path)
         if not text:
-            return ""
+            return []
             
         text = self.clean_text(text)
         segments = self.segment_text(text)
         qa_pairs = self.generate_qa_pairs(segments)
-        return self.format_for_fine_tuning(qa_pairs, output_format)
+        
+        # Return the raw QA pairs instead of formatted string
+        return [{
+            "instruction": pair["question"],
+            "input": "",
+            "output": pair["answer"]
+        } for pair in qa_pairs]
 
-    # Rest of the methods remain the same
     def generate_qa_pairs(self, segments: List[str]) -> List[Dict[str, str]]:
         qa_pairs = []
         for segment in segments:
@@ -181,41 +199,49 @@ class DocumentQA:
             }
         return None
 
-    def format_for_fine_tuning(self, qa_pairs: List[Dict[str, str]], output_format: str = "json") -> str:
-        if output_format.lower() == "json":
-            import json
-            formatted_data = [{
-                "instruction": pair["question"],
-                "input": "",
-                "output": pair["answer"]
-            } for pair in qa_pairs]
-            return json.dumps(formatted_data, indent=2)
-        
-        elif output_format.lower() == "csv":
-            import csv
-            import io
-            output = io.StringIO()
-            writer = csv.writer(output)
+def write_output(data: List[Dict[str, str]], output_path: str):
+    """Write the QA pairs to either JSON or CSV file based on the file extension."""
+    file_extension = os.path.splitext(output_path)[1].lower()
+    
+    if file_extension == '.json':
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+            
+    elif file_extension == '.csv':
+        import csv
+        with open(output_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
             writer.writerow(["instruction", "input", "output"])
-            for pair in qa_pairs:
-                writer.writerow([pair["question"], "", pair["answer"]])
-            return output.getvalue()
-        
-        else:
-            raise ValueError(f"Unsupported output format: {output_format}")
-
+            for item in data:
+                writer.writerow([item["instruction"], item["input"], item["output"]])
+                
+    else:
+        raise ValueError(f"Unsupported output format: {file_extension}")
+    
+    print(f"Successfully wrote data to {output_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parse document to generate QA')
     parser.add_argument('-i', required=True, help='Path to input document file')
-    parser.add_argument('-o', required=True, help='Path for the output JSON file')
+    parser.add_argument('-o', required=True, help='Path for the output csv/json file')
 
-    converter = DocumentQA()
     args = parser.parse_args()
-    if os.path.exists(args.i):
-        print(f"\nProcessing {args.i}:")
-        qa_data = converter.process_document(args.i, "json")
-        print(f"Writing results to {args.o}")
+    
+    if not os.path.exists(args.i):
+        print(f"Error: Input file {args.i} does not exist")
+        exit(1)
         
-        with open(args.o, 'w', encoding='utf-8') as f:
-            json.dump(qa_data, f, indent=2, ensure_ascii=False)
+    try:
+        converter = DocumentQA()
+        print(f"\nProcessing {args.i}...")
+        qa_data = converter.process_document(args.i)
+        
+        if not qa_data:
+            print("No QA pairs were generated from the document")
+            exit(1)
+            
+        write_output(qa_data, args.o)
+        
+    except Exception as e:
+        print(f"Error processing document: {str(e)}")
+        exit(1)
