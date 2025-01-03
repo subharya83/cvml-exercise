@@ -224,6 +224,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parse document to generate QA')
     parser.add_argument('-i', required=True, help='Path to input document file')
     parser.add_argument('-o', required=True, help='Path for the output csv/json file')
+    parser.add_argument('-d', type=float, nargs='?', const=0.85, metavar='SIMILARITY',
+                       help='Enable duplicate detection with optional similarity threshold (0.0 to 1.0, default: 0.85)')
 
     args = parser.parse_args()
     
@@ -240,7 +242,7 @@ if __name__ == "__main__":
             print("No QA pairs were generated from the document")
             exit(1)
             
-        write_output(qa_data, args.o)
+        write_output(qa_data, args.o, similarity_threshold=args.d)
         
     except Exception as e:
         print(f"Error processing document: {str(e)}")
