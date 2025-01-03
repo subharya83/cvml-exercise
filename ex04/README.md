@@ -50,6 +50,30 @@ A Python tool that automatically generates question-answer pairs from various do
 
 ## Code Organization
 
+### Code structure
+```
+├── autopunc.py
+├── convertQA.py
+├── input
+│   ├── 3-Kings.pdf
+│   └── Argo.htm
+├── output
+│   ├── Argo.csv
+│   └── Argo.json
+├── prepro_ytxscrips.py
+├── README.md
+└── weights
+    └── bert-large-uncased-whole-word-masking-finetuned-squad
+        ├── config.json
+        ├── model.safetensors
+        ├── pytorch_model.bin
+        ├── README.md
+        ├── saved_model.tar.gz
+        ├── tokenizer_config.json
+        ├── tokenizer.json
+        └── vocab.txt
+```
+
 ### Class Structure
 ```
 DocumentQA/
