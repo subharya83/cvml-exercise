@@ -37,7 +37,7 @@ solution remains effective and robust over time.
 
 03. [Screen Capture Video Analysis](./ex03/README.md)
 
-04. [LLM fine-tuning Data Preparation](./ex04/README.md)
+04. [Automated Question-Answer Pair Generator](./ex04/README.md)
 
 05. []
 
