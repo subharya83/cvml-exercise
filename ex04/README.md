@@ -190,4 +190,3 @@ def test_output_formats():
 2. **Quality Control**
    - Add confidence scores for generated QA pairs
    - Implement quality filters
-   - Add duplicate detection and removal
