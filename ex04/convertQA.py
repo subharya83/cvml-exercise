@@ -4,15 +4,37 @@ import re
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering
 import numpy as np
 from typing import List, Dict, Tuple
+import os
+from huggingface_hub import snapshot_download
 
 class PDFtoQA:
     def __init__(self):
-        # Load SpaCy model for NER and sentence segmentation
-        self.nlp = spacy.load("en_core_web_sm")
-        # Initialize BERT tokenizer and model for question generation
-        self.tokenizer = AutoTokenizer.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad")
-        self.model = AutoModelForQuestionAnswering.from_pretrained("bert-large-uncased-whole-word-masking-finetuned-squad")
+        # Create weights directory if it doesn't exist
+        self.weights_dir = "./weights"
+        os.makedirs(self.weights_dir, exist_ok=True)
         
+        # Download SpaCy model
+        if not spacy.util.is_package("en_core_web_sm"):
+            os.system("python3 -m spacy download en_core_web_sm")
+        
+        # Load SpaCy model
+        self.nlp = spacy.load("en_core_web_sm")
+        
+        # Download and load BERT model and tokenizer
+        model_name = "bert-large-uncased-whole-word-masking-finetuned-squad"
+        model_path = os.path.join(self.weights_dir, model_name)
+        
+        if not os.path.exists(model_path):
+            snapshot_download(
+                repo_id=model_name,
+                local_dir=model_path,
+                ignore_patterns=["*.msgpack", "*.h5", "*.ot", "*.pdf"]
+            )
+        
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+        self.model = AutoModelForQuestionAnswering.from_pretrained(model_path)
+
+    # Rest of the class implementation remains the same
     def extract_text_from_pdf(self, pdf_path: str) -> str:
         """Extract text from PDF file."""
         pdf_text = ""
@@ -28,28 +50,24 @@ class PDFtoQA:
 
     def clean_text(self, text: str) -> str:
         """Clean extracted text by removing extra whitespace and special characters."""
-        # Remove extra newlines and whitespace
         text = re.sub(r'\n+', '\n', text)
         text = re.sub(r'\s+', ' ', text)
-        # Remove special characters but keep punctuation
         text = re.sub(r'[^\w\s.,!?:;()\-\'\"]+', '', text)
         return text.strip()
 
     def segment_text(self, text: str) -> List[str]:
         """Split text into meaningful segments/paragraphs."""
         doc = self.nlp(text)
-        # Group sentences into paragraphs based on content similarity
         segments = []
         current_segment = ""
         
         for sent in doc.sents:
             current_segment += sent.text + " "
-            # Start new segment if current one is long enough or contains complete thought
             if len(current_segment.split()) > 100 or sent.text.endswith('.'):
                 segments.append(current_segment.strip())
                 current_segment = ""
         
-        if current_segment:  # Add any remaining text
+        if current_segment:
             segments.append(current_segment.strip())
             
         return segments
@@ -59,14 +77,10 @@ class PDFtoQA:
         qa_pairs = []
         
         for segment in segments:
-            # Process each segment to identify key information
             doc = self.nlp(segment)
-            
-            # Extract entities and generate questions
             entities = [(ent.text, ent.label_) for ent in doc.ents]
             
             for ent in entities:
-                # Generate different types of questions based on entity type
                 if ent[1] in ['PERSON', 'ORG', 'GPE']:
                     qa_pairs.append({
                         "question": f"Who or what is {ent[0]}?",
@@ -78,7 +92,6 @@ class PDFtoQA:
                         "answer": self.extract_context(segment, ent[0])
                     })
                 
-            # Generate general questions about the content
             summary = self.generate_summary_question(segment)
             if summary:
                 qa_pairs.append(summary)
@@ -87,16 +100,13 @@ class PDFtoQA:
 
     def extract_context(self, text: str, entity: str, window: int = 100) -> str:
         """Extract relevant context around an entity."""
-        # Find the position of the entity in the text
         pos = text.find(entity)
         if pos == -1:
             return text
             
-        # Extract window of text around the entity
         start = max(0, pos - window)
         end = min(len(text), pos + len(entity) + window)
         
-        # Ensure we don't cut words in half
         while start > 0 and text[start] != ' ':
             start -= 1
         while end < len(text) and text[end] != ' ':
@@ -106,7 +116,6 @@ class PDFtoQA:
 
     def generate_summary_question(self, text: str) -> Dict[str, str]:
         """Generate a summary-type question for the text."""
-        # Extract main topics using NLP
         doc = self.nlp(text)
         main_topics = [token.text for token in doc if token.pos_ in ['NOUN', 'PROPN']]
         
@@ -144,22 +153,15 @@ class PDFtoQA:
 
     def process_pdf(self, pdf_path: str, output_format: str = "json") -> str:
         """Process PDF and generate formatted QA pairs."""
-        # Extract text from PDF
         text = self.extract_text_from_pdf(pdf_path)
         if not text:
             return ""
             
-        # Segment the text
         segments = self.segment_text(text)
-        
-        # Generate QA pairs
         qa_pairs = self.generate_qa_pairs(segments)
-        
-        # Format for fine-tuning
         return self.format_for_fine_tuning(qa_pairs, output_format)
 
 def main():
-    # Example usage
     converter = PDFtoQA()
     qa_data = converter.process_pdf("example.pdf", "json")
     print(qa_data)
