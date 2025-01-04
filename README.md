@@ -39,7 +39,7 @@ solution remains effective and robust over time.
 
 04. [Automated Question-Answer Pair Generator](./ex04/README.md)
 
-05. []
+05. [Browser-based Inferencing on Human centric models](./ex05/README.md)
 
 06. [Outlier detection](./ex06/README.md)
 
