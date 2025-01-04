@@ -1,14 +1,28 @@
 // Constants
-const MAX_GESTURE_DELAY = 500; // General detection interval
-const MAX_FACE_DELAY = 5000; // Face visibility wait interval
-const AUDIO_COOLDOWN = 5000; // 5 seconds
+const MAX_GESTURE_DELAY = 500;
+const MAX_FACE_DELAY = 5000;
+const AUDIO_COOLDOWN = 5000;
+const EXPRESSION_CHECK_INTERVAL = 100;
 
-// Models and Video Element
+// Models and Elements
 let handposeModel;
 let blazefaceModel;
 let video;
+let canvas;
 let lastFaceDetected = true;
 let userLeftTimeout = null;
+
+// Status Icons for Expressions
+const statusIcons = {
+    default: { emoji: '😐', color: '#02c19c' },
+    neutral: { emoji: '😐', color: '#54adad' },
+    happy: { emoji: '😀', color: '#148f77' },
+    sad: { emoji: '😥', color: '#767e7e' },
+    angry: { emoji: '😠', color: '#b64518' },
+    fearful: { emoji: '😨', color: '#90931d' },
+    disgusted: { emoji: '🤢', color: '#1a8d1a' },
+    surprised: { emoji: '😲', color: '#1230ce' }
+};
 
 // Audio Elements
 const audioFiles = {
@@ -59,6 +73,8 @@ function showAlert(message, audioType) {
 
 async function setupCamera() {
     video = document.getElementById('video');
+    canvas = document.getElementById('canvas');
+    
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         video.srcObject = stream;
@@ -78,15 +94,26 @@ async function setupCamera() {
 
 async function loadModels() {
     try {
+        // Load hand and face detection models
         handposeModel = await handpose.load();
         blazefaceModel = await blazeface.load();
-        console.log('Models loaded successfully');
+        
+        // Load face-api.js models
+        await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
+            faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
+            faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
+            faceapi.nets.faceExpressionNet.loadFromUri('./models')
+        ]);
+        
+        console.log('All models loaded successfully');
     } catch (error) {
         console.error('Error loading models:', error);
         showAlert('Error loading detection models', null);
     }
 }
 
+// Existing gesture detection functions
 function isHandRaised(predictions) {
     if (predictions.length > 0) {
         const wrist = predictions[0].annotations.palmBase[0];
@@ -96,7 +123,6 @@ function isHandRaised(predictions) {
             predictions[0].annotations.ringFinger[3],
             predictions[0].annotations.pinky[3]
         ];
-
         return fingers.every(finger => finger[1] < wrist[1] - 50);
     }
     return false;
@@ -121,10 +147,57 @@ function isThumbsDown(predictions) {
             predictions[0].annotations.ringFinger[3],
             predictions[0].annotations.pinky[3]
         ];
-
         return thumbTip[1] > indexBase[1] + 50 && fingers.every(finger => finger[1] > wrist[1] - 50);
     }
     return false;
+}
+
+// Expression detection setup
+function setupExpressionDetection() {
+    const displaySize = { width: video.width, height: video.height };
+    faceapi.matchDimensions(canvas, displaySize);
+
+    setInterval(async () => {
+        const detections = await faceapi.detectAllFaces(
+            video,
+            new faceapi.TinyFaceDetectorOptions()
+        ).withFaceExpressions();
+
+        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        faceapi.draw.drawDetections(canvas, resizedDetections);
+        faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+
+        updateExpressionUI(detections);
+    }, EXPRESSION_CHECK_INTERVAL);
+}
+
+function updateExpressionUI(detections) {
+    const emoji = document.getElementById('emoji');
+    const textStatus = document.getElementById('textStatus');
+    const app = document.getElementById('app');
+
+    if (detections.length > 0) {
+        detections.forEach((element) => {
+            let status = '';
+            let valueStatus = 0.0;
+            
+            for (const [key, value] of Object.entries(element.expressions)) {
+                if (value > valueStatus) {
+                    status = key;
+                    valueStatus = value;
+                }
+            }
+
+            emoji.innerHTML = statusIcons[status].emoji;
+            textStatus.innerHTML = status;
+            app.style.backgroundColor = statusIcons[status].color;
+        });
+    } else {
+        emoji.innerHTML = statusIcons['default'].emoji;
+        textStatus.innerHTML = '...';
+        app.style.backgroundColor = statusIcons['default'].color;
+    }
 }
 
 async function detectGestures() {
@@ -168,6 +241,7 @@ async function init() {
         preloadAudio();
         await setupCamera();
         await loadModels();
+        setupExpressionDetection();
         detectGestures();
     } catch (error) {
         console.error('Error initializing:', error);
