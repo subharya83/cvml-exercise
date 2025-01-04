@@ -1,0 +1,15 @@
+# CMakeLists.txt
+cmake_minimum_required(VERSION 3.10)
+project(DeadPixelDetector)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(OpenCV REQUIRED)
+find_package(nlohmann_json REQUIRED)
+
+add_executable(detector main.cpp)
+target_link_libraries(detector PRIVATE 
+    ${OpenCV_LIBS}
+    nlohmann_json::nlohmann_json
+)
