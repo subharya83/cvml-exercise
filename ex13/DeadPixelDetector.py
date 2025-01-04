@@ -1,10 +1,12 @@
 import cv2
 import numpy as np
 from scipy.spatial.distance import mahalanobis
-from typing import List, Tuple, Optional
-from dataclasses import dataclass
+from typing import List, Tuple, Optional, Dict
+from dataclasses import dataclass, asdict
 import logging
 from pathlib import Path
+import json
+from datetime import datetime
 
 @dataclass
 class PixelDefect:
@@ -12,8 +14,22 @@ class PixelDefect:
     x: int
     y: int
     confidence: float
-    persistence: int = 0  # Number of frames the defect has been detected
-    
+    start_frame: int
+    end_frame: Optional[int] = None
+    total_appearances: int = 1
+
+    def to_dict(self) -> Dict:
+        """Convert defect information to dictionary format."""
+        return {
+            'x': self.x,
+            'y': self.y,
+            'confidence': round(float(self.confidence), 3),
+            'start_frame': self.start_frame,
+            'end_frame': self.end_frame,
+            'total_appearances': self.total_appearances,
+            'span': self.end_frame - self.start_frame if self.end_frame else None
+        }
+
 class DeadPixelDetector:
     def __init__(self, 
                  distance_threshold: float = 3.0,
@@ -30,9 +46,10 @@ class DeadPixelDetector:
         self.distance_threshold = distance_threshold
         self.min_persistence = min_persistence
         self.noise_threshold = noise_threshold
-        self.persistent_defects = {}  # Track defects across frames
+        self.active_defects: Dict[Tuple[int, int], PixelDefect] = {}
+        self.completed_defects: List[PixelDefect] = []
         self._setup_logging()
-        
+
     def _setup_logging(self):
         """Set up logging configuration."""
         logging.basicConfig(
@@ -40,17 +57,9 @@ class DeadPixelDetector:
             format='%(asctime)s - %(levelname)s - %(message)s'
         )
         self.logger = logging.getLogger(__name__)
-        
+
     def compute_difference_matrices(self, frame: np.ndarray) -> List[np.ndarray]:
-        """
-        Generate 8 difference matrices for the given frame.
-        
-        Args:
-            frame: Input grayscale frame
-            
-        Returns:
-            List of difference matrices for 8 directions
-        """
+        """Generate 8 difference matrices for the given frame."""
         directions = [
             (1, 1), (1, 0), (1, -1), (0, -1),
             (-1, -1), (-1, 0), (-1, 1), (0, 1)
@@ -59,7 +68,6 @@ class DeadPixelDetector:
         
         for dx, dy in directions:
             shifted_frame = np.roll(frame, shift=(dx, dy), axis=(0, 1))
-            # Apply border handling
             if dx > 0:
                 shifted_frame[0, :] = frame[0, :]
             elif dx < 0:
@@ -73,60 +81,33 @@ class DeadPixelDetector:
             diff_matrices.append(diff)
             
         return diff_matrices
-    
-    def compute_gradient_matrices(self, 
-                                diff_matrices: List[np.ndarray]
-                                ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Compute first and second degree gradient matrices.
-        
-        Args:
-            diff_matrices: List of difference matrices
-            
-        Returns:
-            Tuple of first and second degree gradient matrices
-        """
+
+    def compute_gradient_matrices(self, diff_matrices: List[np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
+        """Compute first and second degree gradient matrices."""
         first_degree = np.stack(diff_matrices[:4], axis=-1)
         second_degree = np.stack(diff_matrices, axis=-1)
         
-        # Apply Gaussian smoothing to reduce noise
         for i in range(first_degree.shape[-1]):
-            first_degree[..., i] = cv2.GaussianBlur(
-                first_degree[..., i], (3, 3), 0.5
-            )
+            first_degree[..., i] = cv2.GaussianBlur(first_degree[..., i], (3, 3), 0.5)
         for i in range(second_degree.shape[-1]):
-            second_degree[..., i] = cv2.GaussianBlur(
-                second_degree[..., i], (3, 3), 0.5
-            )
+            second_degree[..., i] = cv2.GaussianBlur(second_degree[..., i], (3, 3), 0.5)
             
         return first_degree, second_degree
-    
-    def detect_defective_pixels(self, 
-                              frame: np.ndarray
-                              ) -> List[PixelDefect]:
-        """
-        Detect defective pixels in the frame using statistical gradient analysis.
-        
-        Args:
-            frame: Input grayscale frame
-            
-        Returns:
-            List of detected pixel defects
-        """
+
+    def detect_defective_pixels(self, frame: np.ndarray) -> List[PixelDefect]:
+        """Detect defective pixels in the frame."""
         diff_matrices = self.compute_difference_matrices(frame)
         first_grad, second_grad = self.compute_gradient_matrices(diff_matrices)
         
         candidates = []
         h, w = frame.shape
         
-        # Create meshgrid for vectorized operations
         y_coords, x_coords = np.mgrid[2:h-2, 2:w-2]
         
         for y, x in zip(y_coords.flatten(), x_coords.flatten()):
             first_grad_vector = first_grad[y, x, :].flatten()
             second_grad_vector = second_grad[y, x, :].flatten()
             
-            # Skip if gradient vectors are too small (likely uniform region)
             if np.mean(first_grad_vector) < self.noise_threshold:
                 continue
                 
@@ -143,63 +124,83 @@ class DeadPixelDetector:
                 )
                 
                 if distance > self.distance_threshold:
-                    candidates.append(PixelDefect(x, y, distance))
+                    candidates.append(PixelDefect(x=x, y=y, confidence=distance, start_frame=0))
                     
             except np.linalg.LinAlgError:
                 continue
                 
         return candidates
-    
-    def update_persistent_defects(self, 
-                                current_defects: List[PixelDefect]
-                                ) -> List[PixelDefect]:
-        """
-        Update and track persistent defects across frames.
-        
-        Args:
-            current_defects: List of defects detected in current frame
+
+    def update_defects(self, current_defects: List[PixelDefect], frame_number: int):
+        """Update tracking of dead pixels across frames."""
+        # Check current defects against active defects
+        current_coords = set()
+        for current in current_defects:
+            matched = False
+            current_coord = (current.x, current.y)
+            current_coords.add(current_coord)
             
-        Returns:
-            List of confirmed persistent defects
-        """
-        # Update existing defects
-        for coord, defect in list(self.persistent_defects.items()):
-            found = False
-            for current in current_defects:
-                if (abs(current.x - defect.x) <= 1 and 
-                    abs(current.y - defect.y) <= 1):
-                    defect.persistence += 1
-                    found = True
-                    break
-            
-            if not found:
-                defect.persistence -= 1
-                if defect.persistence < 0:
-                    del self.persistent_defects[coord]
-                    
-        # Add new defects
-        for defect in current_defects:
-            coord = (defect.x, defect.y)
-            if coord not in self.persistent_defects:
-                self.persistent_defects[coord] = defect
+            if current_coord in self.active_defects:
+                defect = self.active_defects[current_coord]
+                defect.total_appearances += 1
+                defect.confidence = max(defect.confidence, current.confidence)
+                matched = True
                 
-        # Return only confirmed persistent defects
-        return [
-            defect for defect in self.persistent_defects.values()
-            if defect.persistence >= self.min_persistence
-        ]
-    
+            if not matched:
+                current.start_frame = frame_number
+                self.active_defects[current_coord] = current
+
+        # Check for ended defects
+        ended_coords = []
+        for coord, defect in self.active_defects.items():
+            if coord not in current_coords:
+                if defect.total_appearances >= self.min_persistence:
+                    defect.end_frame = frame_number - 1
+                    self.completed_defects.append(defect)
+                ended_coords.append(coord)
+                
+        for coord in ended_coords:
+            del self.active_defects[coord]
+
+    def save_results(self, output_path: str):
+        """Save detection results to JSON file."""
+        # Finalize any remaining active defects
+        for defect in self.active_defects.values():
+            if defect.total_appearances >= self.min_persistence:
+                defect.end_frame = defect.start_frame + defect.total_appearances - 1
+                self.completed_defects.append(defect)
+
+        # Prepare results
+        results = {
+            'metadata': {
+                'timestamp': datetime.now().isoformat(),
+                'settings': {
+                    'distance_threshold': self.distance_threshold,
+                    'min_persistence': self.min_persistence,
+                    'noise_threshold': self.noise_threshold
+                }
+            },
+            'defects': [defect.to_dict() for defect in self.completed_defects]
+        }
+
+        # Save to file
+        with open(output_path, 'w') as f:
+            json.dump(results, f, indent=2)
+            
+        self.logger.info(f"Results saved to {output_path}")
+        self.logger.info(f"Total dead pixels detected: {len(self.completed_defects)}")
+
     def process_video(self,
                      input_path: str,
-                     output_path: Optional[str] = None,
-                     display: bool = False):
+                     json_output_path: str,
+                     video_output_path: Optional[str] = None):
         """
-        Process the video and detect dead pixels.
+        Process video and detect dead pixels.
         
         Args:
             input_path: Path to input video
-            output_path: Optional path to save processed video
-            display: Whether to display the processed frames
+            json_output_path: Path to save JSON results
+            video_output_path: Optional path to save visualization video
         """
         input_path = Path(input_path)
         if not input_path.exists():
@@ -208,58 +209,50 @@ class DeadPixelDetector:
         cap = cv2.VideoCapture(str(input_path))
         out = None
         
-        if output_path:
+        if video_output_path:
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             fps = int(cap.get(cv2.CAP_PROP_FPS))
             width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+            out = cv2.VideoWriter(video_output_path, fourcc, fps, (width, height))
             
         frame_count = 0
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         
         self.logger.info(f"Processing video: {input_path}")
-        self.logger.info(f"Total frames: {total_frames}")
         
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
                 
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            current_defects = self.detect_defective_pixels(gray_frame)
+            self.update_defects(current_defects, frame_count)
+            
+            if video_output_path:
+                # Visualize active and completed defects
+                for defect in self.active_defects.values():
+                    confidence_color = np.clip(defect.confidence / 10.0, 0, 1)
+                    color = (
+                        0,
+                        int(255 * (1 - confidence_color)),
+                        int(255 * confidence_color)
+                    )
+                    cv2.circle(frame, (defect.x, defect.y), 2, color, -1)
+                out.write(frame)
+            
             frame_count += 1
             if frame_count % 100 == 0:
-                self.logger.info(f"Processing frame {frame_count}/{total_frames}")
+                self.logger.info(f"Processed frame {frame_count}/{total_frames}")
                 
-            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            candidates = self.detect_defective_pixels(gray_frame)
-            persistent_defects = self.update_persistent_defects(candidates)
-            
-            # Visualize defects
-            for defect in persistent_defects:
-                # Color based on confidence (red->yellow->green)
-                confidence_color = np.clip(defect.confidence / 10.0, 0, 1)
-                color = (
-                    0,
-                    int(255 * (1 - confidence_color)),
-                    int(255 * confidence_color)
-                )
-                cv2.circle(frame, (defect.x, defect.y), 2, color, -1)
-                
-            if out:
-                out.write(frame)
-                
-            if display:
-                cv2.imshow('Dead Pixel Detection', frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-                    
-        self.logger.info("Processing complete")
-        self.logger.info(f"Total persistent defects found: {len(self.persistent_defects)}")
-        
         cap.release()
         if out:
             out.release()
         cv2.destroyAllWindows()
+        
+        # Save results to JSON
+        self.save_results(json_output_path)
 
 def main():
     """Example usage of the DeadPixelDetector."""
@@ -272,12 +265,11 @@ def main():
     try:
         detector.process_video(
             input_path="input_video.mp4",
-            output_path="output_video.mp4",
-            display=True
+            json_output_path="dead_pixels_report.json",
+            video_output_path="output_video.mp4"  # Optional
         )
     except Exception as e:
         logging.error(f"Error processing video: {e}")
 
 if __name__ == "__main__":
     main()
-    
