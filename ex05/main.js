@@ -1,42 +1,42 @@
 // Constants
-const MAX_GESTURE_DELAY = 500;
-const MAX_FACE_DELAY = 5000;
-const AUDIO_COOLDOWN = 5000;
-const EXPRESSION_CHECK_INTERVAL = 100;
+const MAX_GESTURE_DELAY = 500; // General detection interval
+const MAX_FACE_DELAY = 5000; // Face visibility wait interval
+const AUDIO_COOLDOWN = 5000; // 5 seconds
 
-// Models and Elements
+// Models and Video Element
 let handposeModel;
 let blazefaceModel;
 let video;
-let canvas;
 let lastFaceDetected = true;
 let userLeftTimeout = null;
-
-// Status Icons for Expressions
-const statusIcons = {
-    default: { emoji: '😐', color: '#02c19c' },
-    neutral: { emoji: '😐', color: '#54adad' },
-    happy: { emoji: '😀', color: '#148f77' },
-    sad: { emoji: '😥', color: '#767e7e' },
-    angry: { emoji: '😠', color: '#b64518' },
-    fearful: { emoji: '😨', color: '#90931d' },
-    disgusted: { emoji: '🤢', color: '#1a8d1a' },
-    surprised: { emoji: '😲', color: '#1230ce' }
-};
 
 // Audio Elements
 const audioFiles = {
     thumbsUp: new Audio('/audio/thumbs_up.mp3'),
     handRaised: new Audio('/audio/hand_raised.mp3'),
     userLeft: new Audio('/audio/user_left.mp3'),
-    thumbsDown: new Audio('/audio/thumbs_down.mp3')
+    thumbsDown: new Audio('/audio/thumbs_down.mp3'),
+    happy: new Audio('/audio/happy.mp3'),
+    sad: new Audio('/audio/sad.mp3'),
+    surprised: new Audio('/audio/surprised.mp3'),
+    angry: new Audio('/audio/angry.mp3'),
+    disgusted: new Audio('/audio/disgusted.mp3'),
+    fearful: new Audio('/audio/fearful.mp3'),
+    neutral: new Audio('/audio/neutral.mp3')
 };
 
 let lastAudioPlay = {
     thumbsUp: 0,
     handRaised: 0,
     userLeft: 0,
-    thumbsDown: 0
+    thumbsDown: 0,
+    happy: 0,
+    sad: 0,
+    surprised: 0,
+    angry: 0,
+    disgusted: 0,
+    fearful: 0,
+    neutral: 0
 };
 
 // Helper Functions
@@ -73,8 +73,6 @@ function showAlert(message, audioType) {
 
 async function setupCamera() {
     video = document.getElementById('video');
-    canvas = document.getElementById('canvas');
-    
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         video.srcObject = stream;
@@ -94,26 +92,17 @@ async function setupCamera() {
 
 async function loadModels() {
     try {
-        // Load hand and face detection models
         handposeModel = await handpose.load();
         blazefaceModel = await blazeface.load();
-        
-        // Load face-api.js models
-        await Promise.all([
-            faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
-            faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
-            faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
-            faceapi.nets.faceExpressionNet.loadFromUri('./models')
-        ]);
-        
-        console.log('All models loaded successfully');
+        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+        await faceapi.nets.faceExpressionNet.loadFromUri('/models');
+        console.log('Models loaded successfully');
     } catch (error) {
         console.error('Error loading models:', error);
         showAlert('Error loading detection models', null);
     }
 }
 
-// Existing gesture detection functions
 function isHandRaised(predictions) {
     if (predictions.length > 0) {
         const wrist = predictions[0].annotations.palmBase[0];
@@ -123,6 +112,7 @@ function isHandRaised(predictions) {
             predictions[0].annotations.ringFinger[3],
             predictions[0].annotations.pinky[3]
         ];
+
         return fingers.every(finger => finger[1] < wrist[1] - 50);
     }
     return false;
@@ -147,57 +137,10 @@ function isThumbsDown(predictions) {
             predictions[0].annotations.ringFinger[3],
             predictions[0].annotations.pinky[3]
         ];
+
         return thumbTip[1] > indexBase[1] + 50 && fingers.every(finger => finger[1] > wrist[1] - 50);
     }
     return false;
-}
-
-// Expression detection setup
-function setupExpressionDetection() {
-    const displaySize = { width: video.width, height: video.height };
-    faceapi.matchDimensions(canvas, displaySize);
-
-    setInterval(async () => {
-        const detections = await faceapi.detectAllFaces(
-            video,
-            new faceapi.TinyFaceDetectorOptions()
-        ).withFaceExpressions();
-
-        const resizedDetections = faceapi.resizeResults(detections, displaySize);
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-        faceapi.draw.drawDetections(canvas, resizedDetections);
-        faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
-
-        updateExpressionUI(detections);
-    }, EXPRESSION_CHECK_INTERVAL);
-}
-
-function updateExpressionUI(detections) {
-    const emoji = document.getElementById('emoji');
-    const textStatus = document.getElementById('textStatus');
-    const app = document.getElementById('app');
-
-    if (detections.length > 0) {
-        detections.forEach((element) => {
-            let status = '';
-            let valueStatus = 0.0;
-            
-            for (const [key, value] of Object.entries(element.expressions)) {
-                if (value > valueStatus) {
-                    status = key;
-                    valueStatus = value;
-                }
-            }
-
-            emoji.innerHTML = statusIcons[status].emoji;
-            textStatus.innerHTML = status;
-            app.style.backgroundColor = statusIcons[status].color;
-        });
-    } else {
-        emoji.innerHTML = statusIcons['default'].emoji;
-        textStatus.innerHTML = '...';
-        app.style.backgroundColor = statusIcons['default'].color;
-    }
 }
 
 async function detectGestures() {
@@ -225,6 +168,41 @@ async function detectGestures() {
             }
             lastFaceDetected = faceDetected;
         }
+
+        // Facial Expression Detection
+        const expressions = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+            .withFaceExpressions();
+        
+        if (expressions.length > 0) {
+            const expression = expressions[0].expressions;
+            const maxExpression = Object.keys(expression).reduce((a, b) => expression[a] > expression[b] ? a : b);
+
+            switch (maxExpression) {
+                case 'happy':
+                    showAlert('😊 Happy detected!', 'happy');
+                    break;
+                case 'sad':
+                    showAlert('😢 Sad detected!', 'sad');
+                    break;
+                case 'angry':
+                    showAlert('😠 Angry detected!', 'angry');
+                    break;
+                case 'surprised':
+                    showAlert('😮 Surprised detected!', 'surprised');
+                    break;
+                case 'disgusted':
+                    showAlert('🤢 Disgusted detected!', 'disgusted');
+                    break;
+                case 'fearful':
+                    showAlert('😨 Fearful detected!', 'fearful');
+                    break;
+                case 'neutral':
+                    showAlert('😐 Neutral detected!', 'neutral');
+                    break;
+                default:
+                    break;
+            }
+        }
     } catch (error) {
         console.error('Error in detection:', error);
     }
@@ -241,7 +219,6 @@ async function init() {
         preloadAudio();
         await setupCamera();
         await loadModels();
-        setupExpressionDetection();
         detectGestures();
     } catch (error) {
         console.error('Error initializing:', error);
