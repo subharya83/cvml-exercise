@@ -108,18 +108,18 @@ ffmpeg -ss 05 -t 2 -i $IP -vf $OPTS -loop 0 $OP
 
 ### Code Organization
 ```shell
-tree
-
 ├── buildIndex.py
 ├── embeddings.py
 ├── getSimilarity.py
-├── __pycache__
-│   └── embeddings.cpython-310.pyc
+├── input
+│   ├── 000100.jpg
+│   ├── 000200.jpg
+│   └── test.mp4
+├── output
 ├── queryDataset.py
-└── README.md
-
-1 directory, 6 files
-
+├── README.md
+├── requirements.txt
+└── weights
 ```
 ### Test cases
 

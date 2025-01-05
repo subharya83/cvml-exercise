@@ -8,6 +8,16 @@ import faiss
 import numpy as np
 from annoy import AnnoyIndex
 
+def normalize_embeddings(embeddings):
+    """
+    Normalize embeddings to unit length for cosine similarity.
+    
+    :param embeddings: Numpy array of embeddings
+    :return: Normalized embeddings
+    """
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    return embeddings / norms
+
 def process_input(input_sequence, output_index):
     """
     Process video and generate embeddings for sampled frames.
@@ -64,6 +74,9 @@ def process_input(input_sequence, output_index):
     # Convert embeddings list to numpy array
     embeddings_array = np.array(embeddings_list).astype('float32')
     
+    # Normalize embeddings for cosine similarity
+    embeddings_array = normalize_embeddings(embeddings_array)
+    
     # Determine the index format based on the output file extension
     if output_index.endswith('.faiss'):
         # Build FAISS index
@@ -118,3 +131,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    

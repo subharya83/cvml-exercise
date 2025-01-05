@@ -7,6 +7,16 @@ import faiss
 import numpy as np
 from annoy import AnnoyIndex
 
+def normalize_embeddings(embeddings):
+    """
+    Normalize embeddings to unit length for cosine similarity.
+    
+    :param embeddings: Numpy array of embeddings
+    :return: Normalized embeddings
+    """
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    return embeddings / norms
+
 def search_most_similar_frame(query_image, index_file):
     """
     Find the most similar frame from the video index.
@@ -22,14 +32,16 @@ def search_most_similar_frame(query_image, index_file):
     qi = Image.open(query_image).convert('RGB')
     query_embedding = emb_gen.generate_embedding(qi).astype('float32')
     
+    # Normalize query embedding for cosine similarity
+    query_embedding = normalize_embeddings(query_embedding.reshape(1, -1))
+    
     # Determine the index format based on the file extension
     if index_file.endswith('.faiss'):
         # Load FAISS index
         index = faiss.read_index(index_file)
-        query_embedding = query_embedding.reshape(1, -1)
         distances, indices = index.search(query_embedding, 1)
         best_frame_index = indices[0][0]
-        best_similarity = 1 - distances[0][0]  # Convert L2 distance to similarity
+        best_similarity = 1 - (distances[0][0] / 2)  # Convert L2 distance to cosine similarity
         
         # Load frame metadata
         metadata_file = index_file + '.meta'
@@ -39,11 +51,12 @@ def search_most_similar_frame(query_image, index_file):
         
     elif index_file.endswith('.ann'):
         # Load Annoy index
-        dimension = len(query_embedding)
+        dimension = len(query_embedding[0])
         index = AnnoyIndex(dimension, 'euclidean')
         index.load(index_file)
-        best_frame_index = index.get_nns_by_vector(query_embedding, 1, include_distances=True)[0][0]
-        best_similarity = 1 - index.get_nns_by_vector(query_embedding, 1, include_distances=True)[1][0]  # Convert Euclidean distance to similarity
+        best_frame_index = index.get_nns_by_vector(query_embedding[0], 1, include_distances=True)[0][0]
+        distance = index.get_nns_by_vector(query_embedding[0], 1, include_distances=True)[1][0]
+        best_similarity = 1 - (distance**2 / 2)  # Convert Euclidean distance to cosine similarity
         
         # Load frame metadata
         metadata_file = index_file + '.meta'
@@ -58,7 +71,7 @@ def search_most_similar_frame(query_image, index_file):
         best_similarity = -1
         best_frame_index = 0
         for i, frame_info in enumerate(frame_index):
-            similarity = emb_gen.compute_similarity(query_embedding, frame_info['embedding'])
+            similarity = emb_gen.compute_similarity(query_embedding[0], frame_info['embedding'])
             if similarity > best_similarity:
                 best_similarity = similarity
                 best_frame_index = i
@@ -87,7 +100,7 @@ def main():
     # Print results
     print(f"Most Similar Frame:")
     print(f"Frame Number: {best_frame['frame_number']}")
-    print(f"Similarity: {similarity}")
+    print(f"Cosine Similarity: {similarity}")
 
 if __name__ == '__main__':
     main()
