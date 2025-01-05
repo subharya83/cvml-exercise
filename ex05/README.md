@@ -50,19 +50,17 @@ The project addresses the need for natural, non-verbal human-computer interactio
 
 1. Project Structure:
    ```
-   /project-root
-   ├── index.html
-   ├── styles.css
-   ├── script.js
-   ├── /audio
-   │   ├── thumbs_up.mp3
-   │   ├── thumbs_down.mp3
-   │   ├── hand_raised.mp3
-   │   └── user_left.mp3
-   ├── /models
-   └── /libraries
-       ├── face-api.min.js
-       └── tensorflow.js
+├── index.html
+├── lib
+│   ├── blazeface.js
+│   ├── face-api.min.js
+│   ├── handpose.min.js
+│   ├── mobilenet.js
+│   ├── tfjs.js
+│   └── tf.min.js
+├── main.js
+├── README.md
+└── styles.css
    ```
 
 2. Core Components:
