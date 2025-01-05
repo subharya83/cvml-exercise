@@ -1,0 +1,22 @@
+# Core dependencies
+numpy>=1.21.0
+pandas>=1.3.0
+scikit-learn>=1.0.0
+
+# MediaPipe for pose detection (used in getPoseLandmarks.py)
+mediapipe>=0.8.9.1
+
+# OpenCV for video processing (used in getPoseLandmarks.py)
+opencv-python>=4.5.0
+
+# Progress bar for video processing (used in getPoseLandmarks.py)
+tqdm>=4.62.0
+
+# Argument parsing (used in both scripts)
+argparse>=1.4.0
+
+# JSON handling (used in CycleDetection.py)
+json>=2.0.9
+
+# Path handling (used in both scripts)
+pathlib>=1.0.1
