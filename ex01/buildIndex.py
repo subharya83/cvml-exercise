@@ -4,7 +4,9 @@ import cv2
 from PIL import Image
 from embeddings import Embeddings
 import json
-
+import faiss
+import numpy as np
+from annoy import AnnoyIndex
 
 def process_input(input_sequence, output_index):
     """
@@ -27,6 +29,7 @@ def process_input(input_sequence, output_index):
     
     # Prepare output data structure
     frame_index = []
+    embeddings_list = []
     
     try:
         frame_count = 0
@@ -51,6 +54,7 @@ def process_input(input_sequence, output_index):
                 'embedding': e.tolist()
             }
             frame_index.append(frame_info)
+            embeddings_list.append(e)
             frame_count += 1
 
     finally:
@@ -61,17 +65,39 @@ def process_input(input_sequence, output_index):
         else:
             print('Image sequence processed')
     
-    # Save index to file
-    with open(output_index, 'w') as f:
-        json.dump(frame_index, f)
+    # Convert embeddings list to numpy array
+    embeddings_array = np.array(embeddings_list).astype('float32')
     
-    print(f"Processed {len(frame_index)} frames. Index saved to {output_index}")
+    # Determine the index format based on the output file extension
+    if output_index.endswith('.faiss'):
+        # Build FAISS index
+        dimension = embeddings_array.shape[1]
+        index = faiss.IndexFlatL2(dimension)  # Using L2 distance for NN search
+        index.add(embeddings_array)
+        faiss.write_index(index, output_index)
+        print(f"FAISS index saved to {output_index}")
+    elif output_index.endswith('.ann'):
+        # Build Annoy index
+        dimension = embeddings_array.shape[1]
+        index = AnnoyIndex(dimension, 'euclidean')  # Using Euclidean distance for NN search
+        for i, embedding in enumerate(embeddings_array):
+            index.add_item(i, embedding)
+        index.build(10)  # 10 trees
+        index.save(output_index)
+        print(f"Annoy index saved to {output_index}")
+    else:
+        # Save as JSON
+        with open(output_index, 'w') as f:
+            json.dump(frame_index, f)
+        print(f"JSON index saved to {output_index}")
+    
+    print(f"Processed {len(frame_index)} frames.")
 
 def main():
     # Set up argument parsing
     parser = argparse.ArgumentParser(description='Generate embeddings for video frames')
     parser.add_argument('-i', help='Path to input video or directory containing images')
-    parser.add_argument('-o', help='Path to output embedding index file')
+    parser.add_argument('-o', help='Path to output embedding index file [.faiss|.ann|.json]')
    
     # Parse arguments
     args = parser.parse_args()
