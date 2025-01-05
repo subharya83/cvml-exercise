@@ -49,7 +49,8 @@ The project addresses the need for natural, non-verbal human-computer interactio
 ### Code Organization
 
 1. Project Structure:
-   ```
+
+```
 ├── index.html
 ├── lib
 │   ├── blazeface.js
@@ -61,7 +62,7 @@ The project addresses the need for natural, non-verbal human-computer interactio
 ├── main.js
 ├── README.md
 └── styles.css
-   ```
+```
 
 2. Core Components:
    - Camera setup and video stream management
