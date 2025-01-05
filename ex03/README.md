@@ -72,6 +72,7 @@ ffmpeg -i /path/to/screen.webm -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -c:v libx264 
 │   └── results.json
 ├── README.md
 ├── ScreenGrabAnalyzer.py
+
 └── weights
     ├── Download.md
     └── git-base-textcaps
@@ -177,3 +178,25 @@ ffmpeg -i /path/to/screen.webm -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -c:v libx264 
    - Comprehensive error logging
    - Recovery mechanisms
    - Validation checks
+
+### MultiProcessing optimization
+
+```shell
+time python3 ScreenGrabAnalyzer.py -i input/testdata.mp4 -o output.json
+Analysis complete. Processed 6 scenes.
+Writing results to output.json
+
+real	2m59.443s
+user	14m40.914s
+sys	1m35.992s
+```
+
+```shell
+time python3 ScreenGrabAnalyzerMP.py -i input/testdata.mp4 -o output.json
+Analysis complete. Processed 6 scenes.
+Writing results to output.json
+
+real	3m7.505s
+user	10m56.916s
+sys	0m43.451s
+```
