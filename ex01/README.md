@@ -5,7 +5,7 @@ a video or a directory containing the frames extracted from the video.
 
 Query Image/Frame |  Video (Shown as GIF) | Result |
 ------------------|-----------------------|--------|
-![Query](./data/000100.jpg "Frame 100") | ![Video](../assets/ex01-test.gif "Video") | Frame Number: 99 | 
+![Query](./input/000100.jpg "Frame 100") | ![Video](../assets/ex01-test.gif "Video") | Frame Number: 99 | 
 
 ### Problem formulation
 
@@ -91,7 +91,6 @@ tree -L 1
 
 ├── frames
 ├── rTDaZoDDW5g.mp4
-├── testframes
 └── test.mp4
 
 2 directories, 2 files
@@ -116,7 +115,7 @@ ffmpeg -ss 05 -t 2 -i $IP -vf $OPTS -loop 0 $OP
 │   ├── 000200.jpg
 │   └── test.mp4
 ├── output
-├── queryDataset.py
+├── queryinputset.py
 ├── README.md
 ├── requirements.txt
 └── weights
@@ -126,35 +125,58 @@ ffmpeg -ss 05 -t 2 -i $IP -vf $OPTS -loop 0 $OP
 1. Image Similarity
 
 ```shell
-python3 getSimilarity.py -q ./data/000010.jpg -t ./data/000011.jpg
+python3 getSimilarity.py -q ./input/000010.jpg -t ./input/000011.jpg
 Image Similarity: 0.9946704506874084
 ```
 2. Building index for future query
 ```shell
 # Using sequence of images as input
-python3 buildIndex.py -i ./data/testframes/ -o ./output/testIndexF.json
+python3 buildIndex.py -i ./input/testframes/ -o ./output/testIndexF.json
 Image sequence processed
 Processed 300 frames. Index saved to ./output/testIndexF.json
 
 # Using video as input
-python3 buildIndex.py -i ./data/test.mp4 -o ./output/testIndexV.json
+python3 buildIndex.py -i ./input/test.mp4 -o ./output/testIndexV.json
 Video processed
 Processed 300 frames. Index saved to ./output/testIndexV.json
+
+# Using FAISS for indexing
+python3 buildIndex.py -i ./input/test.mp4 -o ./output/testIndexV.faiss
+Video processed
+Processed 300 frames. FAISS index saved to ./output/testIndexV.faiss
+Frame metadata saved to ./output/testIndexV.faiss.meta
+
+# Using Annoy for indexing
+python3 buildIndex.py -i ./input/test.mp4 -o ./output/testIndexV.ann
+Video processed
+Processed 300 frames. Annoy index saved to ./output/testIndexV.ann
+Frame metadata saved to ./output/testIndexV.ann.meta
+
 ```
 3. Search and retrieval
 
 ```shell
 # Query against frame based imdex
-python3 queryDataset.py -q ./data/000100.jpg -i ./output/testIndexV.json
+python3 queryDataset.py -q ./input/000100.jpg -i ./output/testIndexV.json
 Most Similar Frame:
 Frame Number: 99
 Cosine Similarity: 0.8103252220706153
 
 # Query against video based index 
-python3 queryDataset.py -q ./data/000100.jpg -i ./output/testIndexF.json
+python3 queryDataset.py -q ./input/000100.jpg -i ./output/testIndexF.json
 Most Similar Frame:
 Frame Number: 99
 Cosine Similarity: 1.0000000046178263
-```
 
-### Further Optimizations and improvements
+# Query against FAISS index
+python3 queryDataset.py -q ./input/000100.jpg -i ./output/testIndexV.faiss
+Most Similar Frame:
+Frame Number: 99
+Cosine Similarity: 0.998
+
+# Query against Annoy index
+python3 queryDataset.py -q ./input/000100.jpg -i ./output/testIndexV.ann
+Most Similar Frame:
+Frame Number: 99
+Cosine Similarity: 0.997
+```
