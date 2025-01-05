@@ -14,7 +14,7 @@ class Embeddings:
         :param download_weights: Whether to download weights if not present
         """
         # Determine weights file path
-        weights_dir = os.path.join(os.getcwd(), '../weights')
+        weights_dir = os.path.join(os.getcwd(), 'weights')
         os.makedirs(weights_dir, exist_ok=True)
         
         # Mapping of model names to their weight URLs and local filenames

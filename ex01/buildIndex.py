@@ -28,8 +28,8 @@ def process_input(input_sequence, output_index):
             seq = sorted(os.listdir(input_sequence))
     
     # Prepare output data structure
-    frame_index = []
-    embeddings_list = []
+    frame_metadata = []  # Store frame numbers or other metadata
+    embeddings_list = []  # Store embeddings
     
     try:
         frame_count = 0
@@ -48,12 +48,8 @@ def process_input(input_sequence, output_index):
                 frame = Image.open(filename).convert('RGB')
 
             e = emb_gen.generate_embedding(frame)
-            # Store frame information
-            frame_info = {
-                'frame_number': frame_count,
-                'embedding': e.tolist()
-            }
-            frame_index.append(frame_info)
+            # Store frame metadata
+            frame_metadata.append(frame_count)
             embeddings_list.append(e)
             frame_count += 1
 
@@ -75,7 +71,14 @@ def process_input(input_sequence, output_index):
         index = faiss.IndexFlatL2(dimension)  # Using L2 distance for NN search
         index.add(embeddings_array)
         faiss.write_index(index, output_index)
+        
+        # Save frame metadata alongside the FAISS index
+        metadata_file = output_index + '.meta'
+        with open(metadata_file, 'w') as f:
+            json.dump(frame_metadata, f)
+        
         print(f"FAISS index saved to {output_index}")
+        print(f"Frame metadata saved to {metadata_file}")
     elif output_index.endswith('.ann'):
         # Build Annoy index
         dimension = embeddings_array.shape[1]
@@ -84,20 +87,28 @@ def process_input(input_sequence, output_index):
             index.add_item(i, embedding)
         index.build(10)  # 10 trees
         index.save(output_index)
+        
+        # Save frame metadata alongside the Annoy index
+        metadata_file = output_index + '.meta'
+        with open(metadata_file, 'w') as f:
+            json.dump(frame_metadata, f)
+        
         print(f"Annoy index saved to {output_index}")
+        print(f"Frame metadata saved to {metadata_file}")
     else:
-        # Save as JSON
+        # Save as JSON (embedding + metadata)
+        frame_index = [{'frame_number': i, 'embedding': e.tolist()} for i, e in enumerate(embeddings_list)]
         with open(output_index, 'w') as f:
             json.dump(frame_index, f)
         print(f"JSON index saved to {output_index}")
     
-    print(f"Processed {len(frame_index)} frames.")
+    print(f"Processed {len(frame_metadata)} frames.")
 
 def main():
     # Set up argument parsing
     parser = argparse.ArgumentParser(description='Generate embeddings for video frames')
     parser.add_argument('-i', help='Path to input video or directory containing images')
-    parser.add_argument('-o', help='Path to output embedding index file [.faiss|.ann|.json]')
+    parser.add_argument('-o', help='Path to output embedding index file')
    
     # Parse arguments
     args = parser.parse_args()
