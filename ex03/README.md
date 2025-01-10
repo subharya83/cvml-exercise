@@ -97,6 +97,8 @@ ffmpeg -i /path/to/screen.webm -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -c:v libx264 
 4. Caption Generation: Handles image description
 5. Utilities: Common helper functions and tools
 
+![Input](../assets/ex03-arch.png)
+
 ## Test Cases
 
 ### Unit Tests
