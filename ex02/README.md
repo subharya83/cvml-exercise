@@ -74,11 +74,15 @@ yt-dlp -S ext:mp4:m4a https://www.youtube.com/shorts/DftBUdHgr9Q -o DftBUdHgr9Q.
 
 ### Key Components
 
+![Pose Trajectory Generation](../assets/ex02-01.png)
+
 1. **getPoseLandmarks.py**
    - `PoseTrajectoryTracker` class
    - Video processing functions
    - Joint coordinate extraction
    - CSV output generation
+
+![Cycle Detection](../assets/ex02-02.png)
 
 2. **CycleDetection.py**
    - Cycle detection algorithms
