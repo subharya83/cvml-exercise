@@ -1,5 +1,7 @@
-annoy==1.17.3
-faiss-cpu==1.9.0.post1
-opencv-contrib-python
-opencv-python
-opencv-python-headless
+Pillow>=9.0.0
+numpy>=1.21.0
+torch>=1.10.0
+torchvision>=0.11.0
+faiss-cpu>=1.7.0
+annoy>=1.17.0
+opencv-python>=4.5.0
