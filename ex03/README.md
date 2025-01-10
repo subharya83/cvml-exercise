@@ -1,6 +1,9 @@
 # Screen Capture Video Analysis
 
 A Python-based tool for analyzing screen recordings of news browsing sessions, extracting key information, and generating structured data output.
+
+![Input](../assets/ex03-input.gif)
+
 ## Rough Problem sketch 
 I have a video of screen capture that records a user browsing news articles from different websites that may contain images, videos and text. The screen recording at minimum last 5 minutes. I want a set of python/shell scripts that will do the following:
 * Perform scene detection using pySceneDetect 
