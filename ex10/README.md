@@ -1,6 +1,7 @@
 # Image Captioning with ResNet50 and LSTM
 
-This project implements an image captioning system using a ResNet50 backbone for feature extraction and an LSTM network for caption generation.
+This project implements an image captioning system using a ResNet50 backbone for feature 
+extraction and an LSTM network for caption generation.
 
 ## Problem Design
 
