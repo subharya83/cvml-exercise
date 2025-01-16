@@ -50,17 +50,25 @@ Given a video of an object in a relatively clear background where all frames cap
 ### Code Organization
 
 #### Project Structure
-```
-3d-reconstruction/
-├── cpp/
-│   ├── src/
-│   │   └── reconstruct.cpp
-│   └── CMakeLists.txt
-├── python/
-│   └── reconstruct.py
-└── README.md
+```shell
+├── input
+│   ├── coupe.mp4
+│   └── hummer.mp4
+├── output
+│   ├── c_coupe.ply
+│   └── p_coupe.ply
+├── ply2html.py
+├── README.md
+├── reconstruct
+├── reconstruct.cpp
+├── reconstruct.py
+└── three.min.js
 ```
 
+```shell
+# Compiling code
+ g++ -std=c++17 -o reconstruct reconstruct.cpp `pkg-config --cflags --libs opencv4`
+```
 #### Key Components
 1. PointCloudReconstructor Class:
    - Image/video loading
