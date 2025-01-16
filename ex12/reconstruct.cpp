@@ -151,46 +151,50 @@ private:
     }
 
     void triangulatePoints(const cv::Mat& img1, const cv::Mat& img2,
-                          const cv::Mat& R, const cv::Mat& t,
-                          const std::vector<cv::Point2f>& pts1,
-                          const std::vector<cv::Point2f>& pts2) {
-        Logger::debug("Beginning point triangulation");
-        size_t initial_size = point_cloud.size();
+                      const cv::Mat& R, const cv::Mat& t,
+                      const std::vector<cv::Point2f>& pts1,
+                      const std::vector<cv::Point2f>& pts2) {
+    Logger::debug("Beginning point triangulation");
+    size_t initial_size = point_cloud.size();
+    
+    // Camera matrix (assuming default parameters)
+    double focal_length = std::max(img1.cols, img1.rows);
+    cv::Point2d pp(img1.cols/2, img1.rows/2);
+    cv::Mat K = (cv::Mat_<double>(3,3) << 
+        focal_length, 0, pp.x,
+        0, focal_length, pp.y,
+        0, 0, 1);
+    
+    // Create a temporary matrix to store the result of hconcat
+    cv::Mat Rt;
+    cv::hconcat(R, t, Rt);  // Concatenate R and t horizontally
+    
+    // Projection matrices
+    cv::Mat P1 = K * cv::Mat::eye(3, 4, CV_64F);
+    cv::Mat P2 = K * Rt;  // Use the concatenated matrix
+    
+    cv::Mat points4D;
+    cv::triangulatePoints(P1, P2, pts1, pts2, points4D);
+    
+    // Convert to 3D points
+    int validPoints = 0;
+    for (int i = 0; i < points4D.cols; i++) {
+        cv::Mat x = points4D.col(i);
+        x /= x.at<float>(3);
+        CloudPoint cp;
+        cp.pt = cv::Point3d(x.at<float>(0), x.at<float>(1), x.at<float>(2));
         
-        // Camera matrix (assuming default parameters)
-        double focal_length = std::max(img1.cols, img1.rows);
-        cv::Point2d pp(img1.cols/2, img1.rows/2);
-        cv::Mat K = (cv::Mat_<double>(3,3) << 
-            focal_length, 0, pp.x,
-            0, focal_length, pp.y,
-            0, 0, 1);
-        
-        // Projection matrices
-        cv::Mat P1 = K * cv::Mat::eye(3, 4, CV_64F);
-        cv::Mat P2 = K * cv::hconcat(R, t);
-        
-        cv::Mat points4D;
-        cv::triangulatePoints(P1, P2, pts1, pts2, points4D);
-        
-        // Convert to 3D points
-        int validPoints = 0;
-        for (int i = 0; i < points4D.cols; i++) {
-            cv::Mat x = points4D.col(i);
-            x /= x.at<float>(3);
-            CloudPoint cp;
-            cp.pt = cv::Point3d(x.at<float>(0), x.at<float>(1), x.at<float>(2));
-            
-            // Get color from first image
-            cv::Point2f pt = pts1[i];
-            if (pt.x >= 0 && pt.x < img1.cols && pt.y >= 0 && pt.y < img1.rows) {
-                cp.color = img1.at<cv::Vec3b>(pt);
-                point_cloud.push_back(cp);
-                validPoints++;
-            }
+        // Get color from first image
+        cv::Point2f pt = pts1[i];
+        if (pt.x >= 0 && pt.x < img1.cols && pt.y >= 0 && pt.y < img1.rows) {
+            cp.color = img1.at<cv::Vec3b>(pt);
+            point_cloud.push_back(cp);
+            validPoints++;
         }
-        
-        Logger::debug("Added", validPoints, "new 3D points to cloud");
     }
+    
+    Logger::debug("Added", validPoints, "new 3D points to cloud");
+}
 
     void savePLY(const std::string& filename) {
         Logger::info("Saving point cloud to PLY file:", filename);
