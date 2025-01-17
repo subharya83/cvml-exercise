@@ -135,6 +135,7 @@ python3 reconstruct.py -i <input_path> -o <output_path>
 python3 refineply.py -i output/c_coupe.ply -o output/r_coupe.ply -s 0.2
 
 # Run NERF
-
+python3 NERF.py -v input/coupe.mp4 -p output/p_coupe.ply -o output/coupe-NERF.ply
 # Run Gaussian splatting
+python3 GaussianSplat.py -v input/coupe.mp4 -p output/p_coupe.ply -o output/coupe-GS.ply
 ```
