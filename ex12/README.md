@@ -138,11 +138,6 @@ Given a video of an object in a relatively clear background where all frames cap
 
 ### C++ Version
 ```bash
-# Build the project
-mkdir build && cd build
-cmake ..
-make
-
 # Run reconstruction
 ./reconstruct -i <input_path> -o <output_path>
 ```
@@ -152,9 +147,3 @@ make
 # Run reconstruction
 python reconstruct.py -i <input_path> -o <output_path>
 ```
-
-## Dependencies
-- OpenCV (>= 4.0)
-- CMake (for C++ version)
-- Python 3.6+ (for Python version)
-- NumPy

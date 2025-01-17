@@ -52,3 +52,7 @@ solution remains effective and robust over time.
 10. [Image Captioning with ResNet50 and LSTM](./ex10/README.md) 
 
 11. [Fine tuning Language Models](./ex11/README.md) 
+
+12. [Single Object 3D Reconstruction](./ex12/README.md)
+
+13. []
