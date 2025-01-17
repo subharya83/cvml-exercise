@@ -1,5 +1,4 @@
 #include <opencv2/opencv.hpp>
-#include <nlohmann/json.hpp>
 #include <vector>
 #include <unordered_map>
 #include <chrono>
@@ -7,8 +6,7 @@
 #include <sstream>
 #include <cmath>
 #include <memory>
-
-using json = nlohmann::json;
+#include <fstream>
 
 // Structure to store pixel defect information
 struct PixelDefect {
@@ -23,16 +21,14 @@ struct PixelDefect {
         : x(x_), y(y_), confidence(conf_), start_frame(start_),
           end_frame(-1), total_appearances(1) {}
 
-    json to_json() const {
-        return {
-            {"x", x},
-            {"y", y},
-            {"confidence", std::round(confidence * 1000.0) / 1000.0},
-            {"start_frame", start_frame},
-            {"end_frame", end_frame},
-            {"total_appearances", total_appearances},
-            {"span", end_frame >= 0 ? end_frame - start_frame : nullptr}
-        };
+    std::string to_csv() const {
+        std::stringstream ss;
+        ss << x << "," << y << ","
+           << std::fixed << std::setprecision(3) << confidence << ","
+           << start_frame << "," << end_frame << ","
+           << total_appearances << ","
+           << (end_frame >= 0 ? end_frame - start_frame : -1);
+        return ss.str();
     }
 };
 
@@ -53,8 +49,8 @@ public:
           noise_threshold_(noise_threshold) {}
 
     void process_video(const std::string& input_path,
-                      const std::string& json_output_path,
-                      const std::string& video_output_path = "") {
+                       const std::string& csv_output_path,
+                       const std::string& video_output_path = "") {
         cv::VideoCapture cap(input_path);
         if (!cap.isOpened()) {
             throw std::runtime_error("Could not open input video: " + input_path);
@@ -95,11 +91,11 @@ public:
             frame_count++;
             if (frame_count % 100 == 0) {
                 std::cout << "Processed frame " << frame_count << "/"
-                         << total_frames << std::endl;
+                          << total_frames << std::endl;
             }
         }
 
-        save_results(json_output_path);
+        save_results(csv_output_path);
     }
 
 private:
@@ -284,46 +280,40 @@ private:
             }
         }
 
-        // Create JSON output
-        json result;
-        result["metadata"]["timestamp"] = get_current_timestamp();
-        result["metadata"]["settings"] = {
-            {"distance_threshold", distance_threshold_},
-            {"min_persistence", min_persistence_},
-            {"noise_threshold", noise_threshold_}
-        };
-
-        result["defects"] = json::array();
-        for (const auto& defect : completed_defects_) {
-            result["defects"].push_back(defect.to_json());
-        }
-
-        // Save to file
+        // Create CSV output
         std::ofstream out(output_path);
-        out << std::setw(2) << result << std::endl;
+        out << "x,y,confidence,start_frame,end_frame,total_appearances,span\n";
+        for (const auto& defect : completed_defects_) {
+            out << defect.to_csv() << "\n";
+        }
 
         std::cout << "Results saved to " << output_path << std::endl;
         std::cout << "Total dead pixels detected: "
-                 << completed_defects_.size() << std::endl;
-    }
-
-    std::string get_current_timestamp() {
-        auto now = std::chrono::system_clock::now();
-        auto time = std::chrono::system_clock::to_time_t(now);
-        std::stringstream ss;
-        ss << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%S");
-        return ss.str();
+                  << completed_defects_.size() << std::endl;
     }
 };
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
+    if (argc < 5) {
+        std::cerr << "Usage: " << argv[0] << " -i <input_video> -o <output_csv> [-v <output_video>]" << std::endl;
+        return 1;
+    }
+
+    std::string input_video, output_csv, output_video;
+    for (int i = 1; i < argc; i += 2) {
+        std::string arg = argv[i];
+        if (arg == "-i") {
+            input_video = argv[i + 1];
+        } else if (arg == "-o") {
+            output_csv = argv[i + 1];
+        } else if (arg == "-v") {
+            output_video = argv[i + 1];
+        }
+    }
+
     try {
         DeadPixelDetector detector(3.0, 5, 0.1);
-        detector.process_video(
-            "input_video.mp4",
-            "dead_pixels_report.json",
-            "output_video.mp4"  // Optional
-        );
+        detector.process_video(input_video, output_csv, output_video);
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
