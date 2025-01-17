@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set> // Added missing header
 #include <chrono>
 #include <iomanip>
 #include <sstream>
@@ -17,7 +18,7 @@ struct PixelDefect {
     int end_frame;
     int total_appearances;
 
-    PixelDefect(int x_, int y_, double conf_, int start_)
+    PixelDefect(int x_ = 0, int y_ = 0, double conf_ = 0.0, int start_ = 0)
         : x(x_), y(y_), confidence(conf_), start_frame(start_),
           end_frame(-1), total_appearances(1) {}
 
@@ -64,9 +65,9 @@ public:
                 static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH)),
                 static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT))
             );
-            out = std::make_unique<cv::VideoWriter>(
+            out.reset(new cv::VideoWriter(
                 video_output_path, fourcc, fps, frame_size
-            );
+            ));
         }
 
         int frame_count = 0;
@@ -114,7 +115,9 @@ private:
         std::vector<cv::Mat> diff_matrices;
         diff_matrices.reserve(directions.size());
 
-        for (const auto& [dx, dy] : directions) {
+        for (const auto& dir : directions) {
+            int dx = dir.first;
+            int dy = dir.second;
             cv::Mat shifted;
             cv::Mat translation = (cv::Mat_<double>(2, 3) <<
                 1, 0, dx,
@@ -156,7 +159,7 @@ private:
             cv::insertChannel(channel, second_degree, i);
         }
 
-        return {first_degree, second_degree};
+        return std::make_pair(first_degree, second_degree);
     }
 
     double compute_mahalanobis_distance(const cv::Mat& vector,
@@ -169,7 +172,9 @@ private:
 
     std::vector<PixelDefect> detect_defective_pixels(const cv::Mat& frame) {
         auto diff_matrices = compute_difference_matrices(frame);
-        auto [first_grad, second_grad] = compute_gradient_matrices(diff_matrices);
+        auto grad_matrices = compute_gradient_matrices(diff_matrices);
+        cv::Mat first_grad = grad_matrices.first;
+        cv::Mat second_grad = grad_matrices.second;
 
         std::vector<PixelDefect> candidates;
         const int border = 2;
@@ -223,7 +228,7 @@ private:
 
         // Update active defects
         for (const auto& current : current_defects) {
-            std::pair<int, int> coord{current.x, current.y};
+            std::pair<int, int> coord(current.x, current.y);
             current_coords.insert(coord);
 
             auto it = active_defects_.find(coord);
@@ -241,7 +246,9 @@ private:
 
         // Check for ended defects
         std::vector<std::pair<int, int>> to_remove;
-        for (const auto& [coord, defect] : active_defects_) {
+        for (const auto& item : active_defects_) {
+            const std::pair<int, int>& coord = item.first;
+            const PixelDefect& defect = item.second;
             if (current_coords.find(coord) == current_coords.end()) {
                 if (defect.total_appearances >= min_persistence_) {
                     PixelDefect completed = defect;
@@ -258,7 +265,8 @@ private:
     }
 
     void visualize_defects(cv::Mat& frame) {
-        for (const auto& [coord, defect] : active_defects_) {
+        for (const auto& item : active_defects_) {
+            const PixelDefect& defect = item.second;
             double confidence_color = std::min(defect.confidence / 10.0, 1.0);
             cv::Scalar color(
                 0,
@@ -271,7 +279,8 @@ private:
 
     void save_results(const std::string& output_path) {
         // Finalize remaining active defects
-        for (const auto& [coord, defect] : active_defects_) {
+        for (const auto& item : active_defects_) {
+            const PixelDefect& defect = item.second;
             if (defect.total_appearances >= min_persistence_) {
                 PixelDefect completed = defect;
                 completed.end_frame = completed.start_frame +
