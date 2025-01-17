@@ -129,6 +129,12 @@ Color | Direct color from source images | View-dependent color prediction| Optim
 
 ### Python Version
 ```bash
-# Run reconstruction
-python reconstruct.py -i <input_path> -o <output_path>
+# Run Basic reconstruction
+python3 reconstruct.py -i <input_path> -o <output_path>
+# Run refinement using statistical anomaly suppression
+python3 refineply.py -i output/c_coupe.ply -o output/r_coupe.ply -s 0.2
+
+# Run NERF
+
+# Run Gaussian splatting
 ```
