@@ -163,10 +163,10 @@ def train_nerf(video_path, ply_path, output_path, num_epochs=50):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--video', required=True, help='Input video path')
-    parser.add_argument('--ply', required=True, help='Input PLY file path')
-    parser.add_argument('--output', required=True, help='Output PLY file path')
-    parser.add_argument('--epochs', type=int, default=50, help='Number of training epochs')
+    parser.add_argument('-v', required=True, help='Input video path')
+    parser.add_argument('-p', required=True, help='Input PLY file path')
+    parser.add_argument('-o', required=True, help='Output PLY file path')
+    parser.add_argument('-e', type=int, default=50, help='Number of training epochs')
     
     args = parser.parse_args()
-    train_nerf(args.video, args.ply, args.output, args.epochs)
+    train_nerf(args.v, args.p, args.o, args.e)
