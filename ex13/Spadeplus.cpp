@@ -1,105 +1,45 @@
 #include <opencv2/opencv.hpp>
-#include <nlohmann/json.hpp>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <chrono>
 #include <iomanip>
 #include <sstream>
 #include <cmath>
 #include <memory>
+#include <fstream>
 #include <thread>
 #include <mutex>
 #include <queue>
-#include <condition_variable>
-#include <atomic>
 
-using json = nlohmann::json;
-
-// Thread-safe queue for frame processing
-template<typename T>
-class ThreadSafeQueue {
-public:
-    void push(T value) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        queue_.push(std::move(value));
-        cond_.notify_one();
-    }
-
-    bool try_pop(T& value) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (queue_.empty()) return false;
-        value = std::move(queue_.front());
-        queue_.pop();
-        return true;
-    }
-
-    bool wait_and_pop(T& value) {
-        std::unique_lock<std::mutex> lock(mutex_);
-        cond_.wait(lock, [this] { return !queue_.empty() || done_; });
-        if (queue_.empty()) return false;
-        value = std::move(queue_.front());
-        queue_.pop();
-        return true;
-    }
-
-    void set_done() {
-        std::lock_guard<std::mutex> lock(mutex_);
-        done_ = true;
-        cond_.notify_all();
-    }
-
-    bool empty() const {
-        std::lock_guard<std::mutex> lock(mutex_);
-        return queue_.empty();
-    }
-
-private:
-    mutable std::mutex mutex_;
-    std::queue<T> queue_;
-    std::condition_variable cond_;
-    bool done_ = false;
-};
-
-// Memory-efficient frame container
-struct Frame {
-    cv::Mat data;
-    int frame_number;
-    
-    Frame() = default;
-    Frame(cv::Mat&& d, int fn) : data(std::move(d)), frame_number(fn) {}
-    Frame(const Frame&) = delete;
-    Frame& operator=(const Frame&) = delete;
-    Frame(Frame&&) = default;
-    Frame& operator=(Frame&&) = default;
-};
-
-// Enhanced pixel defect structure with memory optimization
+// Structure to store pixel defect information
 struct PixelDefect {
-    int16_t x;
-    int16_t y;
-    float confidence;
-    int32_t start_frame;
-    int32_t end_frame;
-    int32_t total_appearances;
+    int x;
+    int y;
+    double confidence;
+    int start_frame;
+    int end_frame;
+    int total_appearances;
 
-    PixelDefect(int x_, int y_, double conf_, int start_)
-        : x(static_cast<int16_t>(x_)),
-          y(static_cast<int16_t>(y_)),
-          confidence(static_cast<float>(conf_)),
-          start_frame(start_),
-          end_frame(-1),
-          total_appearances(1) {}
+    PixelDefect(int x_ = 0, int y_ = 0, double conf_ = 0.0, int start_ = 0)
+        : x(x_), y(y_), confidence(conf_), start_frame(start_),
+          end_frame(-1), total_appearances(1) {}
 
-    json to_json() const {
-        return {
-            {"x", x},
-            {"y", y},
-            {"confidence", std::round(confidence * 1000.0f) / 1000.0f},
-            {"start_frame", start_frame},
-            {"end_frame", end_frame},
-            {"total_appearances", total_appearances},
-            {"span", end_frame >= 0 ? end_frame - start_frame : nullptr}
-        };
+    std::string to_csv() const {
+        std::stringstream ss;
+        ss << x << "," << y << ","
+           << std::fixed << std::setprecision(3) << confidence << ","
+           << start_frame << "," << end_frame << ","
+           << total_appearances << ","
+           << (end_frame >= 0 ? end_frame - start_frame : -1);
+        return ss.str();
+    }
+};
+
+// Custom hash function for pixel coordinates
+struct CoordHash {
+    size_t operator()(const std::pair<int, int>& p) const {
+        return std::hash<int>()(p.first) ^ (std::hash<int>()(p.second) << 1);
     }
 };
 
@@ -107,19 +47,14 @@ class DeadPixelDetector {
 public:
     DeadPixelDetector(double distance_threshold = 3.0,
                       int min_persistence = 5,
-                      double noise_threshold = 0.1,
-                      size_t num_threads = std::thread::hardware_concurrency())
+                      double noise_threshold = 0.1)
         : distance_threshold_(distance_threshold),
           min_persistence_(min_persistence),
-          noise_threshold_(noise_threshold),
-          num_threads_(num_threads) {
-        active_defects_.reserve(1000);  // Pre-allocate space for defects
-        completed_defects_.reserve(1000);
-    }
+          noise_threshold_(noise_threshold) {}
 
     void process_video(const std::string& input_path,
-                      const std::string& json_output_path,
-                      const std::string& video_output_path = "") {
+                       const std::string& csv_output_path,
+                       const std::string& video_output_path = "") {
         cv::VideoCapture cap(input_path);
         if (!cap.isOpened()) {
             throw std::runtime_error("Could not open input video: " + input_path);
@@ -133,124 +68,101 @@ public:
                 static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH)),
                 static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT))
             );
-            out = std::make_unique<cv::VideoWriter>(
+            out.reset(new cv::VideoWriter(
                 video_output_path, fourcc, fps, frame_size
-            );
+            ));
         }
-
-        // Initialize thread pool and processing queues
-        ThreadSafeQueue<std::unique_ptr<Frame>> frame_queue;
-        ThreadSafeQueue<std::pair<int, std::vector<PixelDefect>>> result_queue;
-        std::atomic<bool> processing_complete{false};
-        std::vector<std::thread> workers;
-        std::mutex results_mutex;
-
-        // Start worker threads
-        for (size_t i = 0; i < num_threads_; ++i) {
-            workers.emplace_back([this, &frame_queue, &result_queue, &processing_complete] {
-                process_frames_worker(frame_queue, result_queue, processing_complete);
-            });
-        }
-
-        // Start result processing thread
-        std::thread result_processor([this, &result_queue, &processing_complete, &results_mutex] {
-            process_results_worker(result_queue, processing_complete, results_mutex);
-        });
 
         int frame_count = 0;
         int total_frames = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_COUNT));
+        std::queue<cv::Mat> frame_queue;
+        std::mutex queue_mutex;
+        std::mutex defects_mutex;
+        std::vector<std::thread> threads;
+        int num_threads = std::thread::hardware_concurrency();
+
+        auto worker = [&]() {
+            while (true) {
+                cv::Mat frame;
+                {
+                    std::lock_guard<std::mutex> lock(queue_mutex);
+                    if (frame_queue.empty()) {
+                        break;
+                    }
+                    frame = frame_queue.front();
+                    frame_queue.pop();
+                }
+
+                cv::Mat gray_frame;
+                cv::cvtColor(frame, gray_frame, cv::COLOR_BGR2GRAY);
+                auto current_defects = detect_defective_pixels(gray_frame);
+
+                {
+                    std::lock_guard<std::mutex> lock(defects_mutex);
+                    update_defects(current_defects, frame_count);
+                }
+
+                if (out) {
+                    visualize_defects(frame);
+                    std::lock_guard<std::mutex> lock(queue_mutex);
+                    *out << frame;
+                }
+
+                frame_count++;
+                if (frame_count % 100 == 0) {
+                    std::cout << "Processed frame " << frame_count << "/"
+                              << total_frames << std::endl;
+                }
+            }
+        };
+
         std::cout << "Processing video: " << input_path << std::endl;
 
-        // Main processing loop
         while (true) {
-            auto frame = std::make_unique<Frame>();
-            cap >> frame->data;
-            if (frame->data.empty()) break;
+            cv::Mat frame;
+            cap >> frame;
+            if (frame.empty()) break;
 
-            frame->frame_number = frame_count++;
-            frame_queue.push(std::move(frame));
-
-            if (frame_count % 100 == 0) {
-                std::cout << "Processed frame " << frame_count << "/"
-                         << total_frames << std::endl;
+            {
+                std::lock_guard<std::mutex> lock(queue_mutex);
+                frame_queue.push(frame.clone());
             }
         }
 
-        // Signal completion and wait for workers
-        frame_queue.set_done();
-        processing_complete = true;
-        for (auto& worker : workers) {
-            worker.join();
+        for (int i = 0; i < num_threads; ++i) {
+            threads.emplace_back(worker);
         }
-        result_processor.join();
 
-        // Save results
-        save_results(json_output_path);
+        for (auto& t : threads) {
+            t.join();
+        }
+
+        save_results(csv_output_path);
     }
 
 private:
     double distance_threshold_;
     int min_persistence_;
     double noise_threshold_;
-    size_t num_threads_;
     std::unordered_map<std::pair<int, int>, PixelDefect, CoordHash> active_defects_;
     std::vector<PixelDefect> completed_defects_;
-    std::mutex defects_mutex_;
 
-    // Worker thread function for frame processing
-    void process_frames_worker(
-        ThreadSafeQueue<std::unique_ptr<Frame>>& frame_queue,
-        ThreadSafeQueue<std::pair<int, std::vector<PixelDefect>>>& result_queue,
-        std::atomic<bool>& processing_complete) {
-        
-        while (!processing_complete) {
-            std::unique_ptr<Frame> frame;
-            if (!frame_queue.wait_and_pop(frame)) continue;
-
-            cv::Mat gray_frame;
-            cv::cvtColor(frame->data, gray_frame, cv::COLOR_BGR2GRAY);
-            auto defects = detect_defective_pixels(gray_frame);
-            
-            result_queue.push(std::make_pair(
-                frame->frame_number,
-                std::move(defects)
-            ));
-        }
-    }
-
-    // Worker thread function for result processing
-    void process_results_worker(
-        ThreadSafeQueue<std::pair<int, std::vector<PixelDefect>>>& result_queue,
-        std::atomic<bool>& processing_complete,
-        std::mutex& results_mutex) {
-        
-        while (!processing_complete || !result_queue.empty()) {
-            std::pair<int, std::vector<PixelDefect>> result;
-            if (!result_queue.wait_and_pop(result)) continue;
-
-            std::lock_guard<std::mutex> lock(results_mutex);
-            update_defects(result.second, result.first);
-        }
-    }
-
-    // Memory-optimized difference matrices computation
     std::vector<cv::Mat> compute_difference_matrices(const cv::Mat& frame) {
-        static const std::array<std::pair<int, int>, 8> directions = {{
+        static const std::vector<std::pair<int, int>> directions = {
             {1, 1}, {1, 0}, {1, -1}, {0, -1},
             {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}
-        }};
+        };
 
         std::vector<cv::Mat> diff_matrices;
         diff_matrices.reserve(directions.size());
 
-        cv::Mat shifted;
-        shifted.create(frame.size(), frame.type());
-
-        for (const auto& [dx, dy] : directions) {
+        for (const auto& dir : directions) {
+            int dx = dir.first;
+            int dy = dir.second;
+            cv::Mat shifted;
             cv::Mat translation = (cv::Mat_<double>(2, 3) <<
                 1, 0, dx,
                 0, 1, dy);
-            
             cv::warpAffine(frame, shifted, translation, frame.size(),
                           cv::INTER_LINEAR, cv::BORDER_REPLICATE);
             
@@ -262,35 +174,196 @@ private:
         return diff_matrices;
     }
 
-    // Rest of the class implementation remains similar but with thread-safety additions
-    // [Previous methods: compute_gradient_matrices, compute_mahalanobis_distance, 
-    // detect_defective_pixels, update_defects, visualize_defects, save_results, 
-    // get_current_timestamp remain the same but with proper mutex locks where needed]
-    
+    std::pair<cv::Mat, cv::Mat> compute_gradient_matrices(
+        const std::vector<cv::Mat>& diff_matrices) {
+        
+        std::vector<cv::Mat> first_channels(diff_matrices.begin(),
+                                          diff_matrices.begin() + 4);
+        cv::Mat first_degree;
+        cv::merge(first_channels, first_degree);
+
+        cv::Mat second_degree;
+        cv::merge(diff_matrices, second_degree);
+
+        // Apply Gaussian smoothing
+        for (int i = 0; i < first_degree.channels(); ++i) {
+            cv::Mat channel;
+            cv::extractChannel(first_degree, channel, i);
+            cv::GaussianBlur(channel, channel, cv::Size(3, 3), 0.5);
+            cv::insertChannel(channel, first_degree, i);
+        }
+
+        for (int i = 0; i < second_degree.channels(); ++i) {
+            cv::Mat channel;
+            cv::extractChannel(second_degree, channel, i);
+            cv::GaussianBlur(channel, channel, cv::Size(3, 3), 0.5);
+            cv::insertChannel(channel, second_degree, i);
+        }
+
+        return std::make_pair(first_degree, second_degree);
+    }
+
+    double compute_mahalanobis_distance(const cv::Mat& vector,
+                                      const cv::Mat& mean,
+                                      const cv::Mat& icov) {
+        cv::Mat diff = vector - mean;
+        cv::Mat mult = diff * icov * diff.t();
+        return std::sqrt(mult.at<double>(0, 0));
+    }
+
+    std::vector<PixelDefect> detect_defective_pixels(const cv::Mat& frame) {
+        auto diff_matrices = compute_difference_matrices(frame);
+        auto grad_matrices = compute_gradient_matrices(diff_matrices);
+        cv::Mat first_grad = grad_matrices.first;
+        cv::Mat second_grad = grad_matrices.second;
+
+        std::vector<PixelDefect> candidates;
+        const int border = 2;
+
+        for (int y = border; y < frame.rows - border; ++y) {
+            for (int x = border; x < frame.cols - border; ++x) {
+                cv::Mat first_grad_vector(1, first_grad.channels(), CV_64F);
+                cv::Mat second_grad_vector(1, second_grad.channels(), CV_64F);
+
+                // Extract gradient vectors
+                for (int c = 0; c < first_grad.channels(); ++c) {
+                    first_grad_vector.at<double>(0, c) =
+                        first_grad.at<cv::Vec<uchar, 4>>(y, x)[c];
+                }
+                for (int c = 0; c < second_grad.channels(); ++c) {
+                    second_grad_vector.at<double>(0, c) =
+                        second_grad.at<cv::Vec<uchar, 8>>(y, x)[c];
+                }
+
+                if (cv::mean(first_grad_vector)[0] < noise_threshold_)
+                    continue;
+
+                try {
+                    cv::Mat covar, mean;
+                    cv::calcCovarMatrix(second_grad_vector, covar, mean,
+                                      cv::COVAR_NORMAL | cv::COVAR_ROWS);
+                    
+                    if (cv::determinant(covar) < 1e-10)
+                        continue;
+
+                    cv::Mat icov = covar.inv();
+                    double distance = compute_mahalanobis_distance(
+                        first_grad_vector, mean, icov);
+
+                    if (distance > distance_threshold_) {
+                        candidates.emplace_back(x, y, distance, 0);
+                    }
+                }
+                catch (const cv::Exception&) {
+                    continue;
+                }
+            }
+        }
+
+        return candidates;
+    }
+
     void update_defects(const std::vector<PixelDefect>& current_defects,
                        int frame_number) {
-        std::lock_guard<std::mutex> lock(defects_mutex_);
-        // [Previous update_defects implementation]
+        std::unordered_set<std::pair<int, int>, CoordHash> current_coords;
+
+        // Update active defects
+        for (const auto& current : current_defects) {
+            std::pair<int, int> coord(current.x, current.y);
+            current_coords.insert(coord);
+
+            auto it = active_defects_.find(coord);
+            if (it != active_defects_.end()) {
+                it->second.total_appearances++;
+                it->second.confidence = std::max(
+                    it->second.confidence, current.confidence);
+            }
+            else {
+                PixelDefect defect = current;
+                defect.start_frame = frame_number;
+                active_defects_[coord] = defect;
+            }
+        }
+
+        // Check for ended defects
+        std::vector<std::pair<int, int>> to_remove;
+        for (const auto& item : active_defects_) {
+            const std::pair<int, int>& coord = item.first;
+            const PixelDefect& defect = item.second;
+            if (current_coords.find(coord) == current_coords.end()) {
+                if (defect.total_appearances >= min_persistence_) {
+                    PixelDefect completed = defect;
+                    completed.end_frame = frame_number - 1;
+                    completed_defects_.push_back(completed);
+                }
+                to_remove.push_back(coord);
+            }
+        }
+
+        for (const auto& coord : to_remove) {
+            active_defects_.erase(coord);
+        }
+    }
+
+    void visualize_defects(cv::Mat& frame) {
+        for (const auto& item : active_defects_) {
+            const PixelDefect& defect = item.second;
+            double confidence_color = std::min(defect.confidence / 10.0, 1.0);
+            cv::Scalar color(
+                0,
+                static_cast<int>(255 * (1 - confidence_color)),
+                static_cast<int>(255 * confidence_color)
+            );
+            cv::circle(frame, cv::Point(defect.x, defect.y), 2, color, -1);
+        }
     }
 
     void save_results(const std::string& output_path) {
-        std::lock_guard<std::mutex> lock(defects_mutex_);
-        // [Previous save_results implementation]
+        // Finalize remaining active defects
+        for (const auto& item : active_defects_) {
+            const PixelDefect& defect = item.second;
+            if (defect.total_appearances >= min_persistence_) {
+                PixelDefect completed = defect;
+                completed.end_frame = completed.start_frame +
+                                    completed.total_appearances - 1;
+                completed_defects_.push_back(completed);
+            }
+        }
+
+        // Create CSV output
+        std::ofstream out(output_path);
+        out << "x,y,confidence,start_frame,end_frame,total_appearances,span\n";
+        for (const auto& defect : completed_defects_) {
+            out << defect.to_csv() << "\n";
+        }
+
+        std::cout << "Results saved to " << output_path << std::endl;
+        std::cout << "Total dead pixels detected: "
+                  << completed_defects_.size() << std::endl;
     }
 };
 
-int main(int argc, char** argv) {
-    try {
-        // Use 80% of available CPU cores for processing
-        size_t num_threads = (std::thread::hardware_concurrency() * 8) / 10;
-        if (num_threads < 1) num_threads = 1;
+int main(int argc, char* argv[]) {
+    if (argc < 5) {
+        std::cerr << "Usage: " << argv[0] << " -i <input_video> -o <output_csv> [-v <output_video>]" << std::endl;
+        return 1;
+    }
 
-        DeadPixelDetector detector(3.0, 5, 0.1, num_threads);
-        detector.process_video(
-            "input_video.mp4",
-            "dead_pixels_report.json",
-            "output_video.mp4"  // Optional
-        );
+    std::string input_video, output_csv, output_video;
+    for (int i = 1; i < argc; i += 2) {
+        std::string arg = argv[i];
+        if (arg == "-i") {
+            input_video = argv[i + 1];
+        } else if (arg == "-o") {
+            output_csv = argv[i + 1];
+        } else if (arg == "-v") {
+            output_video = argv[i + 1];
+        }
+    }
+
+    try {
+        DeadPixelDetector detector(3.0, 5, 0.1);
+        detector.process_video(input_video, output_csv, output_video);
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
