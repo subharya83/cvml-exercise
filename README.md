@@ -42,24 +42,20 @@ solution remains effective and robust over time.
 #### [Counting similar objects](./ex07/README.md)
 
 
-
-03. [Screen Capture Video Analysis](./ex03/README.md)
-
-04. [Automated Question-Answer Pair Generator](./ex04/README.md)
-
 ### Statistical Outlier detection
 #### [Spatial Anomaly detection](./ex06/README.md)
 #### [Spatio-Temporal Anomaly Detection](./ex13/README.md)
 
+### Textual information mining
+#### [Screen Capture Video Analysis](./ex03/README.md)
+#### [Deduplication of textual content](./ex08/README.md) 
+#### [Mining Relevant Contents from Social Media](./ex09/README.md) 
 
-08. [Deduplication of textual content](./ex08/README.md) 
-
-09. [Mining Relevant Contents to a Topic](./ex09/README.md) 
-
-10. [Image Captioning with ResNet50 and LSTM](./ex10/README.md) 
-
-11. [Fine tuning Language Models](./ex11/README.md) 
 
 ### 3D Geometry analysis
 #### [Single Object 3D Reconstruction](./ex12/README.md)
 
+### Data preparation and Fine-tuning of LLMs
+#### [Automated Question-Answer Pair Generator](./ex04/README.md)
+#### [Image Captioning with ResNet50 and LSTM](./ex10/README.md) 
+#### [Fine tuning Language Models](./ex11/README.md) 
