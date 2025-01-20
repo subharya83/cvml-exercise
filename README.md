@@ -31,19 +31,26 @@ solution remains effective and robust over time.
 
 ## Table of Contents
 
-01. [Video search with image query](./ex01/README.md)
+### Multimedia search and Retrival
+#### [Video search with image query](./ex01/README.md)
 
-02. [Cycle detection in human joint movements](./ex02/README.md)
+### Human pose/action analysis
+#### [Cycle detection in human joint movements](./ex02/README.md)
+#### [Browser-based Inferencing on Human centric models](./ex05/README.md)
+
+### Object detection and counting
+#### [Counting similar objects](./ex07/README.md)
+
+
 
 03. [Screen Capture Video Analysis](./ex03/README.md)
 
 04. [Automated Question-Answer Pair Generator](./ex04/README.md)
 
-05. [Browser-based Inferencing on Human centric models](./ex05/README.md)
+### Statistical Outlier detection
+#### [Spatial Anomaly detection](./ex06/README.md)
+#### [Spatio-Temporal Anomaly Detection](./ex13/README.md)
 
-06. [Outlier detection](./ex06/README.md)
-
-07. [Counting similar objects](./ex07/README.md)
 
 08. [Deduplication of textual content](./ex08/README.md) 
 
@@ -53,6 +60,6 @@ solution remains effective and robust over time.
 
 11. [Fine tuning Language Models](./ex11/README.md) 
 
-12. [Single Object 3D Reconstruction](./ex12/README.md)
+### 3D Geometry analysis
+#### [Single Object 3D Reconstruction](./ex12/README.md)
 
-13. [Spatio-Temporal Anomaly Detection](./ex13/README.md)
