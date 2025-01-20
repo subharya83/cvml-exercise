@@ -35,8 +35,8 @@ solution remains effective and robust over time.
 #### [Video search with image query](./ex01/README.md)
 
 ### Human pose/action analysis
-#### [Cycle detection in human joint movements](./ex02/README.md)
-#### [Browser-based Inferencing on Human centric models](./ex05/README.md)
+- [Cycle detection in human joint movements](./ex02/README.md)
+- [Browser-based Inferencing on Human centric models](./ex05/README.md)
 
 ### Object detection and counting
 #### [Counting similar objects](./ex07/README.md)
