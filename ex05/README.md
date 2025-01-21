@@ -43,6 +43,7 @@ This system demonstrates real-time human perception in browser environments, foc
 │   └── face-api.js    # Expression analysis
 └── models/            # Pre-trained weights
 ```
+![Arch Pipeline](../assets/ex05-pipeline.png)
 
 2. Key Pipeline Functions
 ```javascript
