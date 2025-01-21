@@ -72,18 +72,18 @@ The following criterial should be considered:
 
 ```shell
 # Download test data (video file)
-yt-dlp -S ext:mp4:m4a https://www.youtube.com/watch?v=rTDaZoDDW5g -o rTDaZoDDW5g.mp4
+yt-dlp -S ext:mp4:m4a https://www.youtube.com/watch?v=rTDaZoDDW5g -o input/rTDaZoDDW5g.mp4
 ```
 
 ```shell
 # Extract all frames from video
-ffmpeg -hide_banner -thread_queue_size 8192 -i rTDaZoDDW5g.mp4 frames/%06d.jpg
+ffmpeg -hide_banner -thread_queue_size 8192 -i input/rTDaZoDDW5g.mp4 input/frames/%06d.jpg
 ```
 
 ```shell
 # Create small testset for quick testing
-ffmpeg -i rTDaZoDDW5g.mp4 -ss 00:00:20 -to 00:00:30 test.mp4
-ffmpeg -i test.mp4 testframes/%06d.jpg 
+ffmpeg -i input/rTDaZoDDW5g.mp4 -ss 00:00:20 -to 00:00:30 input/test.mp4
+ffmpeg -i input/test.mp4 input/testframes/%06d.jpg 
 ```
 2. Data Organization
 ```shell

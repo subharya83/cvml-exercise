@@ -34,5 +34,13 @@ COPY . .
 # Set environment variables (if needed)
 ENV PYTHONUNBUFFERED=1
 
-# Run the application (you can change this to run a specific script)
-CMD ["python", "queryDataset.py"]
+# Setup test 
+RUN yt-dlp -S ext:mp4:m4a https://www.youtube.com/watch?v=rTDaZoDDW5g -o input/rTDaZoDDW5g.mp4
+RUN ffmpeg -hide_banner -thread_queue_size 8192 -i input/rTDaZoDDW5g.mp4 input/frames/%06d.jpg
+RUN ffmpeg -i input/rTDaZoDDW5g.mp4 -ss 00:00:20 -to 00:00:30 input/test.mp4
+RUN ffmpeg -i input/test.mp4 input/testframes/%06d.jpg 
+
+# Run tests
+RUN python3 getSimilarity.py -q ./input/testfranes/000010.jpg -t ./input/testframes/000011.jpg
+RUN python3 buildIndex.py -i ./input/testframes/ -o ./output/testIndexF.json
+RUN python3 queryDataset.py -q ./input/testframes/000100.jpg -i ./output/testIndexF.json
