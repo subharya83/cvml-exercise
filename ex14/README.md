@@ -1,14 +1,14 @@
-# Audio Pattern Matching Tool
+# Audio Pattern Detection Using Cross-Correlation
 
-This tool finds occurrences of a short audio pattern (query) within a longer audio file using cross-correlation. It outputs timestamps where matches are found along with their correlation scores.
+## Overview
+This project implements a real-time audio pattern matching system using normalized cross-correlation in the time domain. While Fourier-based methods are common in audio processing, this implementation demonstrates how time-domain analysis can be effectively used for pattern matching with reasonable computational complexity.
 
-## Dependencies
+## Dependencies & Building
 
 - C++ compiler with C++11 support
 - [AudioFile](https://github.com/adamstark/AudioFile) (header-only library for audio file handling)
 
-## Building
-
+Build using:
 ```bash
 g++ -std=c++11 main.cpp -o audio_matcher
 ```
@@ -24,36 +24,10 @@ Arguments:
 - `-q`: Path to the query audio file (pattern to find)
 - `-o`: Path for the output CSV file
 
-## Output Format
-
-The program generates a CSV file with two columns:
-1. Timestamp (seconds): The time point where a match was found
-2. Correlation: The correlation score (0-1) indicating match confidence
-
-## Example
-
+Example:
 ```bash
 ./audio_matcher -i long_recording.wav -q gunshot.wav -o detections.csv
 ```
-
-## Technical Details
-
-- The program uses normalized cross-correlation to find matches
-- Default correlation threshold is 0.7 (can be modified in the code)
-- Audio files are converted to mono if necessary
-- Supports common audio formats (WAV, AIFF)
-
-## Notes
-
-- For best results, ensure the query audio is clean and contains only the pattern you're looking for
-- Higher correlation scores indicate better matches
-- Multiple detections close to each other might indicate the same event
-
-
-# Audio Pattern Detection Using Cross-Correlation
-
-## Overview
-This project implements a real-time audio pattern matching system using normalized cross-correlation in the time domain. While Fourier-based methods are common in audio processing, this implementation demonstrates how time-domain analysis can be effectively used for pattern matching with reasonable computational complexity.
 
 ## Mathematical Foundation
 
@@ -71,11 +45,6 @@ where:
 
 The normalization factor ensures that R(t) ∈ [-1,1], making the detection threshold invariant to amplitude scaling.
 
-### Complexity Analysis
-- Time Complexity: O(n*m) where n is input length, m is pattern length
-- Space Complexity: O(n) for input storage + O(k) for detections
-- Memory Access Pattern: Highly cache-friendly due to sequential scanning
-
 ## Implementation Details
 
 ### Key Design Decisions
@@ -89,6 +58,19 @@ The normalization factor ensures that R(t) ∈ [-1,1], making the detection thre
 Raw Audio → Mono Conversion → Normalization → Cross-Correlation → Peak Detection → CSV Output
 ```
 
+### Output Format
+The program generates a CSV file with two columns:
+1. Timestamp (seconds): The time point where a match was found
+2. Correlation: The correlation score (0-1) indicating match confidence
+
+### Technical Specifications
+- Default correlation threshold: 0.7 (modifiable in code)
+- Automatic mono conversion for stereo inputs
+- Supports WAV and AIFF formats
+- Time Complexity: O(n*m) where n is input length, m is pattern length
+- Space Complexity: O(n) for input storage + O(k) for detections
+- Cache-friendly memory access patterns
+
 ## Performance Considerations
 
 ### Optimization Opportunities
@@ -101,6 +83,15 @@ Raw Audio → Mono Conversion → Normalization → Cross-Correlation → Peak D
   - Pros: Lower latency, simpler implementation, no spectral leakage
   - Cons: Higher computational complexity than FFT-based methods for long patterns
 
+### Benchmarking
+Sample performance metrics (tested on Intel i7-9750H):
+```
+Input Duration | Pattern Length | Processing Time
+     60s      |      0.5s     |    0.8s
+    300s      |      1.0s     |    4.2s
+    600s      |      2.0s     |    9.1s
+```
+
 ## Advanced Usage
 
 ### Parameter Tuning
@@ -112,7 +103,7 @@ struct DetectionParams {
 };
 ```
 
-### Example: Multi-Pattern Detection
+### Multi-Pattern Detection
 ```cpp
 std::vector<std::vector<Detection>> findMultiplePatterns(
     const std::vector<double>& source,
@@ -121,43 +112,22 @@ std::vector<std::vector<Detection>> findMultiplePatterns(
 );
 ```
 
-## Research Extensions
-
-### Potential Improvements
-1. **Wavelet-based Preprocessing**: Implement multi-resolution analysis for better noise handling
-2. **Machine Learning Integration**: Use correlation scores as features for ML-based classification
-3. **Real-time Adaptation**: Implement adaptive thresholding based on signal statistics
-
-### Experimental Results
+## Best Practices and Notes
+- Ensure query audio is clean and contains only the target pattern
+- Higher correlation scores indicate better matches
+- Multiple detections close to each other might indicate the same event
 - Detection accuracy varies with SNR (Signal-to-Noise Ratio)
 - False positive rate increases with lower threshold values
-- Computational performance scales linearly with input size
 
-## Benchmarking
-
-Sample performance metrics (tested on Intel i7-9750H):
-```
-Input Duration | Pattern Length | Processing Time
-     60s      |      0.5s     |    0.8s
-    300s      |      1.0s     |    4.2s
-    600s      |      2.0s     |    9.1s
-```
-
-## Contributing
-Contributions are welcome! Areas of particular interest:
-- Implementing SIMD optimizations
-- Adding support for real-time streaming
-- Improving detection accuracy in noisy environments
+## Future Work and Research Extensions
+1. Implementation of frequency-domain correlation for comparison
+2. Wavelet-based preprocessing for improved noise handling
+3. Machine learning integration for pattern classification
+4. Development of adaptive thresholding algorithms
+5. Extension to multi-channel audio analysis
+6. Real-time streaming support
+7. Enhanced detection accuracy in noisy environments
 
 ## References
 1. Smith, J. O. "Mathematics of the Discrete Fourier Transform (DFT)." W3K Publishing, 2007.
 2. Rabiner, L. R., & Schafer, R. W. "Digital Processing of Speech Signals." Prentice-Hall, 1978.
-
-## Future Work
-1. Implementation of frequency-domain correlation for comparison
-2. Integration of machine learning models for pattern classification
-3. Development of adaptive thresholding algorithms
-4. Extension to multi-channel audio analysis
-
-## License
-MIT License - Feel free to use and modify for academic and research purposes.
