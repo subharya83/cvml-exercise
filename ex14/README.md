@@ -10,13 +10,13 @@ This project implements a real-time audio pattern matching system using normaliz
 
 Build using:
 ```bash
-g++ -std=c++11 main.cpp -o audio_matcher
+g++ -std=c++11 audioSearch.cpp -o audioSearch
 ```
 
 ## Usage
 
 ```bash
-./audio_matcher -i <input_audio> -q <query_audio> -o <output_csv>
+./audioSearch -i <input_audio> -q <query_audio> -o <output_csv>
 ```
 
 Arguments:
@@ -26,7 +26,7 @@ Arguments:
 
 Example:
 ```bash
-./audio_matcher -i long_recording.wav -q gunshot.wav -o detections.csv
+./audioSearch -i long_recording.wav -q gunshot.wav -o detections.csv
 ```
 
 ## Mathematical Foundation
