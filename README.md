@@ -32,30 +32,30 @@ solution remains effective and robust over time.
 ## Table of Contents
 
 ### Multimedia search and Retrival
-#### [Video search with image query](./ex01/README.md)
+- [Video search with image query](./ex01/README.md)
 
 ### Human pose/action analysis
 - [Cycle detection in human joint movements](./ex02/README.md)
 - [Browser-based Inferencing on Human centric models](./ex05/README.md)
 
 ### Object detection and counting
-#### [Counting similar objects](./ex07/README.md)
+- [Counting similar objects](./ex07/README.md)
 
 
 ### Statistical Outlier detection
-#### [Spatial Anomaly detection](./ex06/README.md)
-#### [Spatio-Temporal Anomaly Detection](./ex13/README.md)
+- [Spatial Anomaly detection](./ex06/README.md)
+- [Spatio-Temporal Anomaly Detection](./ex13/README.md)
 
 ### Textual information mining
-#### [Screen Capture Video Analysis](./ex03/README.md)
-#### [Deduplication of textual content](./ex08/README.md) 
-#### [Mining Relevant Contents from Social Media](./ex09/README.md) 
+- [Screen Capture Video Analysis](./ex03/README.md)
+- [Deduplication of textual content](./ex08/README.md) 
+- [Mining Relevant Contents from Social Media](./ex09/README.md) 
 
 
 ### 3D Geometry analysis
-#### [Single Object 3D Reconstruction](./ex12/README.md)
+- [Single Object 3D Reconstruction](./ex12/README.md)
 
 ### Data preparation and Fine-tuning of LLMs
-#### [Automated Question-Answer Pair Generator](./ex04/README.md)
-#### [Image Captioning with ResNet50 and LSTM](./ex10/README.md) 
-#### [Fine tuning Language Models](./ex11/README.md) 
+- [Automated Question-Answer Pair Generator](./ex04/README.md)
+- [Image Captioning with ResNet50 and LSTM](./ex10/README.md) 
+- [Fine tuning Language Models](./ex11/README.md) 
