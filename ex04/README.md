@@ -96,7 +96,7 @@ DocumentQA/
 ```
 
 ### Key Components
-![QA generation workflow](../assets/ex04)
+![QA generation workflow](../assets/ex04-QA-gen-arch.png)
 
 1. **Document Processing**
    - Format-specific text extractors
@@ -161,23 +161,8 @@ def test_output_formats():
    - Add support for different question types
    - Improve context selection algorithm
 
-### Feature Additions
-1. **Document Support**
-   - Add support for more document formats (DOCX, EPUB)
-   - Implement image text extraction (OCR)
-   - Add support for tables and structured data
-
-2. **Output Options**
-   - Add support for more output formats
-   - Implement streaming output for large files
-   - Add customizable output templates
-
-### Model Improvements
-1. **Language Support**
-   - Add multilingual support
-   - Implement language-specific question generation
-   - Add custom entity recognition
-
-2. **Quality Control**
-   - Add confidence scores for generated QA pairs
-   - Implement quality filters
+## Usage
+```shell
+python3 convertQA.py -i input/3-Kings.pdf -o output/3-Kings.json
+python3 convertQA.py -i input/Argo.htm -o output/Argo.csv
+```

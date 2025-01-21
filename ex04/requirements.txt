@@ -1,0 +1,9 @@
+pypdf==3.17.1
+spacy==3.7.2
+transformers==4.36.2
+numpy==1.24.3
+beautifulsoup4==4.12.2
+chardet==5.2.0
+srt==3.5.3
+torch==2.1.2
+huggingface-hub==0.20.1
