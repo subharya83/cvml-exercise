@@ -8,8 +8,8 @@
 
 class VideoCorruptor {
 public:
-    VideoCorruptor(const std::string& video_path, double corruption_rate = 0.00005)
-        : video_path(video_path), corruption_rate(corruption_rate) {
+    VideoCorruptor(const std::string& video_path, double corruption_rate = 0.00005, const std::vector<int>& color = {255, 255, 255})
+        : video_path(video_path), corruption_rate(corruption_rate), corruption_color(color) {
         cap.open(video_path);
         if (!cap.isOpened()) {
             throw std::runtime_error("Error: Could not open video file.");
@@ -49,6 +49,7 @@ private:
     double corruption_rate;
     cv::VideoCapture cap;
     int width, height, fps, total_frames;
+    std::vector<int> corruption_color;
 
     struct CorruptionInfo {
         std::vector<int> rgb;
@@ -114,22 +115,12 @@ private:
             std::vector<std::pair<int, int>> new_locations = generate_corruption_locations();
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_int_distribution<> intensity_dist(0, 255);
-            std::uniform_int_distribution<> variation_dist(-20, 20);
             std::uniform_int_distribution<> duration_dist(5, 10);
 
             for (const auto& loc : new_locations) {
                 std::string key = std::to_string(loc.first) + "," + std::to_string(loc.second);
                 if (corruption_map.find(key) == corruption_map.end()) {
-                    int base_intensity = intensity_dist(gen);
-                    int variation = variation_dist(gen);
-                    std::vector<int> rgb = {
-                        std::max(0, std::min(255, base_intensity + variation)),
-                        std::max(0, std::min(255, base_intensity + variation)),
-                        std::max(0, std::min(255, base_intensity + variation))
-                    };
-
-                    corruption_map[key] = {rgb, frame_idx + duration_dist(gen)};
+                    corruption_map[key] = {corruption_color, frame_idx + duration_dist(gen)};
                 }
             }
         }
@@ -153,16 +144,35 @@ private:
 };
 
 int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " -i <input_video> -o <output_video>" << std::endl;
+    if (argc < 5) {
+        std::cerr << "Usage: " << argv[0] << " -i <input_video> -o <output_video> -c <color_code>" << std::endl;
         return 1;
     }
 
-    std::string input_video = argv[2];
-    std::string output_video = argv[4];
+    std::string input_video;
+    std::string output_video;
+    std::vector<int> color = {255, 255, 255}; // Default to white
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "-i" && i + 1 < argc) {
+            input_video = argv[++i];
+        } else if (arg == "-o" && i + 1 < argc) {
+            output_video = argv[++i];
+        } else if (arg == "-c" && i + 1 < argc) {
+            std::string color_code = argv[++i];
+            if (color_code.length() == 3) {
+                color[0] = (color_code[0] == '1') ? 255 : 0;
+                color[1] = (color_code[1] == '1') ? 255 : 0;
+                color[2] = (color_code[2] == '1') ? 255 : 0;
+            } else {
+                std::cerr << "Invalid color code. Using default color (white)." << std::endl;
+            }
+        }
+    }
 
     try {
-        VideoCorruptor corruptor(input_video);
+        VideoCorruptor corruptor(input_video, 0.00005, color);
         corruptor.process_video(output_video);
         std::cout << "Video corruption completed successfully!" << std::endl;
     } catch (const std::exception& e) {
