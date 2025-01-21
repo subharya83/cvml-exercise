@@ -1,131 +1,126 @@
 # Dead Pixel Detection - SPADE (Statistical Pixel Anomaly Detection Engine)
 
-A robust tool for detecting dead, stuck, or malfunctioning pixels in video footage using statistical analysis and computer vision techniques.
+A cutting-edge tool for detecting dead, stuck, or malfunctioning pixels in video footage using advanced statistical analysis and computer vision techniques. Perfect for computer vision enthusiasts and students looking to dive into real-world applications of image processing and anomaly detection!
 
-## Problem Design
+## Why SPADE?
 
-### Objectives
-- Detect dead or malfunctioning pixels in video footage
-- Track pixel defects across multiple frames
-- Provide confidence scores for detected defects
-- Generate detailed reports of findings
-- Support real-time visualization of detected defects
+### The Problem
+Dead or stuck pixels are a common issue in digital displays and camera sensors. These pixels can ruin the visual experience and are often difficult to detect manually, especially in high-resolution videos. SPADE automates this process, making it faster, more accurate, and scalable.
+
+### The Solution
+SPADE uses a **statistical approach** to detect anomalous pixel behavior in video footage. By analyzing pixel gradients and temporal persistence, SPADE can identify dead or stuck pixels with high confidence. It’s not just a tool—it’s a learning opportunity to understand how statistical methods and computer vision can solve real-world problems.
+
+---
+
+## What Makes SPADE Special?
+
+### Key Features
+- **Gradient Analysis**: Computes first and second-order gradients using 8-directional difference matrices.
+- **Statistical Detection**: Uses **Mahalanobis distance** to identify anomalous pixel behavior.
+- **Temporal Tracking**: Tracks pixel defects across multiple frames to filter out noise and transient artifacts.
+- **Confidence Scoring**: Assigns confidence levels based on statistical deviation from normal behavior.
+- **Real-Time Visualization**: Visualizes detected defects directly on the video for easy interpretation.
+- **Multi-Threaded Processing**: Optimized for performance with multi-threading support (see `Spadeplus.cpp`).
+
+### Why Computer Vision Students Will Love It
+- **Hands-On Learning**: SPADE is a great way to learn about gradient computation, statistical anomaly detection, and video processing.
+- **Real-World Application**: Understand how theoretical concepts like Mahalanobis distance and covariance matrices are applied in practice.
+- **Customizable**: Experiment with different thresholds, persistence settings, and visualization options.
+- **OpenCV Integration**: Built using OpenCV, the most popular library for computer vision, making it easy to extend and modify.
+
+---
+
+## How Does SPADE Work?
 
 ### Technical Approach
-The solution employs a sophisticated statistical approach:
-1. Gradient Analysis: Computes first and second-order gradients using 8-directional difference matrices
-2. Statistical Detection: Uses Mahalanobis distance to identify anomalous pixel behavior
-3. Temporal Tracking: Monitors pixel defects across consecutive frames to filter out noise
-4. Confidence Scoring: Assigns confidence levels based on statistical deviation from normal behavior
+1. **Frame Extraction**: Convert video frames to grayscale for efficient processing.
+2. **Gradient Computation**: Calculate directional differences using 8-directional kernels.
+3. **Statistical Analysis**: Compute covariance matrices and Mahalanobis distances to identify anomalies.
+4. **Temporal Aggregation**: Track defects across frames to ensure persistence and filter out noise.
+5. **Visualization**: Highlight detected defects on the video for easy interpretation.
 
-### Constraints
-- Requires sufficient contrast in video content for reliable detection
-- Processing speed depends on video resolution and hardware capabilities
-- Minimum persistence threshold to filter out temporary artifacts
-- Border pixels require special handling due to edge effects
+### Computational Workflow
 
-## Data Preparation
+![Architecture](../assets/ex13-arch.png)
 
-### Input Requirements
-- Video files in formats supported by OpenCV
-- Sufficient frame rate for temporal analysis
-- Adequate lighting and contrast in source material
+1. **Input**: A video file with potential dead or stuck pixels.
+2. **Processing**: SPADE analyzes each frame, detects anomalies, and tracks them over time.
+3. **Output**: 
+   - A CSV file with detailed defect information (coordinates, confidence, frame range, etc.).
+   - An optional output video with defects highlighted.
 
-### Testing Data Generation
-The project includes a `VideoCorruptor` tool that:
-- Introduces controlled pixel defects at specified rates
-- Creates contiguous defect regions
-- Simulates various types of pixel failures
-- Generates test videos with known ground truth
+---
 
-### Data Processing Pipeline
-1. Frame Extraction: Convert video frames to grayscale
-2. Gradient Computation: Calculate directional differences
-3. Statistical Analysis: Compute covariance matrices and distances
-4. Temporal Aggregation: Track defects across frames
+## Getting Started
+
+### Prerequisites
+- OpenCV (C++ or Python)
+- C++11 or Python 3.7+
+- Basic understanding of computer vision concepts (gradients, matrices, etc.)
+
+### Installation
+#### C++ Version
+```bash
+# Compile the video corruptor and SPADE
+g++ -std=c++11 -o videoCorruptor videoCorruptor.cpp `pkg-config --cflags --libs opencv4`
+g++ -std=c++11 -o Spade Spade.cpp `pkg-config --cflags --libs opencv4`
+
+# For multi-threaded version (Spadeplus.cpp)
+g++ -std=c++11 -o Spadeplus Spadeplus.cpp `pkg-config --cflags --libs opencv4` -pthread
+```
+
+#### Python Version
+```bash
+pip install opencv-python numpy scipy
+```
+
+### Running SPADE
+#### C++ Version
+```bash
+./Spade -i input_video.mp4 -o output.csv -v output_video.mp4
+```
+
+#### Python Version
+```python
+python Spade.py -i input_video.mp4 -o output.json -v output_video.mp4
+```
+
+---
 
 ## Code Organization
 
 ### Core Components
 1. **DeadPixelDetector Class**
-   - Main detection engine
-   - Handles frame processing and analysis
-   - Manages defect tracking and reporting
+   - Main detection engine.
+   - Handles frame processing, defect detection, and tracking.
+   - Manages confidence scoring and visualization.
 
 2. **PixelDefect Structure**
-   - Stores defect information
-   - Tracks temporal persistence
-   - Maintains confidence scores
+   - Stores defect information (coordinates, confidence, frame range, etc.).
+   - Tracks temporal persistence and total appearances.
 
 3. **VideoCorruptor Class**
-   - Test data generation
-   - Configurable corruption parameters
-   - Realistic defect simulation
+   - Generates test data with controlled pixel defects.
+   - Simulates various types of pixel failures for testing and validation.
 
 ### Implementation Variants
-- `Spade.cpp`: Base C++ implementation
-- `Spade.py`: Python implementation with additional logging
-- `Spadeplus.cpp`: Multi-threaded C++ version for improved performance
-
-## Test Cases
-
-### Functionality Tests
-1. **Basic Detection**
-   - Single dead pixel detection
-   - Multiple defect detection
-   - Confidence score accuracy
-
-2. **Temporal Tracking**
-   - Persistence verification
-   - Frame-to-frame consistency
-   - Start/end frame accuracy
-
-3. **Edge Cases**
-   - Border pixel handling
-   - Low contrast regions
-   - High noise environments
-
-### Performance Tests
-- Processing speed benchmarks
-- Memory usage monitoring
-- Multi-threading efficiency
-- Different video resolutions
+- **Spade.cpp**: Base C++ implementation.
+- **Spade.py**: Python implementation with additional logging and JSON output.
+- **Spadeplus.cpp**: Multi-threaded C++ version for improved performance.
 
 ## Further Optimizations and Improvements
 
 ### Performance Enhancements
-1. **Computational Optimization**
-   - GPU acceleration potential
-   - Vectorized operations
-   - Memory usage optimization
-   - Parallel processing improvements
+1. **GPU Acceleration**: Leverage CUDA or OpenCL for faster gradient computation.
+2. **Vectorized Operations**: Optimize matrix operations using SIMD instructions.
+3. **Adaptive Thresholding**: Dynamically adjust thresholds based on video content.
 
-2. **Detection Accuracy**
-   - Advanced filtering techniques
-   - Machine learning integration
-   - Adaptive thresholding
-   - Pattern recognition
+### Detection Accuracy
+1. **Machine Learning Integration**: Train a model to classify pixel defects.
+2. **Pattern Recognition**: Detect specific patterns of stuck or dead pixels.
+3. **Advanced Filtering**: Use wavelet transforms or Fourier analysis for better noise reduction.
 
 
-```shell
-# Compile video corruptor, SpatiotemPoral Anomalous pixel DEtector
-g++ -std=c++11 -o videoCorruptor videoCorruptor.cpp `pkg-config --cflags --libs opencv4`
-g++ -std=c++11 -o Spade Spade.cpp `pkg-config --cflags --libs opencv4`
-```
-
-```shell
-./Spade -i output/c-hummer.mp4 -o output/c-hummer.csv -v output/o-hummer.mp4
-````
-
-### Multi-threaded version improvements
-
-Key Changes:
-- Thread Pool: A thread pool is created using std::thread and std::mutex to manage concurrent processing of frames.
-- Frame Queue: A queue (std::queue) is used to store frames that need to be processed. Threads will pop frames from this queue and process them.
-- Mutexes: std::mutex is used to synchronize access to shared resources like the frame queue and the defects data structures.
-- Worker Function: A lambda function (worker) is defined to process frames. Each thread runs this function, which processes frames until the queue is empty.
-
-Notes:
-- The number of threads is determined by `std::thread::hardware_concurrency()`, which returns the number of concurrent threads supported by the hardware.
-- The `update_defects()`  is protected by a mutex to ensure thread safety when updating the `active_defects_` and `completed_defects_` structures.
-- The `visualize_defects()` is also protected by a mutex to ensure thread-safe access to the active_defects_ structure.
+```bash
+./Spade -i your_video.mp4 -o results.csv -v output.mp4
+``` 
