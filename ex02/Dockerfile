@@ -33,6 +33,9 @@ COPY . .
 
 # Set environment variables (if needed)
 ENV PYTHONUNBUFFERED=1
+# Download testdata
+RUN yt-dlp -S ext:mp4:m4a https://www.youtube.com/shorts/DftBUdHgr9Q -o input/DftBUdHgr9Q.mp4
+RUN mkdir -o output
 
 # Run the Joint trajectories application
 RUN python3 getPoseLandmarks.py -i input/DftBUdHgr9Q.mp4 -o output/trajectories.csv

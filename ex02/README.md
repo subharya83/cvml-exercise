@@ -32,7 +32,7 @@ The project focuses on:
 ## Data Preparation
 ```shell
 # Download example video
-yt-dlp -S ext:mp4:m4a https://www.youtube.com/shorts/DftBUdHgr9Q -o DftBUdHgr9Q.mp4
+yt-dlp -S ext:mp4:m4a https://www.youtube.com/shorts/DftBUdHgr9Q -o input/DftBUdHgr9Q.mp4
 ```
 ### Input Requirements
 - Video file featuring a single person
@@ -142,7 +142,7 @@ yt-dlp -S ext:mp4:m4a https://www.youtube.com/shorts/DftBUdHgr9Q -o DftBUdHgr9Q.
 ### Installation
 ```shell
 # Install required packages
-pip install opencv-python mediapipe numpy pandas scikit-learn tqdm
+pip install -r requirements.txt
 ```
 
 ### Running the Analysis
