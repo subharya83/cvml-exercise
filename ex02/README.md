@@ -1,159 +1,138 @@
-# Cycle detection in human joint movements
+# Cycle Detection in Human Joint Movements 🏃‍♂️
 
-A Python-based solution for tracking human body joints in videos and detecting motion cycles.
+A robust Python solution for analyzing human motion patterns by tracking body joints in videos and detecting movement cycles. Perfect for biomechanics research, sports analysis, and motion studies.
+
+## 🎯 Key Features
+
+- Real-time tracking of 12 major body joints
+- 3D trajectory extraction and analysis
+- Automated cycle detection across multiple motion planes
+- Detailed analysis reports in CSV and JSON formats
+- Single-person motion tracking and analysis
+
+## 🎥 Example
 
 Input Video                        |  Joint Tracked                     |
 -----------------------------------|------------------------------------|
 ![Input](../assets/ex02-input.gif) | ![Joints](../assets/ex02-debug.gif)| 
 
+## 🚀 Getting Started
 
-## Problem Design
+### Prerequisites
 
-### Objectives
-- Track human body joints in video footage
-- Extract 3D trajectories of key body joints
-- Detect and analyze cyclic patterns in joint movements
-- Generate detailed analysis reports in CSV and JSON formats
-
-### Scope
-The project focuses on:
-- Single-person videos
-- 12 major body joints (shoulders, elbows, wrists, hips, knees, ankles)
-- 3D position tracking (x, y, z coordinates)
-- Cycle detection in various motion planes (3D and 2D projections)
-
-### Constraints
-- Requires clear visibility of the person in the video
-- Subject should remain within camera frame
-- Designed for single-person analysis
-- Dependent on MediaPipe's pose detection accuracy
-- Minimum of 4 data points required for cycle detection
-
-## Data Preparation
-```shell
-# Download example video
-yt-dlp -S ext:mp4:m4a https://www.youtube.com/shorts/DftBUdHgr9Q -o input/DftBUdHgr9Q.mp4
-```
-### Input Requirements
-- Video file featuring a single person
-- Clear visibility of body joints
+- Python 3.x
+- Clear video footage of a single person
 - Stable camera position recommended
 
-### Data Processing Pipeline
-1. **Video Processing**
-   - Frame extraction using OpenCV
-   - RGB color space conversion
-   - Frame-by-frame pose detection
-
-2. **Joint Tracking**
-   - MediaPipe pose detection
-   - 3D coordinate extraction
-   - Confidence score tracking
-   - Missing data handling
-
-3. **Data Transformation**
-   - Normalization of joint coordinates
-   - Trajectory smoothing
-   - Time series formatting
-   - Export to structured CSV format
-
-## Code Organization
-
-### Project Structure
-```
-|── CycleDetection.py
-├── getPoseLandmarks.py
-├── input
-│   └── DftBUdHgr9Q.mp4
-├── output
-│   ├── cycles.json
-│   └── trajectories.csv
-└── README.md
-
-```
-
-### Key Components
-
-![Pose Trajectory Generation](../assets/ex02-01.png)
-
-1. **getPoseLandmarks.py**
-   - `PoseTrajectoryTracker` class
-   - Video processing functions
-   - Joint coordinate extraction
-   - CSV output generation
-
-![Cycle Detection](../assets/ex02-02.png)
-
-2. **CycleDetection.py**
-   - Cycle detection algorithms
-   - Multi-plane analysis
-   - Statistical calculations
-   - JSON report generation
-
-### Data Flow
-1. Video Input → Frame Processing → Pose Detection → Joint Tracking → CSV Output
-2. CSV Input → Trajectory Analysis → Cycle Detection → JSON Output
-
-## Test Cases
-
-### Input Validation
-- Video file existence and format checking
-- Frame count verification
-- Resolution and quality assessment
-
-### Pose Detection
-- Single person in frame
-- Multiple body positions
-- Different lighting conditions
-- Various movement speeds
-
-### Cycle Detection
-- Regular cyclic movements (walking, running)
-- Complex patterns (exercise routines)
-- Irregular movements
-- Edge cases:
-  - Very slow movements
-  - Rapid movements
-  - Partial cycles
-  - Missing data points
-
-### Output Verification
-- CSV format integrity
-- JSON structure validation
-- Data consistency checks
-- Numerical accuracy
-
-## Further Optimizations and Improvements
-
-### Performance Enhancements
-- Implement parallel processing for video analysis
-- GPU acceleration for pose detection
-- Optimize memory usage for large videos
-- Batch processing capabilities
-
-### Accuracy Improvements
-- Enhanced filtering techniques for noisy data
-- Advanced cycle detection algorithms
-- Machine learning-based pattern recognition
-- Multi-person tracking support
-
-## Usage
-
 ### Installation
-```shell
-# Install required packages
+
+```bash
 pip install -r requirements.txt
 ```
 
-### Running the Analysis
-```shell
-# Step 1: Track joints in video
-python3 getPoseLandmarks.py  -i input/DftBUdHgr9Q.mp4 -o output/trajectories.csv [-d]
+### Quick Start
 
-# Step 2: Detect motion cycles
+1. Download a sample video:
+```bash
+yt-dlp -S ext:mp4:m4a https://www.youtube.com/shorts/DftBUdHgr9Q -o input/DftBUdHgr9Q.mp4
+```
+
+2. Run the analysis:
+```bash
+# Track joints
+python3 getPoseLandmarks.py -i input/DftBUdHgr9Q.mp4 -o output/trajectories.csv
+
+# Detect cycles
 python3 CycleDetection.py -i output/trajectories.csv -o output/cycles.json
 ```
 
-### Output Files
-- `trajectories.csv`: Contains joint coordinates and tracking data
-- `cycles.json`: Contains cycle analysis results and statistics
+## 🏗️ Project Structure
+
+```
+├── CycleDetection.py      # Cycle detection algorithms
+├── getPoseLandmarks.py    # Joint tracking implementation
+├── input/                 # Input video files
+├── output/               # Generated analysis files
+│   ├── cycles.json
+│   └── trajectories.csv
+└── README.md
+```
+
+## 📊 Data Pipeline
+
+1. **Video Processing**
+   - Frame extraction
+   - RGB conversion
+   - Pose detection
+
+2. **Joint Tracking**
+   - MediaPipe integration
+   - 3D coordinate capture
+   - Confidence scoring
+
+3. **Analysis**
+   - Coordinate normalization
+   - Trajectory smoothing
+   - Cycle detection
+   - Report generation
+
+## ⚙️ Technical Details
+
+### Tracked Joints
+- Shoulders
+- Elbows
+- Wrists
+- Hips
+- Knees
+- Ankles
+
+### System Requirements
+- Clear subject visibility
+- Subject within frame
+- Single person in view
+- Minimum 4 data points per cycle
+
+## 🔄 Output Files
+
+### trajectories.csv
+- Joint coordinates
+- Tracking confidence scores
+- Temporal data
+
+### cycles.json
+- Detected motion cycles
+- Statistical analysis
+- Pattern metrics
+
+## 🔜 Future Improvements
+
+- Parallel processing support
+- GPU acceleration
+- Multi-person tracking
+- Machine learning enhancements
+- Advanced filtering algorithms
+
+## ⚠️ Limitations
+
+- Single person analysis only
+- Depends on MediaPipe accuracy
+- Requires clear visibility
+- Subject must stay in frame
+
+## 🧪 Testing
+
+The system includes comprehensive test cases for:
+- Input validation
+- Pose detection accuracy
+- Cycle detection reliability
+- Data integrity
+- Edge case handling
+
+## 📈 Performance Optimization
+
+Future releases will focus on:
+- Parallel processing
+- Memory optimization
+- Batch processing
+- Enhanced filtering
+- ML-based pattern recognition
