@@ -96,6 +96,8 @@ DocumentQA/
 ```
 
 ### Key Components
+![QA generation workflow](../assets/ex04)
+
 1. **Document Processing**
    - Format-specific text extractors
    - Encoding detection and handling
