@@ -4,6 +4,12 @@
 
 You are tasked with developing a solution to count the number of U.S. pennies in an image. The input is an image containing coins scattered on a flat surface. Your goal is to identify and count the pennies while ignoring other types of coins or objects in the image.
 
+Sample Images        |  Results |
+---------------------|----------|
+![01](./input/01.jpg)|          |
+![02](./input/02.jpg)|          |
+![03](./input/03.png)|          |
+![04](./input/04.jpg)|          |
 
 ### Steps to Solve
 
@@ -36,7 +42,9 @@ You are tasked with developing a solution to count the number of U.S. pennies in
    - Count the remaining coins.
 
 
-### How It Works
+### Architecture components
+![Threshold based similar object detection](../assets/ex07-arch.png)
+
 1. **Hough Circle Transform**:
    - Detects all circular coins in the image.
    - Returns their centers and radii.
