@@ -1,65 +1,69 @@
-# DocumentQA: Automated Question-Answer Pair Generator
+# DocumentQA: Automated Question-Answer Pair Generator for Computer Vision Scientists
 
-A Python tool that automatically generates question-answer pairs from various document formats using NLP and transformer models.
+Welcome to **DocumentQA**, a cutting-edge Python tool designed to automatically generate question-answer pairs from various document formats using advanced NLP and transformer models. While primarily focused on text, this tool can be a powerful asset for computer vision scientists working on multimodal datasets, combining textual and visual information for comprehensive analysis.
+
+## Why DocumentQA for Computer Vision?
+
+In the realm of computer vision, understanding the context and content of textual data associated with images, videos, and other visual media is crucial. DocumentQA bridges the gap between text and vision by generating meaningful QA pairs that can be used to fine-tune multimodal models, enhance dataset annotations, and improve the interpretability of visual data.
 
 ## Problem Design
 
 ### Objectives
-- Extract meaningful text from multiple document formats (PDF, TXT, SRT, HTML)
-- Generate relevant question-answer pairs from the extracted text
-- Support different output formats (JSON, CSV) for fine-tuning language models
-- Maintain context-awareness when generating QA pairs
+- **Extract Meaningful Text**: From multiple document formats (PDF, TXT, SRT, HTML) often accompanying visual data.
+- **Generate Relevant QA Pairs**: Create contextually relevant question-answer pairs that can be used to augment visual datasets.
+- **Support Multiple Output Formats**: Generate outputs in JSON and CSV for easy integration with existing pipelines.
+- **Maintain Context-Awareness**: Ensure that the generated QA pairs preserve the context, crucial for multimodal learning.
 
 ### Constraints
-- Documents must be in supported formats (PDF, TXT, SRT, HTML)
-- Text extraction quality depends on document formatting
-- Question generation is limited to entity-based and summary-based questions
-- Memory limitations based on document size
-- Requires internet connection for initial model downloads
+- **Supported Formats**: PDF, TXT, SRT, HTML.
+- **Text Extraction Quality**: Dependent on document formatting.
+- **Question Generation**: Limited to entity-based and summary-based questions.
+- **Memory Limitations**: Based on document size.
+- **Internet Connection**: Required for initial model downloads.
 
 ### Success Criteria
-- Successful text extraction from supported document formats
-- Generation of contextually relevant QA pairs
-- Proper handling of different languages and encodings
-- Accurate entity recognition and context preservation
-- Clean output in specified format (JSON/CSV)
+- **Accurate Text Extraction**: From supported document formats.
+- **Contextually Relevant QA Pairs**: Ensuring the generated pairs are meaningful.
+- **Multilingual Support**: Handling different languages and encodings.
+- **Entity Recognition**: Accurate identification and context preservation.
+- **Clean Output**: In specified formats (JSON/CSV).
 
 ## Data Preparation
 
 ### Input Processing
 1. **Document Loading**
-   - Multiple encoding support (UTF-8, ASCII, Latin-1, CP1252)
-   - Format-specific extractors for PDF, TXT, SRT, and HTML
-   - Error handling for corrupted or unsupported files
+   - Multiple encoding support (UTF-8, ASCII, Latin-1, CP1252).
+   - Format-specific extractors for PDF, TXT, SRT, and HTML.
+   - Error handling for corrupted or unsupported files.
 
 2. **Text Cleaning**
-   - Removal of excessive whitespace and newlines
-   - Standardization of punctuation and special characters
-   - Preservation of sentence structure and context
+   - Removal of excessive whitespace and newlines.
+   - Standardization of punctuation and special characters.
+   - Preservation of sentence structure and context.
 
 3. **Text Segmentation**
-   - Breaking text into manageable chunks (max 100 words)
-   - Maintaining sentence integrity
-   - Preserving contextual relationships
+   - Breaking text into manageable chunks (max 100 words).
+   - Maintaining sentence integrity.
+   - Preserving contextual relationships.
 
 ### Model Preparation
-- Automatic download of required models
-- SpaCy model for NER and text processing
-- BERT model for question answering
-- Weights management and storage
+- Automatic download of required models.
+- SpaCy model for NER and text processing.
+- BERT model for question answering.
+- Weights management and storage.
 
 ## Code Organization
 
-### Code structure
+### Code Structure
 ```
 ├── autopunc.py
 ├── convertQA.py
 ├── input
-│   ├── 3-Kings.pdf
-│   └── Argo.htm
+│   ├── 3-Kings.pdf
+│   └── Argo.htm
 ├── output
-│   ├── Argo.csv
-│   └── Argo.json
+│   ├── Argo.csv
+│   └── Argo.json
 ├── prepro_ytxscrips.py
 ├── README.md
 └── weights
@@ -99,19 +103,19 @@ DocumentQA/
 ![QA generation workflow](../assets/ex04-QA-gen-arch.png)
 
 1. **Document Processing**
-   - Format-specific text extractors
-   - Encoding detection and handling
-   - Error management
+   - Format-specific text extractors.
+   - Encoding detection and handling.
+   - Error management.
 
 2. **NLP Pipeline**
-   - Entity recognition
-   - Context extraction
-   - Question generation
+   - Entity recognition.
+   - Context extraction.
+   - Question generation.
 
 3. **Output Generation**
-   - Format conversion
-   - File writing
-   - Error handling
+   - Format conversion.
+   - File writing.
+   - Error handling.
 
 ## Test Cases
 
@@ -152,14 +156,14 @@ def test_output_formats():
 
 ### Performance Enhancements
 1. **Processing Speed**
-   - Implement batch processing for large documents
-   - Add multiprocessing for parallel text extraction
-   - Optimize memory usage for large files
+   - Implement batch processing for large documents.
+   - Add multiprocessing for parallel text extraction.
+   - Optimize memory usage for large files.
 
 2. **QA Quality**
-   - Implement more sophisticated question generation strategies
-   - Add support for different question types
-   - Improve context selection algorithm
+   - Implement more sophisticated question generation strategies.
+   - Add support for different question types.
+   - Improve context selection algorithm.
 
 ## Usage
 ```shell
