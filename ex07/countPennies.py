@@ -161,5 +161,6 @@ if __name__ == "__main__":
     parser.add_argument('-i', required=True, help='Path to input image')
     # Parse arguments
     args = parser.parse_args()
-    num_pennies = detect_and_count_pennies_with_cnn(args.i)
+    #num_pennies = detect_and_count_pennies_with_cnn(args.i)
+    num_pennies = detect_and_count_pennies(args.i)
     print(f"Number of pennies detected: {num_pennies}")
