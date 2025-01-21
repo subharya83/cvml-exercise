@@ -68,3 +68,14 @@ Sample Images        |  Results |
 - **Overlapping Coins**:
   - Overlapping coins may complicate detection and classification. Advanced segmentation techniques can be employed if necessary.
 
+### Usage
+```shell
+# Python3 
+python3 countPennies.py -i input/03.png
+Number of pennies detected: 76
+
+# Compile CPP code
+g++ -std=c++11 -o countPennies countPennies.cpp `pkg-config --cflags --libs opencv4`
+./countPennies input/01.jpg 
+Number of pennies detected: 45
+```
