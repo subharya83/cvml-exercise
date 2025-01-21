@@ -33,6 +33,7 @@ solution remains effective and robust over time.
 
 ### Multimedia search and Retrival
 - [Video search with image query](./ex01/README.md)
+- [Audio Pattern retrieval Using Cross-Correlation](./ex14/README.md)
 
 ### Human pose/action analysis
 - [Cycle detection in human joint movements](./ex02/README.md)
