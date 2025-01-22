@@ -1,25 +1,25 @@
-FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
+# Use an official PyTorch image as the base image
+FROM pytorch/pytorch:2.0.1-cuda12.1-cudnn8-runtime
 
-# Set working directory
-WORKDIR /app
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
     git \
+    wget \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy training code
-COPY train.py .
+# Set the working directory
+WORKDIR /workspace
 
-# Set environment variables
-ENV TRANSFORMERS_CACHE=/app/cache
-ENV HF_HOME=/app/cache
+# Copy your code and data into the container
+COPY . .
 
-# Default command
-ENTRYPOINT ["python3", "fineTuneLM.py"]
+# Default command (can be overridden when running the container)
+CMD ["bash"]
