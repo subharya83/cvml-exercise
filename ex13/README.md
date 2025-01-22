@@ -1,4 +1,4 @@
-# Dead Pixel Detection - SPADE (Statistical Pixel Anomaly Detection Engine)
+# Statistical Pixel Anomaly DEtection (SPADE)
 
 A cutting-edge tool for detecting dead, stuck, or malfunctioning pixels in video footage using advanced statistical analysis and computer vision techniques. Perfect for computer vision enthusiasts and students looking to dive into real-world applications of image processing and anomaly detection!
 
