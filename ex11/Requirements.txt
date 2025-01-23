@@ -1,8 +1,0 @@
-torch>=2.0.0
-transformers>=4.30.0
-datasets>=2.12.0
-sentencepiece>=0.1.99
-accelerate>=0.20.0
-bitsandbytes>=0.40.0
-pdfplumber>=0.9.0
-PyPDF2>=3.0.0
