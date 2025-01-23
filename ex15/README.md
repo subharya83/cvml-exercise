@@ -129,3 +129,227 @@ plt.show()
 3. **OpenStreetMap**: For free and open-source routing, consider using OSRM or similar tools.
 
 By following these steps, you can build a comprehensive dataset of road distances between zip codes across the continental US.
+
+
+## More docs
+
+To build a dataset of geographical distances and average driving times between zip codes across the continental US using **OSRM (Open Source Routing Machine)** and other open-source tools, you can follow these steps:
+
+1. **Set up OSRM**: Use the OSRM C++ backend to preprocess map data and serve routing requests.
+2. **Use Python for Data Handling**: Use Python to manage zip code data, interact with the OSRM backend, and store results.
+3. **Parallelize the Process**: Use parallel processing to speed up distance and time calculations.
+
+Below is a detailed guide with **C++ and Python code** to achieve this.
+
+---
+
+### **Step 1: Set Up OSRM**
+
+#### 1.1 Download OSM Data
+Download OpenStreetMap (OSM) data for the continental US from [Geofabrik](https://download.geofabrik.de/north-america.html).
+
+```bash
+wget https://download.geofabrik.de/north-america/us-latest.osm.pbf
+```
+
+#### 1.2 Build OSRM Backend
+Clone and build the OSRM backend from its GitHub repository.
+
+```bash
+# Clone OSRM
+git clone https://github.com/Project-OSRM/osrm-backend.git
+cd osrm-backend
+
+# Install dependencies
+sudo apt-get install build-essential git cmake pkg-config \
+libbz2-dev libstxxl-dev libstxxl1v5 libxml2-dev \
+libzip-dev libboost-all-dev lua5.2 liblua5.2-dev libtbb-dev
+
+# Build OSRM
+mkdir -p build
+cd build
+cmake ..
+make
+```
+
+#### 1.3 Preprocess OSM Data
+Extract and preprocess the OSM data using OSRM.
+
+```bash
+# Extract data
+./osrm-extract ../us-latest.osm.pbf -p ../profiles/car.lua
+
+# Partition and customize
+./osrm-partition ../us-latest.osrm
+./osrm-customize ../us-latest.osrm
+
+# Start OSRM backend
+./osrm-routed ../us-latest.osrm
+```
+
+Now, the OSRM backend is running and ready to serve routing requests.
+
+---
+
+### **Step 2: Use Python to Interact with OSRM**
+
+#### 2.1 Install Required Python Libraries
+Install the required libraries to interact with OSRM and handle data.
+
+```bash
+pip install requests pandas numpy
+```
+
+#### 2.2 Python Script to Calculate Distances and Driving Times
+Use Python to query the OSRM backend for distances and driving times between zip codes.
+
+```python
+import requests
+import pandas as pd
+import numpy as np
+from multiprocessing import Pool
+
+# OSRM API endpoint
+OSRM_URL = "http://localhost:5000/route/v1/driving/"
+
+def get_route_info(lon1, lat1, lon2, lat2):
+    """Get distance (in km) and driving time (in minutes) between two points."""
+    url = f"{OSRM_URL}{lon1},{lat1};{lon2},{lat2}?overview=false"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("routes"):
+            distance = data["routes"][0]["distance"] / 1000  # Convert meters to kilometers
+            duration = data["routes"][0]["duration"] / 60   # Convert seconds to minutes
+            return distance, duration
+    return None, None
+
+def process_zip_pair(args):
+    """Process a pair of zip codes."""
+    zip1, zip2, lat1, lon1, lat2, lon2 = args
+    distance, duration = get_route_info(lon1, lat1, lon2, lat2)
+    return zip1, zip2, distance, duration
+
+# Load zip code data
+zip_data = pd.read_csv("us_zip_codes.csv")  # Columns: zip, lat, lon, state
+
+# Generate all unique pairs of zip codes
+zip_pairs = []
+for i, row1 in zip_data.iterrows():
+    for j, row2 in zip_data.iterrows():
+        if i < j:  # Avoid redundant calculations
+            zip_pairs.append((row1["zip"], row2["zip"], row1["lat"], row1["lon"], row2["lat"], row2["lon"]))
+
+# Use multiprocessing to speed up calculations
+with Pool(processes=8) as pool:  # Adjust the number of processes based on your CPU
+    results = pool.map(process_zip_pair, zip_pairs)
+
+# Save results to a DataFrame
+results_df = pd.DataFrame(results, columns=["zip1", "zip2", "distance_km", "duration_min"])
+results_df.to_csv("us_zip_code_distances_times.csv", index=False)
+```
+
+---
+
+### **Step 3: Optimize and Scale**
+
+#### 3.1 Parallelize with C++ (Optional)
+If you need even faster processing, you can write a C++ program to interact with the OSRM backend directly.
+
+```cpp
+#include <iostream>
+#include <curl/curl.h>
+#include <json/json.h>
+
+std::string fetch_route_info(double lon1, double lat1, double lon2, double lat2) {
+    CURL *curl;
+    CURLcode res;
+    std::string readBuffer;
+
+    curl = curl_easy_init();
+    if(curl) {
+        char url[256];
+        snprintf(url, sizeof(url), "http://localhost:5000/route/v1/driving/%.6f,%.6f;%.6f,%.6f?overview=false", lon1, lat1, lon2, lat2);
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+    }
+    return readBuffer;
+}
+
+int main() {
+    double lon1 = -122.42, lat1 = 37.78;  // Example: San Francisco
+    double lon2 = -118.24, lat2 = 34.05;  // Example: Los Angeles
+
+    std::string response = fetch_route_info(lon1, lat1, lon2, lat2);
+    Json::Value root;
+    Json::CharReaderBuilder reader;
+    std::string errs;
+
+    if (Json::parseFromStream(reader, response, &root, &errs)) {
+        double distance = root["routes"][0]["distance"].asDouble() / 1000;  // km
+        double duration = root["routes"][0]["duration"].asDouble() / 60;    // minutes
+        std::cout << "Distance: " << distance << " km, Duration: " << duration << " min" << std::endl;
+    }
+
+    return 0;
+}
+```
+
+Compile and run the C++ program:
+```bash
+g++ -o osrm_query osrm_query.cpp -lcurl -ljsoncpp
+./osrm_query
+```
+
+#### 3.2 Use a Database for Storage
+Store the results in a database (e.g., SQLite, PostgreSQL) for efficient querying and analysis.
+
+```python
+import sqlite3
+
+# Connect to SQLite database
+conn = sqlite3.connect("us_zip_distances.db")
+cursor = conn.cursor()
+
+# Create a table to store distances and times
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS zip_distances (
+    zip1 TEXT,
+    zip2 TEXT,
+    distance_km REAL,
+    duration_min REAL
+)
+""")
+
+# Insert results into the database
+results_df.to_sql("zip_distances", conn, if_exists="append", index=False)
+conn.close()
+```
+
+---
+
+### **Step 4: Visualize or Analyze the Data**
+Use Python libraries like `matplotlib` or `folium` to visualize the dataset.
+
+```python
+import matplotlib.pyplot as plt
+
+# Example: Plot a histogram of driving times
+plt.hist(results_df["duration_min"], bins=50)
+plt.xlabel("Driving Time (minutes)")
+plt.ylabel("Frequency")
+plt.title("Distribution of Driving Times Between Zip Codes")
+plt.show()
+```
+
+---
+
+### **Notes**
+1. **Data Size**: The dataset will be large, so consider using a distributed database or cloud storage.
+2. **OSRM Performance**: Ensure the OSRM backend is running on a powerful machine to handle many requests.
+3. **OpenStreetMap Updates**: Regularly update the OSM data to reflect changes in road networks.
+
+By combining OSRM's C++ backend with Python for data handling, you can efficiently build a dataset of geographical distances and driving times between zip codes across the continental US.
