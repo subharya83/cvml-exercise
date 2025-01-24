@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace cv;
 using namespace std;
@@ -56,7 +57,7 @@ Mat adaptiveThresholding(const Mat& image, int k, int C) {
 }
 
 // Function to detect bright regions using integral images
-Mat detectBrightRegions(const Mat& image, int w, int h, float T) {
+Mat detectBrightRegions(const Mat& image, int w, int h, float T, vector<Point>& brightRegions) {
     int rows = image.rows;
     int cols = image.cols;
     int halfW = w / 2;
@@ -90,6 +91,7 @@ Mat detectBrightRegions(const Mat& image, int w, int h, float T) {
             // Highlight the region if the mean intensity exceeds the threshold
             if (regionMean > T) {
                 outputImage.at<uchar>(i, j) = 255;  // Highlight
+                brightRegions.push_back(Point(j, i));  // Store the coordinates of the bright region
             }
         }
     }
@@ -125,6 +127,7 @@ int main(int argc, char** argv) {
     }
 
     Mat outputImage;
+    vector<Point> brightRegions;  // To store coordinates of bright regions
 
     if (mode == 0) {
         // Parameters for adaptive thresholding
@@ -140,7 +143,14 @@ int main(int argc, char** argv) {
         float T = 200.0f;  // Intensity threshold
 
         // Detect bright regions
-        outputImage = detectBrightRegions(image, w, h, T);
+        outputImage = detectBrightRegions(image, w, h, T, brightRegions);
+
+        // Output the number of detected bright regions and their coordinates
+        cout << "Number of bright regions detected: " << brightRegions.size() << endl;
+        cout << "Coordinates of bright regions (x, y):" << endl;
+        for (const auto& point : brightRegions) {
+            cout << "(" << point.x << ", " << point.y << ")" << endl;
+        }
     } else {
         cerr << "Invalid mode selected. Use 0 for adaptive thresholding or 1 for bright region detection." << endl;
         return -1;
