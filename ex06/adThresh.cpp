@@ -102,12 +102,13 @@ Mat detectBrightRegions(const Mat& image, int w, int h, float T, vector<Point>& 
 int main(int argc, char** argv) {
     // Parse command-line arguments
     if (argc < 4) {
-        cerr << "Usage: " << argv[0] << " -i <input_image> -m <mode> -o <output_image>" << endl;
+        cerr << "Usage: " << argv[0] << " -i <input_image> -m <mode> [-o <output_image>]" << endl;
         return -1;
     }
 
     string inputPath, outputPath;
     int mode = 1;
+    bool saveOutput = false;
 
     for (int i = 1; i < argc; i++) {
         if (string(argv[i]) == "-i") {
@@ -116,6 +117,7 @@ int main(int argc, char** argv) {
             mode = stoi(argv[++i]);
         } else if (string(argv[i]) == "-o") {
             outputPath = argv[++i];
+            saveOutput = true;
         }
     }
 
@@ -156,14 +158,11 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    // Save the output image
-    imwrite(outputPath, outputImage);
-
-    // Display the results
-    imshow("Original Image", image);
-    imshow("Output Image", outputImage);
-    waitKey(0);
-    destroyAllWindows();
+    // Save the output image only if -o is provided
+    if (saveOutput) {
+        imwrite(outputPath, outputImage);
+        cout << "Output image saved to: " << outputPath << endl;
+    }
 
     return 0;
 }
