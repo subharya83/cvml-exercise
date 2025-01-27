@@ -1,32 +1,29 @@
-import os
 import numpy as np
-from CamMotionClassification import CamMotionClassifier
+from sklearn.svm import SVC
+from sklearn.decomposition import PCA
+import joblib
 
-def load_dataset(dataset_path):
-    X = []
-    y = []
-    class_labels = os.listdir(dataset_path)
-    for label in class_labels:
-        class_path = os.path.join(dataset_path, label)
-        for video_file in os.listdir(class_path):
-            video_path = os.path.join(class_path, video_file)
-            classifier = CamMotionClassifier()
-            features = classifier.extract_features(video_path)
-            if len(features) > 0:
-                X.append(np.mean(features, axis=0))  # Use mean feature vector
-                y.append(label)
-    return np.array(X), np.array(y)
+def load_dataset(dataset_file):
+    data = np.load(dataset_file)
+    X = data['X']
+    y = data['y']
+    return X, y
 
 def main():
-    dataset_path = "path_to_cinematographic_shot_dataset"
-    X, y = load_dataset(dataset_path)
+    dataset_file = "dataset.npz"
+    X, y = load_dataset(dataset_file)
 
-    classifier = CamMotionClassifier()
-    classifier.train(X, y)
+    # Reduce dimensionality using PCA
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X)
 
-    # Save the trained model (optional)
-    import joblib
-    joblib.dump(classifier, 'trained_classifier.pkl')
+    # Train an SVM classifier
+    classifier = SVC(kernel='linear')
+    classifier.fit(X_pca, y)
+
+    # Save the trained model
+    joblib.dump((classifier, pca), 'trained_model.pkl')
+    print("Model trained and saved to trained_model.pkl")
 
 if __name__ == "__main__":
     main()

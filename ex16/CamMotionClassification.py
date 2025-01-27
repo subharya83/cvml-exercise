@@ -1,14 +1,10 @@
 import cv2
 import numpy as np
-from sklearn.decomposition import PCA
-from sklearn.svm import SVC
-from scipy.linalg import logm, expm
+from scipy.linalg import logm
 
 class CamMotionClassifier:
     def __init__(self):
         self.surf = cv2.xfeatures2d.SURF_create()
-        self.pca = PCA(n_components=2)
-        self.svm = SVC(kernel='linear')
 
     def compute_homography(self, frame1, frame2):
         # Detect SURF features
@@ -64,12 +60,3 @@ class CamMotionClassifier:
 
         cap.release()
         return np.array(features)
-
-    def train(self, X, y):
-        # Reduce dimensionality using PCA
-        X_pca = self.pca.fit_transform(X)
-        self.svm.fit(X_pca, y)
-
-    def predict(self, X):
-        X_pca = self.pca.transform(X)
-        return self.svm.predict(X_pca)
