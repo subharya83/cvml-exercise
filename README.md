@@ -60,3 +60,7 @@ solution remains effective and robust over time.
 - [Automated Question-Answer Pair Generator](./ex04/README.md)
 - [Image Captioning with ResNet50 and LSTM](./ex10/README.md) 
 - [Fine tuning Language Models](./ex11/README.md) 
+
+### Cinematographic Shot classification
+- [Shot Classification based on Human Subjects](./ex15/README.md)
+- [Shot Classification based on Camera Motion Classification](./ex16/README.md)
