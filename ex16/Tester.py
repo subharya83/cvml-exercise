@@ -1,5 +1,6 @@
 import numpy as np
 import joblib
+import argparse
 from CamMotionClassification import CamMotionClassifier
 
 def test_classifier(classifier, pca, test_video_path):
@@ -15,12 +16,16 @@ def test_classifier(classifier, pca, test_video_path):
         return "Unknown"
 
 def main():
-    # Load the trained model
-    classifier, pca = joblib.load('trained_model.pkl')
+    parser = argparse.ArgumentParser(description="Test a camera motion classifier.")
+    parser.add_argument("--model_file", type=str, default="trained_model.pkl", help="File containing the trained model.")
+    parser.add_argument("--test_video", type=str, required=True, help="Path to the test video.")
+    args = parser.parse_args()
 
-    # Test on a new video
-    test_video_path = "path_to_test_video.mp4"
-    predicted_class = test_classifier(classifier, pca, test_video_path)
+    # Load the trained model
+    classifier, pca = joblib.load(args.model_file)
+
+    # Test on the provided video
+    predicted_class = test_classifier(classifier, pca, args.test_video)
     print(f"Predicted Class: {predicted_class}")
 
 if __name__ == "__main__":
