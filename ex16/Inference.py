@@ -17,15 +17,15 @@ def test_classifier(classifier, pca, test_video_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Test a camera motion classifier.")
-    parser.add_argument("--model_file", type=str, default="trained_model.pkl", help="File containing the trained model.")
-    parser.add_argument("--test_video", type=str, required=True, help="Path to the test video.")
+    parser.add_argument("-m", type=str, default="output/CamMotionModel.pkl", help="File containing the trained model.")
+    parser.add_argument("-t", type=str, required=True, help="Path to the test video.")
     args = parser.parse_args()
 
     # Load the trained model
-    classifier, pca = joblib.load(args.model_file)
+    classifier, pca = joblib.load(args.m)
 
     # Test on the provided video
-    predicted_class = test_classifier(classifier, pca, args.test_video)
+    predicted_class = test_classifier(classifier, pca, args.t)
     print(f"Predicted Class: {predicted_class}")
 
 if __name__ == "__main__":
