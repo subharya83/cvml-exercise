@@ -1,19 +1,40 @@
-You're absolutely correct! Since the C++ implementation relies on **Eigen** and **Boost** libraries (in addition to OpenCV), they should be included in the compilation commands in the `README.md`. Here's the updated `README.md` with the correct compilation commands:
+Here’s an updated version of the `README.md` with a detailed introduction to the problem, tailored for computer vision graduate students:
 
 ---
 
 # Camera Motion Classification
 
-This project provides tools for classifying camera motion in video sequences. It includes both Python and C++ implementations.
+This project provides tools for classifying camera motion in video sequences. It includes both Python and C++ implementations, making it suitable for both rapid prototyping and high-performance deployment.
 
 ## Table of Contents
-1. [Python Implementation](#python-implementation)
-2. [C++ Implementation](#cpp-implementation)
-3. [Dependencies](#dependencies)
-4. [Usage](#usage)
+1. [Introduction](#introduction)
+2. [Python Implementation](#python-implementation)
+3. [C++ Implementation](#cpp-implementation)
+4. [Dependencies](#dependencies)
+5. [Usage](#usage)
    - [Training the Model](#training-the-model)
    - [Running Inference](#running-inference)
-5. [File Descriptions](#file-descriptions)
+6. [File Descriptions](#file-descriptions)
+
+---
+
+## Introduction
+
+### Problem Statement
+In computer vision, understanding camera motion is a fundamental task with applications in video stabilization, action recognition, and autonomous navigation. Camera motion can be categorized into various types, such as **panning**, **tilting**, **zooming**, and **rotation**. Automatically classifying these motions from video sequences is a challenging problem due to the complexity of motion patterns and the need for robust feature extraction.
+
+### Why This Matters
+- **Video Stabilization**: Identifying camera motion helps in stabilizing shaky videos by compensating for unwanted movements.
+- **Action Recognition**: Camera motion classification can improve action recognition systems by separating camera-induced motion from object motion.
+- **Autonomous Systems**: In robotics and autonomous vehicles, understanding ego-motion (camera motion relative to the environment) is critical for navigation and mapping.
+
+### Technical Approach
+This project uses **homography estimation** and **Lie algebra mapping** to extract features from video frames. Homography captures the geometric transformation between consecutive frames, while Lie algebra provides a compact representation of these transformations in a vector space. These features are then used to train a classifier (e.g., SVM) to predict the type of camera motion.
+
+### Key Contributions
+- **Feature Extraction**: Utilizes SURF (Speeded-Up Robust Features) for detecting keypoints and computing homographies.
+- **Lie Algebra Mapping**: Maps homographies to a vector space for efficient classification.
+- **Modular Design**: Provides both Python and C++ implementations, making it accessible for research and production.
 
 ---
 
