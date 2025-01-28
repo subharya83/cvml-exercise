@@ -62,5 +62,5 @@ solution remains effective and robust over time.
 - [Fine tuning Language Models](./ex11/README.md) 
 
 ### Cinematographic Shot classification
-- [Based on Human Subjects](./ex15/README.md)
+- [Based on Human Subjects](./ex17/README.md)
 - [Based on Camera Motion](./ex16/README.md)
