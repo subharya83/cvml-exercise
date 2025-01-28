@@ -1,6 +1,6 @@
 ### Updated README.md
 
-```markdown
+
 # Shot Classification with SGNet: A Deep Dive into Movie Shot Analysis
 
 Welcome to the **Shot Classification with SGNet** project! This project is designed to classify movie shots based on their scale and movement using the **SGNet** model. Whether you're a computer vision enthusiast or a film buff, this project offers a fascinating intersection of deep learning and cinematic analysis.
@@ -10,6 +10,16 @@ Welcome to the **Shot Classification with SGNet** project! This project is desig
 - **Cinematic Insight**: Understand how different shot scales and movements contribute to storytelling in movies.
 - **Hands-On Learning**: Get hands-on experience with state-of-the-art deep learning models in computer vision.
 - **Real-World Application**: Apply your skills to classify shots in real movies or even your own videos.
+
+```shell
+[Input Image] --> [Subject Map Generator] --> [Subject Image]
+    |                                   ▲
+    ▼                                   |
+[ResNet50] ------------------------> [Feature Fusion] --> [Scale Classification]
+    |                                   ▲
+    ▼                                   |
+[Variance Map Module] --> [Movement Classification]
+```
 
 ## Requirements
 
