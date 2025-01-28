@@ -11,15 +11,7 @@ Welcome to the **Shot Classification with SGNet** project! This project is desig
 - **Hands-On Learning**: Get hands-on experience with state-of-the-art deep learning models in computer vision.
 - **Real-World Application**: Apply your skills to classify shots in real movies or even your own videos.
 
-```shell
-[Input Image] --> [Subject Map Generator] --> [Subject Image]
-    |                                   ▲
-    ▼                                   |
-[ResNet50] ------------------------> [Feature Fusion] --> [Scale Classification]
-    |                                   ▲
-    ▼                                   |
-[Variance Map Module] --> [Movement Classification]
-```
+![Feature Extraction](../assets/ex17-fx.png)
 
 ## Requirements
 
