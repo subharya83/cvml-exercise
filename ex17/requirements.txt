@@ -1,0 +1,6 @@
+torch>=1.0.0
+torchvision>=0.2.1
+opencv-python>=4.0.0
+pandas>=1.0.0
+Pillow>=6.0.0
+numpy>=1.18.0
