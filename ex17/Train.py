@@ -11,6 +11,35 @@ from torchvision.transforms import Compose, Resize, ToTensor
 from PIL import Image
 import numpy as np
 
+def get_file_type(file_path):
+    # Check magic numbers to determine file type
+    with open(file_path, 'rb') as f:
+        header = f.read(12)
+    
+    # Check for common image formats
+    if len(header) >= 2 and header.startswith(b'\xFF\xD8'):
+        return 'image'  # JPEG
+    if len(header) >= 8 and header.startswith(b'\x89PNG\r\n\x1a\n'):
+        return 'image'  # PNG
+    if len(header) >= 6 and (header.startswith(b'GIF87a') or header.startswith(b'GIF89a')):
+        return 'image'  # GIF
+    # Check for video formats
+    if len(header) >= 8:
+        if header[4:8] == b'ftyp':  # MP4, MOV
+            return 'video'
+        if header.startswith(b'RIFF') and len(header) >= 12 and header[8:12] == b'AVI ':
+            return 'video'  # AVI
+    # Fallback to file extension if magic number not recognized
+    ext = os.path.splitext(file_path)[1].lower()
+    image_exts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp']
+    video_exts = ['.mp4', '.avi', '.mov', '.mkv', '.flv', '.webm']
+    if ext in image_exts:
+        return 'image'
+    elif ext in video_exts:
+        return 'video'
+    else:
+        raise ValueError(f"Unsupported file type: {file_path}")
+
 class MovieShotsDataset(Dataset):
     def __init__(self, root, csv_file, transform=None):
         self.root = root
@@ -21,23 +50,31 @@ class MovieShotsDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        video_path = os.path.join(self.root, self.data.iloc[idx, 0])
+        file_path = os.path.join(self.root, self.data.iloc[idx, 0])
         scale_label = self.data.iloc[idx, 1]
         movement_label = self.data.iloc[idx, 2]
 
-        # Extract a random frame from the video
-        cap = cv2.VideoCapture(video_path)
-        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        frame_idx = np.random.randint(0, frame_count)
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
-        ret, frame = cap.read()
-        cap.release()
+        file_type = get_file_type(file_path)
 
-        if not ret:
-            raise ValueError(f"Unable to read frame {frame_idx} from video {video_path}")
-
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        image = Image.fromarray(frame)
+        if file_type == 'image':
+            # Load image directly
+            image = Image.open(file_path)
+        elif file_type == 'video':
+            # Extract random frame from video
+            cap = cv2.VideoCapture(file_path)
+            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            if frame_count == 0:
+                raise ValueError(f"Video {file_path} has no frames.")
+            frame_idx = np.random.randint(0, frame_count)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+            ret, frame = cap.read()
+            cap.release()
+            if not ret:
+                raise ValueError(f"Unable to read frame {frame_idx} from video {file_path}")
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            image = Image.fromarray(frame)
+        else:
+            raise ValueError(f"Unsupported file type for {file_path}")
 
         if self.transform:
             image = self.transform(image)
@@ -93,11 +130,11 @@ def train_model(dataset_file, output_model_file):
 
 def main():
     parser = argparse.ArgumentParser(description="Train the SGNet model for shot classification.")
-    parser.add_argument('-d', '--dataset', type=str, help="Build dataset from videos and CSV file. Usage: -d dataset.ext")
+    parser.add_argument('-d', '--dataset', type=str, help="Build dataset from files and CSV. Usage: -d dataset.ext")
     parser.add_argument('-t', '--train', type=str, help="Train the model using a pre-built dataset. Usage: -t dataset.ext")
     parser.add_argument('-o', '--output', type=str, help="Output model file. Usage: -o model.pth")
-    parser.add_argument('-r', '--root', type=str, help="Root directory containing videos.")
-    parser.add_argument('-c', '--csv', type=str, help="CSV file containing video filenames and labels.")
+    parser.add_argument('-r', '--root', type=str, help="Root directory containing files.")
+    parser.add_argument('-c', '--csv', type=str, help="CSV file containing filenames and labels.")
     args = parser.parse_args()
 
     if args.dataset:
