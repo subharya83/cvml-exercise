@@ -29,12 +29,16 @@ In computer vision, understanding camera motion is a fundamental task with appli
 - **Autonomous Systems**: In robotics and autonomous vehicles, understanding ego-motion (camera motion relative to the environment) is critical for navigation and mapping.
 
 ### Technical Approach
+
+![Computational Flow](../assets/ex16-fc.png)
+
 This project uses **homography estimation** and **Lie algebra mapping** to extract features from video frames. Homography captures the geometric transformation between consecutive frames, while Lie algebra provides a compact representation of these transformations in a vector space. These features are then used to train a classifier (e.g., SVM) to predict the type of camera motion.
 
 ### Key Contributions
+![Fature extaction Block Diagram](../assets/ex16-fx.png)
+
 - **Feature Extraction**: Utilizes SURF (Speeded-Up Robust Features) for detecting keypoints and computing homographies.
 - **Lie Algebra Mapping**: Maps homographies to a vector space for efficient classification.
-- **Modular Design**: Provides both Python and C++ implementations, making it accessible for research and production.
 
 ---
 
