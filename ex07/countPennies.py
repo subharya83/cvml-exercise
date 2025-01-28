@@ -6,7 +6,7 @@ import tensorflow as tf
 
 def detect_and_count_pennies(image_path):
     """
-    Detects and counts U.S. pennies in an image.
+    Detects and counts U.S. pennies in an image using multi-scale Hough Circle Transform.
     
     Parameters:
         image_path (str): Path to the image containing coins.
@@ -14,153 +14,165 @@ def detect_and_count_pennies(image_path):
     Returns:
         int: Number of pennies detected.
     """
-    # Load the image
     image = cv2.imread(image_path)
     if image is None:
         print("Error: Image not found.")
         return 0
 
-    # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Apply Gaussian blur
     blurred = cv2.GaussianBlur(gray, (9, 9), 2)
 
-    # Detect circles using Hough Circle Transform
-    circles = cv2.HoughCircles(
-        blurred,
-        cv2.HOUGH_GRADIENT,
-        dp=1.2,
-        minDist=30,
-        param1=50,
-        param2=30,
-        minRadius=10,
-        maxRadius=50
-    )
+    # Multi-scale parameters
+    scales = [0.5, 0.75, 1.0, 1.25, 1.5]
+    all_circles = []
 
-    if circles is not None:
-        circles = np.uint16(np.around(circles))
-        penny_count = 0
+    for s in scales:
+        resized = cv2.resize(blurred, None, fx=s, fy=s)
+        min_radius_scaled = max(1, int(10 * s))  # Ensure min radius is at least 1
+        max_radius_scaled = int(50 * s)
+        
+        circles = cv2.HoughCircles(
+            resized,
+            cv2.HOUGH_GRADIENT,
+            dp=1.2,
+            minDist=30,
+            param1=50,
+            param2=30,
+            minRadius=min_radius_scaled,
+            maxRadius=max_radius_scaled
+        )
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for circle in circles[0, :]:
+                x, y, r = circle
+                # Convert back to original scale
+                orig_x = int(x / s)
+                orig_y = int(y / s)
+                orig_r = int(r / s)
+                all_circles.append((orig_x, orig_y, orig_r))
 
-        for circle in circles[0, :]:
-            x, y, radius = circle
+    # Merge overlapping circles
+    merged = []
+    for x, y, r in all_circles:
+        duplicate = False
+        for mx, my, mr in merged:
+            distance = np.sqrt((x - mx)**2 + (y - my)**2)
+            if distance < 20 and abs(r - mr) < 10:
+                duplicate = True
+                break
+        if not duplicate:
+            merged.append((x, y, r))
 
-            # Extract the region of interest (ROI) for the coin
-            mask = np.zeros_like(gray)
-            cv2.circle(mask, (x, y), radius, 255, -1)
-            coin_roi = cv2.bitwise_and(image, image, mask=mask)
+    penny_count = 0
+    for x, y, r in merged:
+        diameter = 2 * r
+        # Adjusted diameter range based on Hough parameters and calibration
+        if 18 <= diameter <= 22:  # Calibrate this range as needed
+            penny_count += 1
+            cv2.circle(image, (x, y), r, (0, 255, 0), 2)
+            cv2.putText(image, "Penny", (x - r, y - r - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-            # Measure the diameter (pixel radius * 2)
-            diameter = radius * 2
+    cv2.imshow("Detected Pennies", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-            # Pennies have a known approximate diameter
-            if 18 <= diameter <= 20:  # Adjust thresholds based on calibration
-                penny_count += 1
-
-                # Optionally, draw the detected penny on the image
-                cv2.circle(image, (x, y), radius, (0, 255, 0), 2)
-                cv2.putText(image, "Penny", (x - radius, y - radius - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-        # Show the result
-        cv2.imshow("Detected Pennies", image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-        return penny_count
-    else:
-        print("No coins detected.")
-        return 0
+    return penny_count
 
 
 def detect_and_count_pennies_with_cnn(image_path):
     """
-    Detects and counts U.S. pennies in an image using a combination of Hough Circle Transform
-    and a CNN-based object detection model.
-
-    Parameters:
-        image_path (str): Path to the image containing coins.
-        
-    Returns:
-        int: Number of pennies detected.
+    Detects and counts pennies using multi-scale Hough Transform and CNN classification.
     """
-    model_path = "penny_detection_model.h5" 
+    model_path = "penny_detection_model.h5"
     detection_model = tf.saved_model.load(model_path)
 
-    # Load the image
     image = cv2.imread(image_path)
     if image is None:
         print("Error: Image not found.")
         return 0
 
-    # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Apply Gaussian blur
     blurred = cv2.GaussianBlur(gray, (9, 9), 2)
 
-    # Detect circles using Hough Circle Transform
-    circles = cv2.HoughCircles(
-        blurred,
-        cv2.HOUGH_GRADIENT,
-        dp=1.2,
-        minDist=30,
-        param1=50,
-        param2=30,
-        minRadius=10,
-        maxRadius=50
-    )
+    scales = [0.5, 0.75, 1.0, 1.25, 1.5]
+    all_circles = []
 
-    if circles is not None:
-        circles = np.uint16(np.around(circles))
-        penny_count = 0
+    for s in scales:
+        resized = cv2.resize(blurred, None, fx=s, fy=s)
+        min_radius_scaled = max(1, int(10 * s))
+        max_radius_scaled = int(1000 * s)
+        
+        circles = cv2.HoughCircles(
+            resized,
+            cv2.HOUGH_GRADIENT,
+            dp=1.2,
+            minDist=30,
+            param1=50,
+            param2=30,
+            minRadius=min_radius_scaled,
+            maxRadius=max_radius_scaled
+        )
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            for circle in circles[0, :]:
+                x, y, r = circle
+                orig_x = int(x / s)
+                orig_y = int(y / s)
+                orig_r = int(r / s)
+                all_circles.append((orig_x, orig_y, orig_r))
 
-        for circle in circles[0, :]:
-            x, y, radius = circle
+    merged = []
+    for x, y, r in all_circles:
+        duplicate = False
+        for mx, my, mr in merged:
+            distance = np.sqrt((x - mx)**2 + (y - my)**2)
+            if distance < 20 and abs(r - mr) < 10:
+                duplicate = True
+                break
+        if not duplicate:
+            merged.append((x, y, r))
 
-            # Extract the region of interest (ROI) for the coin
-            x1, y1 = max(0, x - radius), max(0, y - radius)
-            x2, y2 = min(image.shape[1], x + radius), min(image.shape[0], y + radius)
-            coin_roi = image[y1:y2, x1:x2]
+    penny_count = 0
+    for x, y, r in merged:
+        x1, y1 = max(0, x - r), max(0, y - r)
+        x2, y2 = x + r, y + r
+        coin_roi = image[y1:y2, x1:x2]
+        if coin_roi.size == 0:
+            continue
 
-            # Prepare the ROI for CNN model
-            coin_roi_resized = cv2.resize(coin_roi, (224, 224))  # Resize to match model input size
-            coin_roi_tensor = tf.convert_to_tensor(coin_roi_resized, dtype=tf.float32)
-            coin_roi_tensor = tf.expand_dims(coin_roi_tensor, axis=0)  # Add batch dimension
+        coin_roi_resized = cv2.resize(coin_roi, (224, 224))
+        coin_roi_tensor = tf.convert_to_tensor(coin_roi_resized, dtype=tf.float32)
+        coin_roi_tensor = tf.expand_dims(coin_roi_tensor, axis=0)
 
-            # Perform inference with the CNN model
-            detections = detection_model(coin_roi_tensor)
+        detections = detection_model(coin_roi_tensor)
+        scores = detections["detection_scores"].numpy()[0]
+        classes = detections["detection_classes"].numpy()[0]
 
-            # Extract detection results
-            scores = detections["detection_scores"].numpy()
-            classes = detections["detection_classes"].numpy()
-            class_names = [int(cls) for cls in classes]
-
-            # Check if the highest-scoring detection is a penny
-            if scores[0] > 0.5 and class_names[0] == 1:  # Assuming class 1 is "Penny"
+        for score, cls in zip(scores, classes):
+            if score > 0.5 and cls == 1:
                 penny_count += 1
-
-                # Optionally, draw the detected penny on the image
-                cv2.circle(image, (x, y), radius, (0, 255, 0), 2)
-                cv2.putText(image, "Penny", (x - radius, y - radius - 10),
+                cv2.circle(image, (x, y), r, (0, 255, 0), 2)
+                cv2.putText(image, "Penny", (x - r, y - r - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                break
 
-        # Show the result
-        cv2.imshow("Detected Pennies", image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+    cv2.imshow("Detected Pennies", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-        return penny_count
-    else:
-        print("No coins detected.")
-        return 0
+    return penny_count
 
-# Example usage
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Counting pennies w/o CNN')
+    parser = argparse.ArgumentParser(description='Count pennies using improved detection')
     parser.add_argument('-i', required=True, help='Path to input image')
-    # Parse arguments
+    parser.add_argument('--cnn', action='store_true', help='Use CNN for classification')
     args = parser.parse_args()
-    #num_pennies = detect_and_count_pennies_with_cnn(args.i)
-    num_pennies = detect_and_count_pennies(args.i)
+    
+    if args.cnn:
+        num_pennies = detect_and_count_pennies_with_cnn(args.i)
+    else:
+        num_pennies = detect_and_count_pennies(args.i)
+        
     print(f"Number of pennies detected: {num_pennies}")
