@@ -1,0 +1,8 @@
+numpy
+scipy
+scikit-learn
+opencv-python
+opencv-contrib-python
+joblib
+google-api-python-client
+boost
