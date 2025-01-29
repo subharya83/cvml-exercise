@@ -79,15 +79,6 @@ def detect_circles(image_path, visualize=False):
     # Create a binary version of the image
     _, binary = cv2.threshold(edges, 50, 255, cv2.THRESH_BINARY)
 
-    # Find connected components
-    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(binary, connectivity=8)
-
-    # Create a mask for the largest connected component (assuming it's the background)
-    if num_labels > 1:
-        largest_component = np.argmax(stats[1:, cv2.CC_STAT_AREA]) + 1
-        mask = (labels == largest_component).astype("uint8") * 255
-        binary = cv2.bitwise_and(binary, binary, mask=mask)
-
     # Detect circles using Hough Circle Transform on the binarized image
     circles = cv2.HoughCircles(
         binary,
