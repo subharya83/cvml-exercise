@@ -73,18 +73,31 @@ def detect_circles(image_path, visualize=False):
     # Apply Gaussian blur to reduce noise
     blurred = cv2.GaussianBlur(gray, (9, 9), 2)
     
+    # Apply Canny edge detection
     edges = cv2.Canny(blurred, 50, 150)
 
-    # Detect circles using Hough Circle Transform
+    # Create a binary version of the image
+    _, binary = cv2.threshold(edges, 50, 255, cv2.THRESH_BINARY)
+
+    # Find connected components
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(binary, connectivity=8)
+
+    # Create a mask for the largest connected component (assuming it's the background)
+    if num_labels > 1:
+        largest_component = np.argmax(stats[1:, cv2.CC_STAT_AREA]) + 1
+        mask = (labels == largest_component).astype("uint8") * 255
+        binary = cv2.bitwise_and(binary, binary, mask=mask)
+
+    # Detect circles using Hough Circle Transform on the binarized image
     circles = cv2.HoughCircles(
-        edges,
+        binary,
         cv2.HOUGH_GRADIENT,
         dp=1.2,  # Inverse ratio of the accumulator resolution
         minDist=30,  # Minimum distance between detected centers
         param1=50,  # Upper threshold for edge detection
         param2=30,  # Threshold for center detection
-        minRadius=100,  # Minimum radius of circles to detect
-        maxRadius=500   # Maximum radius of circles to detect
+        minRadius=10,  # Minimum radius of circles to detect
+        maxRadius=100   # Maximum radius of circles to detect
     )
 
     if circles is not None:
