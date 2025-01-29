@@ -1,208 +1,151 @@
 #include <opencv2/opencv.hpp>
-#include <opencv2/dnn.hpp>
-#include <iostream>
 #include <vector>
-#include <string>
+#include <algorithm>
+#include <cmath>
+#include <iostream>
 
-class PennyDetector {
-private:
-    cv::dnn::Net model;
-    bool has_model;
-
-public:
-    PennyDetector() : has_model(false) {}
-
-    bool loadModel(const std::string& model_path) {
-        try {
-            model = cv::dnn::readNet(model_path);
-            has_model = true;
-            return true;
-        }
-        catch (const cv::Exception& e) {
-            std::cerr << "Error loading model: " << e.what() << std::endl;
-            return false;
-        }
-    }
-
-    int detectAndCountPennies(const std::string& image_path) {
-        // Load the image
-        cv::Mat image = cv::imread(image_path);
-        if (image.empty()) {
-            std::cerr << "Error: Image not found." << std::endl;
-            return 0;
-        }
-
-        // Convert to grayscale
-        cv::Mat gray;
-        cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
-
-        // Apply Gaussian blur
-        cv::Mat blurred;
-        cv::GaussianBlur(gray, blurred, cv::Size(9, 9), 2);
-
-        // Detect circles using Hough Circle Transform
-        std::vector<cv::Vec3f> circles;
-        cv::HoughCircles(
-            blurred,
-            circles,
-            cv::HOUGH_GRADIENT,
-            1.2,
-            30,    // minDist
-            50,    // param1
-            30,    // param2
-            10,    // minRadius
-            50     // maxRadius
-        );
-
-        if (!circles.empty()) {
-            int penny_count = 0;
-
-            for (const auto& circle : circles) {
-                int x = cvRound(circle[0]);
-                int y = cvRound(circle[1]);
-                int radius = cvRound(circle[2]);
-
-                // Create mask for ROI
-                cv::Mat mask = cv::Mat::zeros(gray.size(), gray.type());
-                cv::circle(mask, cv::Point(x, y), radius, cv::Scalar(255), -1);
-
-                // Extract ROI
-                cv::Mat coin_roi;
-                image.copyTo(coin_roi, mask);
-
-                // Measure diameter
-                int diameter = radius * 2;
-
-                // Check if the coin matches penny dimensions
-                if (diameter >= 18 && diameter <= 20) {
-                    penny_count++;
-
-                    // Draw detection on image
-                    cv::circle(image, cv::Point(x, y), radius, cv::Scalar(0, 255, 0), 2);
-                    cv::putText(image, "Penny", 
-                        cv::Point(x - radius, y - radius - 10),
-                        cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
-                }
-            }
-
-            // Show result
-            cv::imshow("Detected Pennies", image);
-            cv::waitKey(0);
-            cv::destroyAllWindows();
-
-            return penny_count;
-        }
-
-        std::cout << "No coins detected." << std::endl;
-        return 0;
-    }
-
-    int detectAndCountPenniesWithCNN(const std::string& image_path) {
-        if (!has_model) {
-            std::cerr << "Error: CNN model not loaded" << std::endl;
-            return 0;
-        }
-
-        // Load the image
-        cv::Mat image = cv::imread(image_path);
-        if (image.empty()) {
-            std::cerr << "Error: Image not found." << std::endl;
-            return 0;
-        }
-
-        // Convert to grayscale
-        cv::Mat gray;
-        cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
-
-        // Apply Gaussian blur
-        cv::Mat blurred;
-        cv::GaussianBlur(gray, blurred, cv::Size(9, 9), 2);
-
-        // Detect circles using Hough Circle Transform
-        std::vector<cv::Vec3f> circles;
-        cv::HoughCircles(
-            blurred,
-            circles,
-            cv::HOUGH_GRADIENT,
-            1.2,
-            30,    // minDist
-            50,    // param1
-            30,    // param2
-            10,    // minRadius
-            50     // maxRadius
-        );
-
-        if (!circles.empty()) {
-            int penny_count = 0;
-
-            for (const auto& circle : circles) {
-                int x = cvRound(circle[0]);
-                int y = cvRound(circle[1]);
-                int radius = cvRound(circle[2]);
-
-                // Extract ROI
-                cv::Rect roi(
-                    std::max(0, x - radius),
-                    std::max(0, y - radius),
-                    std::min(image.cols - x + radius, radius * 2),
-                    std::min(image.rows - y + radius, radius * 2)
-                );
-                cv::Mat coin_roi = image(roi);
-
-                // Prepare ROI for CNN model
-                cv::Mat coin_roi_resized;
-                cv::resize(coin_roi, coin_roi_resized, cv::Size(224, 224));
-                
-                // Convert to blob for DNN
-                cv::Mat blob = cv::dnn::blobFromImage(coin_roi_resized, 1.0, 
-                    cv::Size(224, 224), cv::Scalar(0, 0, 0), true, false);
-
-                // Run inference
-                model.setInput(blob);
-                cv::Mat outputs = model.forward();
-
-                // Process detection results
-                float confidence = outputs.at<float>(0);
-                if (confidence > 0.5) {  // Assuming binary classification
-                    penny_count++;
-
-                    // Draw detection on image
-                    cv::circle(image, cv::Point(x, y), radius, cv::Scalar(0, 255, 0), 2);
-                    cv::putText(image, "Penny", 
-                        cv::Point(x - radius, y - radius - 10),
-                        cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
-                }
-            }
-
-            // Show result
-            cv::imshow("Detected Pennies", image);
-            cv::waitKey(0);
-            cv::destroyAllWindows();
-
-            return penny_count;
-        }
-
-        std::cout << "No coins detected." << std::endl;
-        return 0;
-    }
+struct Circle {
+    int x, y, radius;
 };
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <image_path>" << std::endl;
-        return 1;
+std::vector<Circle> non_max_suppression(const std::vector<Circle>& circles, float overlap_threshold = 0.5f) {
+    if (circles.empty()) {
+        return {};
     }
 
-    PennyDetector detector;
-    
-    // Uncomment and modify path to use CNN-based detection
-    // if (!detector.loadModel("penny_detection_model.xml")) {
-    //     return 1;
-    // }
-    // int num_pennies = detector.detectAndCountPenniesWithCNN(argv[1]);
-    
-    int num_pennies = detector.detectAndCountPennies(argv[1]);
-    std::cout << "Number of pennies detected: " << num_pennies << std::endl;
+    // Sort circles by radius (largest first)
+    std::vector<Circle> sorted_circles = circles;
+    std::sort(sorted_circles.begin(), sorted_circles.end(), [](const Circle& a, const Circle& b) {
+        return a.radius > b.radius;
+    });
+
+    std::vector<Circle> suppressed;
+
+    while (!sorted_circles.empty()) {
+        // Take the largest circle
+        Circle current = sorted_circles.front();
+        suppressed.push_back(current);
+        sorted_circles.erase(sorted_circles.begin());
+
+        // Calculate overlap with remaining circles
+        std::vector<Circle> to_keep;
+        for (const auto& circle : sorted_circles) {
+            // Calculate distance between centers
+            float dx = current.x - circle.x;
+            float dy = current.y - circle.y;
+            float distance = std::sqrt(dx * dx + dy * dy);
+
+            // Calculate overlap ratio (intersection over union)
+            if (distance < (current.radius + circle.radius)) {
+                float overlap_ratio = (current.radius * current.radius) / (circle.radius * circle.radius);
+                if (overlap_ratio <= overlap_threshold) {
+                    to_keep.push_back(circle);
+                }
+            } else {
+                to_keep.push_back(circle);
+            }
+        }
+
+        sorted_circles = to_keep;
+    }
+
+    return suppressed;
+}
+
+int detect_circles(const std::string& image_path, bool visualize = false) {
+    // Load the image
+    cv::Mat image = cv::imread(image_path);
+    if (image.empty()) {
+        std::cerr << "Error: Image not found." << std::endl;
+        return 0;
+    }
+
+    // Convert to grayscale
+    cv::Mat gray;
+    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+
+    // Apply Gaussian blur to reduce noise
+    cv::Mat blurred;
+    cv::GaussianBlur(gray, blurred, cv::Size(9, 9), 2);
+
+    // Apply Canny edge detection
+    cv::Mat edges;
+    cv::Canny(blurred, edges, 50, 150);
+
+    // Create a binary version of the image
+    cv::Mat binary;
+    cv::threshold(edges, binary, 50, 255, cv::THRESH_BINARY);
+
+    // Detect circles using Hough Circle Transform on the binarized image
+    std::vector<cv::Vec3f> circles;
+    cv::HoughCircles(binary, circles, cv::HOUGH_GRADIENT, 1.2, 30, 50, 30, 10, 100);
+
+    if (!circles.empty()) {
+        // Convert to Circle struct
+        std::vector<Circle> detected_circles;
+        for (const auto& circle : circles) {
+            detected_circles.push_back({static_cast<int>(circle[0]), static_cast<int>(circle[1]), static_cast<int>(circle[2])});
+        }
+
+        // Apply Non-Maximum Suppression (NMS)
+        std::vector<Circle> filtered_circles = non_max_suppression(detected_circles, 0.5f);
+
+        if (!filtered_circles.empty()) {
+            int num_circles = filtered_circles.size();
+
+            if (visualize) {
+                // Draw the detected circles on the original image
+                for (const auto& circle : filtered_circles) {
+                    // Draw the outer circle
+                    cv::circle(image, cv::Point(circle.x, circle.y), circle.radius, cv::Scalar(0, 255, 0), 2);
+                    // Draw the center of the circle
+                    cv::circle(image, cv::Point(circle.x, circle.y), 2, cv::Scalar(0, 0, 255), 3);
+                }
+
+                // Show the output image with detected circles
+                cv::imshow("Detected Circles", image);
+                cv::waitKey(0);
+                cv::destroyAllWindows();
+            }
+
+            return num_circles;
+        } else {
+            std::cout << "No circular objects detected after NMS." << std::endl;
+            return 0;
+        }
+    } else {
+        std::cout << "No circular objects detected." << std::endl;
+        return 0;
+    }
+}
+
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " -i <image_path> [-v]" << std::endl;
+        return -1;
+    }
+
+    std::string image_path;
+    bool visualize = false;
+
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "-i" && i + 1 < argc) {
+            image_path = argv[i + 1];
+        } else if (std::string(argv[i]) == "-v") {
+            visualize = true;
+        }
+    }
+
+    if (image_path.empty()) {
+        std::cerr << "Error: Image path not provided." << std::endl;
+        return -1;
+    }
+
+    // Detect circles in the image
+    int num_circles = detect_circles(image_path, visualize);
+
+    // Print the number of detected circles
+    std::cout << "Number of circular objects detected: " << num_circles << std::endl;
 
     return 0;
 }
