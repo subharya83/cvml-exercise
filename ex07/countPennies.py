@@ -83,7 +83,7 @@ def detect_circles(image_path, visualize=False):
         minDist=30,  # Minimum distance between detected centers
         param1=50,  # Upper threshold for edge detection
         param2=30,  # Threshold for center detection
-        minRadius=10,  # Minimum radius of circles to detect
+        minRadius=100,  # Minimum radius of circles to detect
         maxRadius=500   # Maximum radius of circles to detect
     )
 
