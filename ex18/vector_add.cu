@@ -1,4 +1,3 @@
-// vector_add.cu
 #include <stdio.h>
 
 __global__ void vectorAdd(float *a, float *b, float *c, int n) {

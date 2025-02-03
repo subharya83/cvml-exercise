@@ -1,4 +1,3 @@
-// video_integral.cu
 #include <opencv2/opencv.hpp>
 #include <H5Cpp.h>
 #include <cuda_runtime.h>
