@@ -5,12 +5,14 @@ find_package(CUDA REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(HDF5 REQUIRED COMPONENTS CXX)
 
+include_directories(/usr/include/hdf5/serial)
+
 cuda_add_executable(video_integral
     video_processor.cpp
     cuda_kernels.cu
 )
 
 target_link_libraries(video_integral
-    PUBLIC hdf5::hdf5
     ${OpenCV_LIBS}
+    ${HDF5_LIBRARIES}
 )

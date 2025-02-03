@@ -43,20 +43,27 @@ private:
     }
     
 public:
-    VideoProcessor(const std::string& videoPath, const std::string& h5Path) 
-        : cap(videoPath) {
-        if (!cap.isOpened()) {
-            throw std::runtime_error("Failed to open video file");
+    VideoProcessor(const std::string& videoPath, const std::string& h5Path) {
+        try {
+            // Open video
+            cap.open(videoPath);
+            if (!cap.isOpened()) {
+                throw std::runtime_error("Failed to open video file: " + videoPath);
+            }
+            
+            // Get video properties
+            width = static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+            height = static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+            
+            // Initialize CUDA resources
+            cuda = std::make_unique<CUDAResources>(width, height);
+            
+            // Create HDF5 file
+            file = std::make_unique<H5::H5File>(h5Path, H5F_ACC_TRUNC);
+        } catch (const std::exception& e) {
+            std::cerr << "Initialization error: " << e.what() << std::endl;
+            throw;
         }
-        
-        width = static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
-        height = static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-        
-        // Initialize CUDA resources
-        cuda = std::make_unique<CUDAResources>(width, height);
-        
-        // Create HDF5 file
-        file = new H5::H5File(h5Path, H5F_ACC_TRUNC);
     }
     
     void process() {
@@ -116,3 +123,27 @@ public:
         delete file;
     }
 };
+
+int main(int argc, char** argv) {
+    if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " <video_path> <output_h5_path>" << std::endl;
+        return 1;
+    }
+    
+    try {
+        VideoProcessor processor(argv[1], argv[2]);
+        processor.process();
+        std::cout << "Processing completed successfully" << std::endl;
+    } catch (const cv::Exception& e) {
+        std::cerr << "OpenCV Error: " << e.what() << std::endl;
+        return 1;
+    } catch (const H5::Exception& e) {
+        std::cerr << "HDF5 Error: " << e.what() << std::endl;
+        return 1;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+    
+    return 0;
+}
