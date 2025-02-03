@@ -2,6 +2,7 @@
 #define CUDA_KERNELS_CUH
 
 #include <cuda_runtime.h>
+#include <stdio.h>
 
 // CUDA error checking macro
 #define CHECK_CUDA(call) \
