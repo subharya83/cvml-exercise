@@ -1,66 +1,86 @@
-# Base repository for CV/ML exercises
-This repository contains interesting Computer Vision and Machine Learning problems I have encountered while being in the industry.
-Each problem is formulated at its core level to encourage first principles thinking. The following structure is maintained to design 
-a potential solution to a given problem.
+# Advanced Computer Vision and Machine Learning Challenges
 
-### Problem design  
-This section involves defining the objectives, constraints, and scope of the project. It sets the foundation by identifying 
-what needs to be solved, the expected outputs, and the criteria for success. This section ensures clarity and alignment 
-with the project's goals by breaking down complex problems into manageable components.
+## Repository Overview
+This repository is a curated collection of sophisticated computer vision and machine learning problems, designed to challenge and inspire graduate-level researchers and practitioners. Each problem is meticulously crafted to encourage first-principles thinking, pushing the boundaries of algorithmic problem-solving and innovative technological approaches.
 
-### Data Preparation  
-Data preparation entails collecting, cleaning, and preprocessing the raw data to make it suitable for analysis or modeling. 
-This stage involves handling missing values, transforming data formats, and feature engineering to enhance the dataset's 
-quality and relevance, ensuring reliable and meaningful results.
+## Research Methodology Framework
 
-### Code Organization  
-This section describes how to  structure the codebase in a clear, maintainable, and scalable manner. This includes using modular 
-functions, adhering to coding standards, and separating concerns by grouping related functionalities. A well-organized codebase 
-facilitates collaboration and future enhancements.
+### 🎯 Problem Design
+A rigorous approach to problem formulation that involves:
+- Precise objective definition
+- Constraint identification
+- Comprehensive scope analysis
+- Clear success criteria and performance metrics
 
-### Test cases  
-Test cases are designed to validate the correctness and reliability of the code. They include a variety of scenarios, ranging 
-from typical use cases to edge cases, to ensure that the program behaves as expected under different conditions. This step 
-helps identify bugs and maintain quality assurance.
+### 📊 Data Preparation Strategies
+Advanced data handling techniques including:
+- Sophisticated data cleaning protocols
+- Intelligent missing value imputation
+- Innovative feature engineering
+- Robust data transformation methodologies
 
-### Further Optimizations and improvements  
-Further optimizations and improvements focus on refining the solution to enhance efficiency, scalability, and user experience. 
-This includes performance tuning, algorithm refinement, and incorporating feedback for iterative enhancements, ensuring the 
-solution remains effective and robust over time.
+### 🧩 Code Architecture
+Emphasizing:
+- Modular and extensible design
+- Performance-optimized implementations
+- Clear separation of concerns
+- Scalable and maintainable codebase
 
+### 🔬 Comprehensive Testing
+Robust validation through:
+- Extensive scenario coverage
+- Edge case identification
+- Systematic error handling
+- Performance benchmarking
 
-## Table of Contents
+### 🚀 Continuous Improvement
+Iterative refinement focusing on:
+- Algorithmic optimization
+- Scalability enhancements
+- User experience improvements
+- Cutting-edge research integration
 
-### Multimedia search and Retrival
-- [Video search with image query](./ex01/README.md)
-- [Audio Pattern retrieval Using Cross-Correlation](./ex14/README.md)
+## Research Domains and Challenges
 
-### Human pose/action analysis
-- [Cycle detection in human joint movements](./ex02/README.md)
-- [Browser-based Inferencing on Human centric models](./ex05/README.md)
+### 🔍 Multimedia Intelligence
+- **Semantic Multimedia Search**
+  - [Video search with image query](./ex01/README.md)
+  - [Audio Pattern retrieval Using Cross-Correlation](./ex14/README.md)
 
-### Object detection and counting
-- [Counting similar objects](./ex07/README.md)
+### 🧍 Human-Centric Analysis
+- **Advanced Human Movement Understanding**
+  - [Cycle detection in human joint movements](./ex02/README.md)
+  - [Browser-based Inferencing on Human centric models](./ex05/README.md)
 
+### 🕵️ Intelligent Detection Systems
+- **Object Detection**
+  - [Counting similar objects](./ex07/README.md)
+- **Anomaly Detection**
+  - [Spatial Anomaly detection](./ex06/README.md)
+  - [Spatio-Temporal Anomaly Detection](./ex13/README.md)
 
-### Statistical Outlier detection
-- [Spatial Anomaly detection](./ex06/README.md)
-- [Spatio-Temporal Anomaly Detection](./ex13/README.md)
+### 📝 Information Extraction
+- **Intelligent Content Mining**
+  - [Screen Capture Video Analysis](./ex03/README.md)
+  - [Deduplication of textual content](./ex08/README.md)
+  - [Mining Relevant Contents from Social Media](./ex09/README.md)
 
-### Textual information mining
-- [Screen Capture Video Analysis](./ex03/README.md)
-- [Deduplication of textual content](./ex08/README.md) 
-- [Mining Relevant Contents from Social Media](./ex09/README.md) 
+### 🌐 Geometric Reconstruction
+- **3D Spatial Understanding**
+  - [Single Object 3D Reconstruction](./ex12/README.md)
 
+### 🤖 Advanced Machine Learning
+- **Language and Vision Model Enhancement**
+  - [Automated Question-Answer Pair Generator](./ex04/README.md)
+  - [Image Captioning with ResNet50 and LSTM](./ex10/README.md)
+  - [Fine tuning Language Models](./ex11/README.md)
 
-### 3D Geometry analysis
-- [Single Object 3D Reconstruction](./ex12/README.md)
+### 🎥 Cinematographic Analysis
+- **Intelligent Shot Classification**
+  - [Based on Human Subjects](./ex17/README.md)
+  - [Based on Camera Motion](./ex16/README.md)
 
-### Data preparation and Fine-tuning of LLMs
-- [Automated Question-Answer Pair Generator](./ex04/README.md)
-- [Image Captioning with ResNet50 and LSTM](./ex10/README.md) 
-- [Fine tuning Language Models](./ex11/README.md) 
+## Contribution and Exploration
+This repository is more than a collection of exercises—it's a playground for advanced research, inviting graduate students to explore, challenge, and extend the frontiers of computer vision and machine learning.
 
-### Cinematographic Shot classification
-- [Based on Human Subjects](./ex17/README.md)
-- [Based on Camera Motion](./ex16/README.md)
+**Dive deep, experiment boldly, and push the boundaries of what's possible!**
