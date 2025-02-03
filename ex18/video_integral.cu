@@ -117,8 +117,7 @@ public:
             hsize_t count[3] = {1, dims[1], dims[2]};
             H5::DataSpace memspace(3, count);
             dataspace.selectHyperslab(H5S_SELECT_SET, count, start);
-            dataset.write(hostBuffer.data(), H5::PredType::NATIVE_FLOAT, 
-                         memspace, dataspace);
+            dataset.write(hostBuffer.data(), H5::PredType::NATIVE_FLOAT, memspace, dataspace);
             
             if (i % 100 == 0) {
                 std::cout << "Processed " << i << " frames" << std::endl;
