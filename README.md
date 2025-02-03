@@ -57,7 +57,7 @@ Iterative refinement focusing on:
   - [Spatial Anomaly detection](./ex06/README.md)
   - [Spatio-Temporal Anomaly Detection](./ex13/README.md)
 
-**Intelligent Content Mining**
+**Content Mining**
   - [Screen Capture Video Analysis](./ex03/README.md)
   - [Deduplication of textual content](./ex08/README.md)
   - [Mining Relevant Contents from Social Media](./ex09/README.md)
@@ -71,9 +71,12 @@ Iterative refinement focusing on:
   - [Image Captioning with ResNet50 and LSTM](./ex10/README.md)
   - [Fine tuning Language Models](./ex11/README.md)
 
-**Intelligent Shot Classification**
+**Cinematographic Shot Classification**
   - [Based on Human Subjects](./ex17/README.md)
   - [Based on Camera Motion](./ex16/README.md)
+
+**Software optimization**
+  - [Understanding CUDA/PTX for Vision Tasks](./ex18/README.md)
 
 ## Contribution and Exploration
 This repository is more than a collection of exercises—it's a playground for advanced research, inviting graduate students to explore, challenge, and extend the frontiers of computer vision and machine learning.
