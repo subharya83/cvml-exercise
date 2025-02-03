@@ -11,6 +11,6 @@ cuda_add_executable(video_integral
 )
 
 target_link_libraries(video_integral
+    PUBLIC hdf5::hdf5
     ${OpenCV_LIBS}
-    ${HDF5_LIBRARIES}
 )
