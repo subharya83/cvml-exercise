@@ -40,7 +40,7 @@ Iterative refinement focusing on:
 - User experience improvements
 - Cutting-edge research integration
 
-## Research Domains and Challenges
+## Problem Domains and Challenges
 
 ### 🔍 Multimedia Intelligence
 - **Semantic Multimedia Search**
