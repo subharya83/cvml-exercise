@@ -3,9 +3,44 @@
 #define CUDA_KERNELS_CUH
 
 #include <cuda_runtime.h>
-#include <cstdlib>    // For EXIT_FAILURE
-#include <stdexcept>  // For runtime_error
-#include <iostream>   // For cerr
+#include <cstdlib>
+#include <stdexcept>
+#include <iostream>
+
+// Extern C wrapper function declarations
+extern "C" {
+    cudaError_t launchConvertToFloat(
+        const unsigned char* input, 
+        float* output, 
+        int width, 
+        int height, 
+        dim3 gridSize, 
+        dim3 blockSize, 
+        cudaStream_t stream
+    );
+
+    cudaError_t launchHorizontalScan(
+        const float* input, 
+        float* output, 
+        int width, 
+        int height, 
+        dim3 gridSize, 
+        dim3 blockSize, 
+        size_t sharedMemSize,
+        cudaStream_t stream
+    );
+
+    cudaError_t launchVerticalScan(
+        const float* input, 
+        float* output, 
+        int width, 
+        int height, 
+        dim3 gridSize, 
+        dim3 blockSize, 
+        size_t sharedMemSize,
+        cudaStream_t stream
+    );
+}
 
 // CUDA error checking macro with exception handling
 #define CHECK_CUDA(call) \
@@ -62,13 +97,5 @@ struct CUDAResources {
         cleanup();
     }
 };
-
-// Kernel declarations
-__global__ void convertToFloat(const unsigned char* input, float* output, 
-                             int width, int height);
-__global__ void horizontalScan(const float* input, float* output, 
-                             int width, int height);
-__global__ void verticalScan(const float* input, float* output, 
-                            int width, int height);
 
 #endif // CUDA_KERNELS_CUH

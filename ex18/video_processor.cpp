@@ -2,6 +2,12 @@
 #include <opencv2/opencv.hpp>
 #include <H5Cpp.h>
 
+#include "cuda_kernels.cuh"
+#include <opencv2/opencv.hpp>
+#include <H5Cpp.h>
+#include <stdexcept>
+#include <memory>
+
 class VideoProcessor {
 private:
     cv::VideoCapture cap;
@@ -21,22 +27,37 @@ private:
                      (height + blockSize.y - 1) / blockSize.y);
         
         // Convert to float
-        convertToFloat<<<gridSize, blockSize, 0, cuda->stream>>>
-            (cuda->d_input, cuda->d_temp, width, height);
+        cudaError_t err = launchConvertToFloat(
+            cuda->d_input, cuda->d_temp, width, height, 
+            gridSize, blockSize, cuda->stream
+        );
+        if (err != cudaSuccess) {
+            throw std::runtime_error("Failed to launch convertToFloat kernel");
+        }
         
         // Horizontal scan
         dim3 hBlockSize(256, 1);
         dim3 hGridSize(1, height);
         size_t sharedMemSize = width * sizeof(float);
-        horizontalScan<<<hGridSize, hBlockSize, sharedMemSize, cuda->stream>>>
-            (cuda->d_temp, cuda->d_integral, width, height);
+        err = launchHorizontalScan(
+            cuda->d_temp, cuda->d_integral, width, height,
+            hGridSize, hBlockSize, sharedMemSize, cuda->stream
+        );
+        if (err != cudaSuccess) {
+            throw std::runtime_error("Failed to launch horizontalScan kernel");
+        }
         
         // Vertical scan
         dim3 vBlockSize(1, 256);
         dim3 vGridSize(width, 1);
         sharedMemSize = height * sizeof(float);
-        verticalScan<<<vGridSize, vBlockSize, sharedMemSize, cuda->stream>>>
-            (cuda->d_integral, cuda->d_temp, width, height);
+        err = launchVerticalScan(
+            cuda->d_integral, cuda->d_temp, width, height,
+            vGridSize, vBlockSize, sharedMemSize, cuda->stream
+        );
+        if (err != cudaSuccess) {
+            throw std::runtime_error("Failed to launch verticalScan kernel");
+        }
         
         // Synchronize stream
         CHECK_CUDA(cudaStreamSynchronize(cuda->stream));
