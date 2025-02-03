@@ -1,52 +1,6 @@
-// cuda_kernels.cu
 #include "cuda_kernels.cuh"
-extern "C" {
-    cudaError_t launchConvertToFloat(
-        const unsigned char* input, 
-        float* output, 
-        int width, 
-        int height, 
-        dim3 gridSize, 
-        dim3 blockSize, 
-        cudaStream_t stream
-    ) {
-        convertToFloat<<<gridSize, blockSize, 0, stream>>>(input, output, width, height);
-        return cudaGetLastError();
-    }
 
-    cudaError_t launchHorizontalScan(
-        const float* input, 
-        float* output, 
-        int width, 
-        int height, 
-        dim3 gridSize, 
-        dim3 blockSize, 
-        size_t sharedMemSize,
-        cudaStream_t stream
-    ) {
-        horizontalScan<<<gridSize, blockSize, sharedMemSize, stream>>>(
-            input, output, width, height
-        );
-        return cudaGetLastError();
-    }
-
-    cudaError_t launchVerticalScan(
-        const float* input, 
-        float* output, 
-        int width, 
-        int height, 
-        dim3 gridSize, 
-        dim3 blockSize, 
-        size_t sharedMemSize,
-        cudaStream_t stream
-    ) {
-        verticalScan<<<gridSize, blockSize, sharedMemSize, stream>>>(
-            input, output, width, height
-        );
-        return cudaGetLastError();
-    }
-}
-
+// Define the CUDA kernels first
 __global__ void convertToFloat(const unsigned char* input, float* output, 
                              int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -121,5 +75,53 @@ __global__ void verticalScan(const float* input, float* output,
         for (int y = threadIdx.y; y < height; y += blockDim.y) {
             output[y * width + x] = temp[y];
         }
+    }
+}
+
+// Now define the wrapper functions
+extern "C" {
+    cudaError_t launchConvertToFloat(
+        const unsigned char* input, 
+        float* output, 
+        int width, 
+        int height, 
+        dim3 gridSize, 
+        dim3 blockSize, 
+        cudaStream_t stream
+    ) {
+        convertToFloat<<<gridSize, blockSize, 0, stream>>>(input, output, width, height);
+        return cudaGetLastError();
+    }
+
+    cudaError_t launchHorizontalScan(
+        const float* input, 
+        float* output, 
+        int width, 
+        int height, 
+        dim3 gridSize, 
+        dim3 blockSize, 
+        size_t sharedMemSize,
+        cudaStream_t stream
+    ) {
+        horizontalScan<<<gridSize, blockSize, sharedMemSize, stream>>>(
+            input, output, width, height
+        );
+        return cudaGetLastError();
+    }
+
+    cudaError_t launchVerticalScan(
+        const float* input, 
+        float* output, 
+        int width, 
+        int height, 
+        dim3 gridSize, 
+        dim3 blockSize, 
+        size_t sharedMemSize,
+        cudaStream_t stream
+    ) {
+        verticalScan<<<gridSize, blockSize, sharedMemSize, stream>>>(
+            input, output, width, height
+        );
+        return cudaGetLastError();
     }
 }
