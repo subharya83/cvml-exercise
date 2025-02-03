@@ -42,41 +42,36 @@ Iterative refinement focusing on:
 
 ## Problem Domains and Challenges
 
-### 🔍 Multimedia Intelligence
-- **Semantic Multimedia Search**
+**Semantic Multimedia Search**
   - [Video search with image query](./ex01/README.md)
   - [Audio Pattern retrieval Using Cross-Correlation](./ex14/README.md)
 
-### 🧍 Human-Centric Analysis
-- **Advanced Human Movement Understanding**
+**Advanced Human Movement Understanding**
   - [Cycle detection in human joint movements](./ex02/README.md)
   - [Browser-based Inferencing on Human centric models](./ex05/README.md)
 
-### 🕵️ Intelligent Detection Systems
-- **Object Detection**
+**Object Detection**
   - [Counting similar objects](./ex07/README.md)
-- **Anomaly Detection**
+
+**Anomaly Detection**
   - [Spatial Anomaly detection](./ex06/README.md)
   - [Spatio-Temporal Anomaly Detection](./ex13/README.md)
 
-### 📝 Information Extraction
-- **Intelligent Content Mining**
+**Intelligent Content Mining**
   - [Screen Capture Video Analysis](./ex03/README.md)
   - [Deduplication of textual content](./ex08/README.md)
   - [Mining Relevant Contents from Social Media](./ex09/README.md)
 
-### 🌐 Geometric Reconstruction
-- **3D Spatial Understanding**
+**3D Spatial Understanding**
   - [Single Object 3D Reconstruction](./ex12/README.md)
 
-### 🤖 Advanced Machine Learning
-- **Language and Vision Model Enhancement**
+
+**Language and Vision Model Enhancement**
   - [Automated Question-Answer Pair Generator](./ex04/README.md)
   - [Image Captioning with ResNet50 and LSTM](./ex10/README.md)
   - [Fine tuning Language Models](./ex11/README.md)
 
-### 🎥 Cinematographic Analysis
-- **Intelligent Shot Classification**
+**Intelligent Shot Classification**
   - [Based on Human Subjects](./ex17/README.md)
   - [Based on Camera Motion](./ex16/README.md)
 
