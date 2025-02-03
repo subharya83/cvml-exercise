@@ -22,36 +22,19 @@ The program processes a video frame-by-frame, computes integral images using CUD
 
 ## File Structure
 
-```
-cuda-video-processing/
-├── src/
-│   ├── video_processor.cpp
-│   ├── cuda_kernels.cu
-│   └── cuda_kernels.cuh
+```.
 ├── CMakeLists.txt
+├── cuda_kernels.cu
+├── cuda_kernels.cuh
 ├── README.md
-└── .gitignore
+├── vector_add.cu
+├── vector_add.ptx
+├── video_integral.cu
+└── video_processor.cpp
 ```
 
 ## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/cuda-video-processing.git
-   cd cuda-video-processing
-   ```
-
-2. Install dependencies:
-   ```bash
-   sudo apt-get install libopencv-dev libhdf5-dev
-   ```
-
-3. Verify CUDA installation:
-   ```bash
-   nvcc --version
-   ```
-
-4. Build the project using CMake:
+Build the project using CMake:
    ```bash
    mkdir build
    cd build
@@ -75,12 +58,7 @@ cuda-video-processing/
 
 To generate PTX (Parallel Thread Execution) code for CUDA kernel analysis, use the following command:
 ```bash
-nvcc -ptx src/cuda_kernels.cu -o cuda_kernels.ptx
-```
-
-You can inspect the generated PTX code to understand how the CUDA kernels are compiled and optimized:
-```bash
-cat cuda_kernels.ptx
+nvcc -ptx cuda_kernels.cu -o cuda_kernels.ptx
 ```
 
 ## Code Explanation
