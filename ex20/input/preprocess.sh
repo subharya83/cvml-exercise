@@ -13,11 +13,18 @@ SEGMENT_DURATION=240  # 4 minutes in seconds
 # Get the total duration of the input file in seconds
 TOTAL_DURATION=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$INPUT_FILE" | cut -d. -f1)
 
+# Function to zero-pad a number to 5 digits
+zero_pad() {
+    printf "%05d" "$1"
+}
+
 # Function to process a segment
 process_segment() {
     START="$1"
     END="$2"
-    OUTPUT_FILE="${PREF}_${START}-${END}.wav"
+    START_PADDED=$(zero_pad "$START")
+    END_PADDED=$(zero_pad "$END")
+    OUTPUT_FILE="${PREF}_${START_PADDED}-${END_PADDED}.wav"
 
     echo "Processing segment: $START - $END"
 
