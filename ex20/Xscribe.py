@@ -1,6 +1,7 @@
 import os
 import whisper
 import srt
+import argparse
 from datetime import timedelta
 from pyannote.audio import Pipeline
 
@@ -65,12 +66,12 @@ def transcribe_audio_with_diarization(input_audio_path, output_srt_path, languag
     print(f"SRT file generated successfully at {output_srt_path}")
 
 if __name__ == "__main__":
-    # Input and output file paths
-    input_audio = input("Enter the path to the input audio file: ")
-    output_srt = input("Enter the path for the output SRT file: ")
-
-    # Language code (e.g., "bn" for Bengali)
-    language_code = input("Enter the language code (e.g., 'bn' for Bengali): ")
+    # Set up argument parsing
+    parser = argparse.ArgumentParser(description="Transcribe audio with speaker diarization and generate an SRT file.")
+    parser.add_argument("-i", "--input", required=True, help="Path to the input audio file.")
+    parser.add_argument("-o", "--output", required=True, help="Path for the output SRT file.")
+    parser.add_argument("-l", "--language", default="bn", help="Language code for transcription (e.g., 'bn' for Bengali).")
+    args = parser.parse_args()
 
     # Transcribe and generate SRT with speaker diarization
-    transcribe_audio_with_diarization(input_audio, output_srt, language_code)
+    transcribe_audio_with_diarization(args.input, args.output, args.language)
