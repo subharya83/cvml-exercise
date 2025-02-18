@@ -10,6 +10,21 @@ Fine-tuning a LLaMA 3 model for Question Answering (QA) on a laptop with the giv
 - CPU : 12 core Intel(R) Core(TM) i7-8750H CPU @ 2.20GHz
 
 ---
+For faster download of an already existing model from huggingface, the following steps can be used:
+
+```shell
+# Install the HuggingFace CLI
+pip install -U "huggingface_hub[cli]"
+
+# Install hf_transfer for blazingly fast speeds
+pip install hf_transfer 
+
+# Login to your HF account
+huggingface-cli login
+
+# Now you can download any model with uncapped speeds
+HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download <model-id>
+```
 
 ### **1. Prepare the Environment**
 1. **Install Required Libraries**:
