@@ -3,12 +3,12 @@ import cv2
 import numpy as np
 
 def detect_and_match_keypoints(reference_image, target_image):
-    # Initialize SURF detector
-    surf = cv2.SIFT_create()  # SIFT is used as SURF is not available in default OpenCV installations
+    # Initialize SIFT detector
+    sift = cv2.SIFT_create()
 
     # Detect keypoints and descriptors in both images
-    keypoints_ref, descriptors_ref = surf.detectAndCompute(reference_image, None)
-    keypoints_target, descriptors_target = surf.detectAndCompute(target_image, None)
+    keypoints_ref, descriptors_ref = sift.detectAndCompute(reference_image, None)
+    keypoints_target, descriptors_target = sift.detectAndCompute(target_image, None)
 
     # FLANN-based matcher
     FLANN_INDEX_KDTREE = 1
@@ -44,6 +44,16 @@ def align_images(reference_image, target_image):
 
     return aligned_image, homography
 
+def extract_translation(homography):
+    # Normalize the homography matrix
+    homography = homography / homography[2, 2]
+
+    # Extract translation parameters
+    tx = homography[0, 2]
+    ty = homography[1, 2]
+
+    return tx, ty
+
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="Align a target image to a reference image using homography.")
@@ -67,10 +77,9 @@ def main():
     # Save the aligned image
     cv2.imwrite(args.output, aligned_image)
 
-    # Print the homography matrix
-    print("Homography matrix:")
-    print(homography)
+    # Extract and print translation parameters
+    tx, ty = extract_translation(homography)
+    print(f"Translation parameters (in pixels): (tx, ty) = ({tx:.2f}, {ty:.2f})")
 
 if __name__ == "__main__":
     main()
-    
