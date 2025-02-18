@@ -77,6 +77,10 @@ Iterative refinement focusing on:
 
 **Software optimization**
   - [Understanding CUDA/PTX for Vision Tasks](./ex18/README.md)
+  
+**Geospatial data/Satellite Imagery Analysis**
+  - [] (./ex21/README.md) 
+
 
 ## Contribution and Exploration
 This repository is more than a collection of exercises—it's a playground for advanced research, inviting graduate students to explore, challenge, and extend the frontiers of computer vision and machine learning.
