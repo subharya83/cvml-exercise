@@ -12,9 +12,3 @@ This Python script transcribes an input audio file into an SRT subtitle file usi
 - Python 3.7 or higher.
 - `ffmpeg` installed on your system.
 
-## Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/yourusername/audio-to-srt.git
-   cd audio-to-srt
