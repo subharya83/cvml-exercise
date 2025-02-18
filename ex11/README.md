@@ -1,3 +1,5 @@
+# Fine Tuning LLMs 
+
 Fine-tuning a LLaMA 3 model for Question Answering (QA) on a laptop with the given specifications requires careful consideration of resource limitations, especially with only 8GB of GPU VRAM. Below is a step-by-step guide to fine-tune the model, including building a custom dataset from PDFs, selecting batch sizes, epochs, and quantization options.
 
 

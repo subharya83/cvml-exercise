@@ -12,7 +12,7 @@ def transcribe_audio_with_diarization(input_audio_path, output_srt_path, languag
     # Load the Whisper model (it will download weights if not already present)
     print("Loading Whisper model...")
     model = whisper.load_model("large", download_root="weights")
-    model = model.to("cuda")  # Move the model to GPU
+    model = model.to("cpu")  # Move the model to CPU
 
     # Load the pyannote.audio speaker diarization pipeline
     print("Loading speaker diarization model...")
