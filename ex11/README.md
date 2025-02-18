@@ -13,17 +13,15 @@ Fine-tuning a LLaMA 3 model for Question Answering (QA) on a laptop with the giv
 For faster download of an already existing model from huggingface, the following steps can be used:
 
 ```shell
-# Install the HuggingFace CLI
+# Install HuggingFace CLI
 pip install -U "huggingface_hub[cli]"
 
-# Install hf_transfer for blazingly fast speeds
+# Install hf_transfer for faster downloads
 pip install hf_transfer 
-
-# Login to your HF account
 huggingface-cli login
 
 # Now you can download any model with uncapped speeds
-HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download <model-id>
+HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download meta-llama/Llama-3.1-70B 
 ```
 
 ### **1. Prepare the Environment**
@@ -102,7 +100,8 @@ HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download <model-id>
 
 ### **3. Load the LLaMA 3 Model**
 1. **Load the Pretrained Model**:
-   Use the `transformers` library to load the LLaMA 3 model. Since your GPU has limited VRAM, consider using a smaller variant (e.g., `llama-3-7b`).
+   Use the `transformers` library to load the LLaMA 3 model. Since your GPU has limited VRAM, consider using a smaller variant (e.g., 
+`meta-llama/Llama-3.1-70B`).
 
    ```python
    from transformers import AutoModelForCausalLM, AutoTokenizer
