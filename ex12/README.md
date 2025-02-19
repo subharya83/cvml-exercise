@@ -112,12 +112,16 @@ Given a video of an object in a relatively clear background where all frames cap
 - Each point becomes a "splat" (3D oriented disk) rather than just a point
 
 
-Features  | Original | NERF | Gaussian Splatting |
+Features            | Original | NERF | Gaussian Splatting |
 --------------------|----------|------|---------------------|
 Data Representation | Discrete points in 3D space| Continuous volumetric representation| Surface-oriented ellipsoids|
-Quality | Raw reconstruction | fill missing information | Smooths and connects points|
-Color | Direct color from source images | View-dependent color prediction| Optimized colors using all video frames|
+Quality             | Raw reconstruction | fill missing information | Smooths and connects points|
+Color               | Direct color from source images | View-dependent color prediction| Optimized colors using all video frames|
 
+Some key differences between 3D reconstruction methods are [here](./comp.md). While there are several differences between 
+the methods practically applied for 3D reconstruction, there are some fundamental initialization techniques that each method 
+benefits from. One such method described in this [document](./advconv.md) provides some guidelines to convert sparse 2D 
+point clouds to dense 3D point clouds. 
 
 ## Usage
 
