@@ -1,6 +1,9 @@
 import argparse
 import cv2
 import numpy as np
+from skimage import io, transform
+from skimage.registration import phase_cross_correlation
+from skimage.transform import warp, AffineTransform
 
 def detect_and_match_keypoints(reference_image, target_image):
     # Initialize SIFT detector
@@ -31,7 +34,7 @@ def detect_and_match_keypoints(reference_image, target_image):
 
     return points_ref, points_target, good_matches
 
-def align_images(reference_image, target_image):
+def align_images_sift(reference_image, target_image):
     # Detect keypoints and match them
     points_ref, points_target, good_matches = detect_and_match_keypoints(reference_image, target_image)
 
@@ -42,7 +45,20 @@ def align_images(reference_image, target_image):
     height, width = reference_image.shape
     aligned_image = cv2.warpPerspective(target_image, homography, (width, height))
 
-    return aligned_image, homography
+    # Extract translation parameters from homography
+    tx, ty = extract_translation(homography)
+
+    return aligned_image, tx, ty
+
+def align_images_phase_correlation(reference_image, target_image):
+    # Compute the translation parameters using phase correlation
+    shift, error, diffphase = phase_cross_correlation(reference_image, target_image)
+
+    # Apply the translation to the target image
+    transform = AffineTransform(translation=(-shift[1], -shift[0]))
+    aligned_image = warp(target_image, transform, mode='constant')
+
+    return aligned_image, shift[1], shift[0]
 
 def extract_translation(homography):
     # Normalize the homography matrix
@@ -56,10 +72,12 @@ def extract_translation(homography):
 
 def main():
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description="Align a target image to a reference image using homography.")
+    parser = argparse.ArgumentParser(description="Align a target image to a reference image.")
     parser.add_argument("-r", "--reference", required=True, help="Path to the reference image.")
     parser.add_argument("-t", "--target", required=True, help="Path to the target image.")
     parser.add_argument("-o", "--output", required=True, help="Path to save the aligned image.")
+    parser.add_argument("-a", "--algorithm", type=int, required=True, choices=[0, 1],
+                        help="Algorithm to use: 0 for SIFT, 1 for phase correlation.")
     args = parser.parse_args()
 
     # Load the reference and target images
@@ -71,14 +89,21 @@ def main():
         print("Error: Could not load images.")
         return
 
-    # Align the target image to the reference image
-    aligned_image, homography = align_images(reference_image, target_image)
+    # Align the target image to the reference image using the selected algorithm
+    if args.algorithm == 0:
+        print("Using SIFT-based homography for alignment.")
+        aligned_image, tx, ty = align_images_sift(reference_image, target_image)
+    elif args.algorithm == 1:
+        print("Using phase correlation for alignment.")
+        aligned_image, tx, ty = align_images_phase_correlation(reference_image, target_image)
+    else:
+        print("Invalid algorithm selection.")
+        return
 
     # Save the aligned image
     cv2.imwrite(args.output, aligned_image)
 
-    # Extract and print translation parameters
-    tx, ty = extract_translation(homography)
+    # Print the translation parameters
     print(f"Translation parameters (in pixels): (tx, ty) = ({tx:.2f}, {ty:.2f})")
 
 if __name__ == "__main__":
