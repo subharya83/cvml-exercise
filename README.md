@@ -79,7 +79,7 @@ Iterative refinement focusing on:
   - [Understanding CUDA/PTX for Vision Tasks](./ex18/README.md)
   
 **Geospatial data/Satellite Imagery Analysis**
-  - [] (./ex21/README.md) 
+  - [Image alignment for Satellite Imagery](./ex21/README.md) 
 
 
 ## Contribution and Exploration
