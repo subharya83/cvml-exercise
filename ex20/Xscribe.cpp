@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <cstdlib>
 #include <cstring>
-#include <argparse.hpp> // Include a C++ argument parsing library
 
 // Placeholder for GGUF-based transcription and diarization
 // These functions would be implemented using GGUF files and appropriate C++ libraries
@@ -73,32 +72,75 @@ void generate_srt(const std::string& output_path, const std::vector<std::tuple<d
     std::cout << "SRT file generated successfully at " << output_path << std::endl;
 }
 
+void print_usage(const char* program_name) {
+    std::cerr << "Usage: " << program_name << " -i <input_audio_file> -o <output_srt_file> [-l <language_code>]" << std::endl;
+    std::cerr << "Options:" << std::endl;
+    std::cerr << "  -i, --input    Path to the input audio file (required)" << std::endl;
+    std::cerr << "  -o, --output   Path for the output SRT file (required)" << std::endl;
+    std::cerr << "  -l, --language Language code for transcription (default: 'bn' for Bengali)" << std::endl;
+    std::cerr << "  -h, --help     Display this help message" << std::endl;
+}
+
 int main(int argc, char* argv[]) {
-    argparse::ArgumentParser program("transcribe_with_diarization");
+    std::string input_audio_path;
+    std::string output_srt_path;
+    std::string language_code = "bn"; // Default language code is Bengali
 
-    program.add_argument("-i", "--input")
-        .required()
-        .help("Path to the input audio file.");
-
-    program.add_argument("-o", "--output")
-        .required()
-        .help("Path for the output SRT file.");
-
-    program.add_argument("-l", "--language")
-        .default_value(std::string("bn"))
-        .help("Language code for transcription (e.g., 'bn' for Bengali).");
-
-    try {
-        program.parse_args(argc, argv);
-    } catch (const std::runtime_error& err) {
-        std::cerr << err.what() << std::endl;
-        std::cerr << program;
+    if (argc < 2) {
+        print_usage(argv[0]);
         return 1;
     }
 
-    std::string input_audio_path = program.get<std::string>("--input");
-    std::string output_srt_path = program.get<std::string>("--output");
-    std::string language_code = program.get<std::string>("--language");
+    // Manual argument parsing
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        
+        if (arg == "-h" || arg == "--help") {
+            print_usage(argv[0]);
+            return 0;
+        } else if (arg == "-i" || arg == "--input") {
+            if (i + 1 < argc) {
+                input_audio_path = argv[++i];
+            } else {
+                std::cerr << "Error: -i/--input requires an argument." << std::endl;
+                print_usage(argv[0]);
+                return 1;
+            }
+        } else if (arg == "-o" || arg == "--output") {
+            if (i + 1 < argc) {
+                output_srt_path = argv[++i];
+            } else {
+                std::cerr << "Error: -o/--output requires an argument." << std::endl;
+                print_usage(argv[0]);
+                return 1;
+            }
+        } else if (arg == "-l" || arg == "--language") {
+            if (i + 1 < argc) {
+                language_code = argv[++i];
+            } else {
+                std::cerr << "Error: -l/--language requires an argument." << std::endl;
+                print_usage(argv[0]);
+                return 1;
+            }
+        } else {
+            std::cerr << "Unknown option: " << arg << std::endl;
+            print_usage(argv[0]);
+            return 1;
+        }
+    }
+
+    // Check for required arguments
+    if (input_audio_path.empty()) {
+        std::cerr << "Error: Input audio path is required." << std::endl;
+        print_usage(argv[0]);
+        return 1;
+    }
+
+    if (output_srt_path.empty()) {
+        std::cerr << "Error: Output SRT path is required." << std::endl;
+        print_usage(argv[0]);
+        return 1;
+    }
 
     // Perform transcription and diarization
     auto transcription = transcribe_audio(input_audio_path, language_code);
