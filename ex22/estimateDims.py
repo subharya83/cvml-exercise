@@ -4,35 +4,8 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
-import requests
+import subprocess
 from pathlib import Path
-
-# Create weights directory if it doesn't exist
-os.makedirs("weights", exist_ok=True)
-
-# Download YOLOv5 for object detection if not already downloaded
-if not os.path.exists("yolov5"):
-    print("Cloning YOLOv5 repository...")
-    os.system("git clone https://github.com/ultralytics/yolov5.git")
-    os.system("pip install -r yolov5/requirements.txt")
-
-# Import YOLOv5 modules
-import sys
-sys.path.append("yolov5")
-from models.experimental import attempt_load
-from utils.general import non_max_suppression, scale_coords
-from utils.torch_utils import select_device
-from utils.datasets import letterbox
-
-# Download YOLOv5 weights if not already downloaded
-weights_path = "weights/yolov5s.pt"
-if not os.path.exists(weights_path):
-    print(f"Downloading YOLOv5 weights to {weights_path}...")
-    os.makedirs(os.path.dirname(weights_path), exist_ok=True)
-    torch.hub.download_url_to_file(
-        "https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5s.pt",
-        weights_path
-    )
 
 class DimensionEstimator:
     def __init__(self):
@@ -40,9 +13,25 @@ class DimensionEstimator:
         self.soda_can_height = 12.2  # standard height in cm
         self.soda_can_diameter = 6.6  # standard diameter in cm
         
+        # Run the bash script to download YOLOv5
+        self._setup_yolo()
+        
+        # Import YOLOv5 modules (after they're downloaded)
+        import sys
+        sys.path.append("yolov5")
+        from models.experimental import attempt_load
+        from utils.general import non_max_suppression, scale_coords
+        from utils.torch_utils import select_device
+        from utils.datasets import letterbox
+        
+        # These imports are used in the methods below
+        self.non_max_suppression = non_max_suppression
+        self.scale_coords = scale_coords
+        self.letterbox = letterbox
+        
         # Load YOLOv5 model
         self.device = select_device('')
-        self.model = attempt_load(weights_path, device=self.device)
+        self.model = attempt_load("weights/yolov5s.pt", device=self.device)
         self.model.eval()
         
         # Classes that YOLO can detect (COCO dataset)
@@ -63,6 +52,33 @@ class DimensionEstimator:
         
         # The bottle class (index 39) will be used to detect soda can
         self.bottle_class_id = 39
+    
+    def _setup_yolo(self):
+        """Run the bash script to download YOLOv5 and weights"""
+        try:
+            # Make the script executable
+            script_path = "download_yolo.sh"
+            os.chmod(script_path, 0o755)
+            
+            # Run the bash script
+            print("Running YOLOv5 setup script...")
+            result = subprocess.run(
+                [f"./{script_path}"], 
+                shell=True, 
+                check=True, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE, 
+                text=True
+            )
+            print(result.stdout)
+            
+            if result.returncode != 0:
+                print(f"Error running setup script: {result.stderr}")
+                raise Exception("Failed to set up YOLOv5")
+                
+        except Exception as e:
+            print(f"Error setting up YOLOv5: {str(e)}")
+            raise
         
     def preprocess_image(self, img_path, img_size=640):
         """Preprocess the image for YOLOv5"""
@@ -70,7 +86,7 @@ class DimensionEstimator:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
         # Resize and pad image
-        img_processed = letterbox(img, img_size, stride=32)[0]
+        img_processed = self.letterbox(img, img_size, stride=32)[0]
         
         # Convert to float and normalize
         img_processed = img_processed.transpose(2, 0, 1)  # HWC to CHW
@@ -89,7 +105,7 @@ class DimensionEstimator:
             pred = self.model(img_processed)[0]
         
         # Apply NMS
-        pred = non_max_suppression(pred, conf_thres, iou_thres)
+        pred = self.non_max_suppression(pred, conf_thres, iou_thres)
         return pred
     
     def estimate_dimensions(self, img_path, target_type="tree"):
@@ -117,7 +133,7 @@ class DimensionEstimator:
         if len(predictions[0]) > 0:
             # Scale boxes to original image
             pred = predictions[0]
-            pred[:, :4] = scale_coords(img_processed.shape[2:], pred[:, :4], original_img.shape).round()
+            pred[:, :4] = self.scale_coords(img_processed.shape[2:], pred[:, :4], original_img.shape).round()
             
             # Look for soda can (bottle class in COCO)
             for *xyxy, conf, cls_id in pred:
