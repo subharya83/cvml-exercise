@@ -62,8 +62,9 @@ Iterative refinement focusing on:
   - [Deduplication of textual content](./ex08/README.md)
   - [Mining Relevant Contents from Social Media](./ex09/README.md)
 
-**3D Spatial Understanding**
+**2D/3D Spatial Understanding**
   - [Single Object 3D Reconstruction](./ex12/README.md)
+  - [Outdoor Object dimension estimation](./ex22/README.md)
 
 
 **Language and Vision Model Enhancement**
