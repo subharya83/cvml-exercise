@@ -2,6 +2,7 @@
 
 ### pytorch --> tensorflow --> tensorflow.js
 ---
+A real [example](./faceexp.md). 
 
 ### **Step 1: Export the PyTorch Model to ONNX**
 ONNX (Open Neural Network Exchange) is an intermediate format that allows conversion between PyTorch and TensorFlow.
@@ -152,11 +153,3 @@ Use the TensorFlow.js converter to convert the TensorFlow SavedModel to a format
    output.print();
    ```
 
----
-
-### **Notes**
-- Ensure the input/output shapes and data types are consistent across PyTorch, ONNX, TensorFlow, and TensorFlow.js.
-- Test the converted model thoroughly to ensure accuracy and functionality.
-- For complex models, you may need to handle custom layers or operations manually.
-
-Let me know if you need further clarification!
