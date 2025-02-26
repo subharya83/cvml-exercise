@@ -78,6 +78,7 @@ Iterative refinement focusing on:
 
 **Software optimization**
   - [Understanding CUDA/PTX for Vision Tasks](./ex18/README.md)
+  - [Model conversion](./ex23/README.md)
   
 **Geospatial data/Satellite Imagery Analysis**
   - [Image alignment for Satellite Imagery](./ex21/README.md) 
