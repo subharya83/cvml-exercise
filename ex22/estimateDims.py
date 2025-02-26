@@ -2,9 +2,9 @@ import os
 import cv2
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
 import subprocess
+import argparse
 from pathlib import Path
 
 class DimensionEstimator:
@@ -108,12 +108,13 @@ class DimensionEstimator:
         pred = self.non_max_suppression(pred, conf_thres, iou_thres)
         return pred
     
-    def estimate_dimensions(self, img_path, target_type="tree"):
+    def estimate_dimensions(self, img_path, output_path=None, target_type="tree"):
         """
         Estimate dimensions of a building or tree using a soda can as reference
         
         Args:
             img_path: Path to the image
+            output_path: Path to save the output image with visualization
             target_type: Either "tree" or "building" to determine what to look for
             
         Returns:
@@ -167,15 +168,17 @@ class DimensionEstimator:
             estimated_height_m = (target_height_px * scale_factor) / 100
             estimated_width_m = (target_width_px * scale_factor) / 100
             
-            # Draw the results on the image and save
-            self._visualize_results(original_img, soda_can_bbox, target_bbox, 
-                                   estimated_height_m, estimated_width_m)
+            # Draw the results on the image and save if output path is provided
+            if output_path:
+                self._visualize_results(original_img, soda_can_bbox, target_bbox, 
+                                      estimated_height_m, estimated_width_m, output_path)
             
             return {
                 "estimated_height_m": estimated_height_m,
                 "estimated_width_m": estimated_width_m,
                 "reference_object": "soda can",
-                "reference_height_cm": self.soda_can_height
+                "reference_height_cm": self.soda_can_height,
+                "success": True
             }
         else:
             missing = []
@@ -186,7 +189,8 @@ class DimensionEstimator:
                 
             return {
                 "error": f"Could not detect {' and '.join(missing)} in the image.",
-                "detected_objects": [self.class_names[int(cls)] for *_, cls in predictions[0]]
+                "detected_objects": [self.class_names[int(cls)] for *_, cls in predictions[0]],
+                "success": False
             }
     
     def _detect_tree(self, img):
@@ -247,8 +251,8 @@ class DimensionEstimator:
         h, w = img.shape[:2]
         return [0, 0, w, h]
     
-    def _visualize_results(self, img, can_bbox, target_bbox, height_m, width_m):
-        """Draw bounding boxes and dimensions on the image"""
+    def _visualize_results(self, img, can_bbox, target_bbox, height_m, width_m, output_path):
+        """Draw bounding boxes and dimensions on the image and save to output path"""
         result_img = Image.fromarray(img.copy())
         draw = ImageDraw.Draw(result_img)
         
@@ -273,39 +277,52 @@ class DimensionEstimator:
         )
         
         # Save the result
-        result_img.save("dimension_estimation_result.jpg")
-        print(f"Result saved as dimension_estimation_result.jpg")
-        
-        # Display the result
-        plt.figure(figsize=(10, 8))
-        plt.imshow(result_img)
-        plt.axis('off')
-        plt.tight_layout()
-        plt.show()
+        result_img.save(output_path)
+        print(f"Result saved as {output_path}")
 
-# Example usage
-if __name__ == "__main__":
+def parse_arguments():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(description="Estimate dimensions of a building or tree from a single image.")
+    parser.add_argument("-i", "--input", required=True, help="Path to the input image")
+    parser.add_argument("-o", "--output", help="Path to save the output image with dimension visualization")
+    parser.add_argument("-t", "--type", choices=["tree", "building"], default="tree", 
+                        help="Type of object to measure (tree or building)")
+    
+    return parser.parse_args()
+
+def main():
+    """Main function to run the dimension estimator"""
+    # Parse command line arguments
+    args = parse_arguments()
+    
+    # Initialize the dimension estimator
+    print("Initializing dimension estimator...")
     estimator = DimensionEstimator()
     
-    # Get input from user
-    img_path = input("Enter path to image file: ")
-    target_type = input("What are you measuring? (tree/building): ").lower()
-    
-    if target_type not in ["tree", "building"]:
-        print("Invalid target type. Defaulting to 'tree'.")
-        target_type = "tree"
+    # Set default output path if not specified
+    output_path = args.output
+    if not output_path:
+        # Use input filename with _result suffix
+        input_path = Path(args.input)
+        output_path = str(input_path.with_stem(f"{input_path.stem}_result"))
     
     # Estimate dimensions
-    results = estimator.estimate_dimensions(img_path, target_type)
+    print(f"Processing image: {args.input}")
+    print(f"Target type: {args.type}")
+    results = estimator.estimate_dimensions(args.input, output_path, args.type)
     
     # Print results
-    if "error" in results:
-        print(f"Error: {results['error']}")
-        print(f"Detected objects in the image: {results['detected_objects']}")
-    else:
+    if results["success"]:
         print(f"\nEstimated dimensions:")
         print(f"Height: {results['estimated_height_m']:.2f} meters")
         print(f"Width: {results['estimated_width_m']:.2f} meters")
         print(f"Reference object: {results['reference_object']} " +
               f"(height: {results['reference_height_cm']} cm)")
-        print("\nResult image saved as dimension_estimation_result.jpg")
+        print(f"\nVisualization saved to: {output_path}")
+    else:
+        print(f"Error: {results['error']}")
+        print(f"Detected objects in the image: {results['detected_objects']}")
+
+if __name__ == "__main__":
+    main()
+    
