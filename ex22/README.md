@@ -72,6 +72,30 @@ Reference object: soda can (height: 12.2 cm)
 
 Visualization saved to: example_result.jpg
 ```
+### Prerequisites for C++ Version:
+
+- **OpenCV**: Install OpenCV with DNN module support.
+- **YOLOv5 ONNX Model**: Convert the YOLOv5 model to ONNX format and place it in the `weights` directory.
+- **C++ Compiler**: Use a C++ compiler that supports C++17 (e.g., GCC, Clang, or MSVC).
+
+### Compilation and Execution:
+
+1. **Compile the C++ Code**:
+   ```bash
+   g++ -std=c++17 -o estimateDims estimateDims.cpp `pkg-config --cflags --libs opencv4`
+   ```
+
+2. **Run the Executable**:
+   ```bash
+   ./estimateDims input_image.jpg output_image.jpg tree
+   ```
+
+### Notes:
+- The C++ version assumes that the YOLOv5 model is already converted to ONNX format. You can convert the PyTorch model to ONNX using the `torch.onnx.export` function in Python.
+- The C++ version is more performant than the Python version, especially for real-time applications, but requires more setup and configuration.
+
+This C++ implementation provides a solid foundation for further optimization and extension, making it suitable for graduate students interested in high-performance computer vision applications.
+
 
 ## 🧠 How It Works
 
