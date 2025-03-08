@@ -125,6 +125,20 @@ The validation system uses two complementary metrics:
    - Filters out images that don't match the dominant scene category
    - Configurable threshold for determining scene homogeneity
 
+```bash
+# Use SIFT features for validation
+python imageStitcherPlus.py -i input_directory -o output.jpg --validation sift --match-threshold 0.15
+
+# Use deep learning features with ResNet18
+python imageStitcherPlus.py -i input_directory -o output.jpg --validation deep --model resnet18
+
+# Enable scene classification preprocessing with deep learning validation
+python imageStitcherPlus.py -i input_directory -o output.jpg --validation deep --scene-classification --scene-threshold 0.6
+
+# Use MobileNet for both scene classification and feature validation
+python imageStitcherPlus.py -i input_directory -o output.jpg --validation deep --model mobilenet --scene-classification
+```
+
 ## Future Improvements
 
 Potential enhancements for research purposes:
