@@ -78,7 +78,26 @@ python3 imageStitcher.py -i input_directory -o output.jpg [--hist-threshold 0.6]
 
 ## Workflow
 Basic version: 
-
+```
++-----------------------+                       +-----------------------+
+|     Main Function     | --------------------> |  Load Images from Dir |
+|          (A)          |                       |          (B)          |
++-----------------------+                       +-----------------------+
+                                                        |
+                                                        v
++-----------------------+                       +-----------------------+
+| Validate Images Using | <-------------------- | Calculate Reference   |
+| Histogram & Edge      |                       | Features (Histogram & |
+| Density Comparison (D)|                       | Edge Density) (C)     |
++-----------------------+                       +-----------------------+
+           |                                          
+           v                                          
++-----------------------+                       +-----------------------+
+| Stitch Valid Images   | --------------------> | Save Stitched Panorama|
+| Using OpenCV Stitcher |                       | to Output File (F)    |
+|          (E)          |                       |                       |
++-----------------------+                       +-----------------------+
+```
 
 
 Advanced version: 
