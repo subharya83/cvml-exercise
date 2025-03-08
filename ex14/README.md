@@ -58,6 +58,45 @@ The normalization factor ensures that R(t) ∈ [-1,1], making the detection thre
 Raw Audio → Mono Conversion → Normalization → Cross-Correlation → Peak Detection → CSV Output
 ```
 
+### Computational flow
+```
+                            +-------------------+ 
+                            |  Command Line     | 
+                            |  Argument Parsing | 
+                            |  (-i, -q, -o)     | 
+                            +-------------------+
+                                |       |  
+                                v       v 
+            +-------------------+       +-------------------+ 
+            |  Input Audio      |       |  Query Audio      | 
+            | Samples Extraction|       | Samples Extraction| 
+            +-------------------+       +-------------------+ 
+                                |       |  
+                                v       v 
+                            +-------------------+
+                            |  Sample Rate      |
+                            |  Extraction       |---------------+
+                            +-------------------+               |
+                                                                |
+                                                                v
++-------------------+       +-------------------+       +-------------------+
+|  Pattern Matching | <--   |  Normalization    | <--   |  Cross-Correlation|
+|  (findPattern)    |       | (Pattern & Window)|       |  Calculation      |
++-------------------+       +-------------------+       +-------------------+
+         |
+         v
++-------------------+       +-------------------+       +-------------------+
+|  Detection        | -->   |  Threshold        | -->   |  Timestamp        |
+|  Results          |       |  Comparison       |       |  Calculation      |
++-------------------+       +-------------------+       +-------------------+
+                                                             |
+                                                             v
++-------------------+       +-------------------+       +-------------------+
+|  CSV File         | <--   |  Output File      | <--   |  Results Writing  |
+|  Writing          |       |  (outputFile)     |       |  (detections)     |
++-------------------+       +-------------------+       +-------------------+
+```
+
 ### Output Format
 The program generates a CSV file with two columns:
 1. Timestamp (seconds): The time point where a match was found
