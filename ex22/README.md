@@ -90,6 +90,29 @@ Visualization saved to: example_result.jpg
    ./estimateDims input_image.jpg output_image.jpg tree
    ```
 
+### Computational Workflow
+```
++-------------------+       +-------------------+       +-------------------+
+|  Command Line     |       |  Dimension        |       |  YOLOv5 Setup     |
+|  Arguments        | ----> |  Estimator        | <->   | (download_yolo.sh)|
+|  (parse_arguments)|       |  Initialization   |       |                   |
++-------------------+       +-------------------+       +-------------------+
+        |                                                   |
+        V                                                   V
++-------------------+       +-------------------+       +-------------------+
+|  Image Preprocess |       |  Object Detection |       |  YOLOv5 Model     |
+|  (preprocess_image)| <->  |  (detect_objects) | <---  |  (attempt_load)   |
++-------------------+       +-------------------+       +-------------------+
+                                |                           
+                                v                           
++-------------------+       +-------------------+       +----------------------+
+|  Dimension        |       |  Tree/Building    |       |  Visualization       |
+|  Estimation       | <---- |  Detection        | --->  |  (_visualize_results)|
++-------------------+       +-------------------+       +----------------------+
+       
+```
+
+
 ### Notes:
 - The C++ version assumes that the YOLOv5 model is already converted to ONNX format. You can convert the PyTorch model to ONNX using the `torch.onnx.export` function in Python.
 - The C++ version is more performant than the Python version, especially for real-time applications, but requires more setup and configuration.

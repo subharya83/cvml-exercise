@@ -75,7 +75,7 @@ python3 imageStitcher.py -i input_directory -o output.jpg [--hist-threshold 0.6]
 
 ## Workflow
 
-***Basic version: 
+### Basic version: 
 ```
 +-----------------------+                       +-----------------------+
 |     Main Function     | --------------------> |  Load Images from Dir |
@@ -98,7 +98,7 @@ python3 imageStitcher.py -i input_directory -o output.jpg [--hist-threshold 0.6]
 ```
 
 
-***Advanced version: 
+### Advanced version: 
 
 ```
 +-------------------+       +-------------------+       +-------------------+
@@ -123,6 +123,7 @@ python3 imageStitcher.py -i input_directory -o output.jpg [--hist-threshold 0.6]
 |  [cv2.imwrite]    |       |                   |       |                   |
 +-------------------+       +-------------------+       +-------------------+
 ```
+
 ## Parameter Tuning
 
 - **Histogram Threshold** (default: 0.6): Controls how similar the color distribution must be between images. Higher values enforce stricter color consistency.
