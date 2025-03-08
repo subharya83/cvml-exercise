@@ -23,24 +23,17 @@ double computeEdgeDensity(const cv::Mat& image) {
 // Compute color histogram for an image
 std::vector<float> computeColorHistogram(const cv::Mat& image) {
     std::vector<float> hist;
+    std::vector<cv::Mat> bgr_planes;
+    cv::split(image, bgr_planes);
     
-    // Calculate histogram for each channel
-    for (int i = 0; i < 3; i++) {
-        std::vector<cv::Mat> bgr_planes;
-        cv::split(image, bgr_planes);
-        
-        // Calculate histogram for current channel
+    int histSize = 8;
+    float range[] = {0, 256};
+    const float* histRange = {range};
+    
+    for (const auto& plane : bgr_planes) {
         cv::Mat hist_channel;
-        int histSize = 8;
-        float range[] = {0, 256};
-        const float* histRange = {range};
-        
-        cv::calcHist(&bgr_planes[i], 1, 0, cv::Mat(), hist_channel, 1, &histSize, &histRange);
-        
-        // Flatten and add to our histogram
-        for (int j = 0; j < hist_channel.rows; j++) {
-            hist.push_back(hist_channel.at<float>(j));
-        }
+        cv::calcHist(&plane, 1, 0, cv::Mat(), hist_channel, 1, &histSize, &histRange);
+        hist.insert(hist.end(), hist_channel.begin<float>(), hist_channel.end<float>());
     }
     
     return hist;
@@ -53,26 +46,14 @@ bool validateImage(const cv::Mat& image,
                   double histThreshold = 0.5,
                   double edgeThreshold = 0.5) {
     
-    // Compute histogram for current image
-    std::vector<float> hist = computeColorHistogram(image);
-    cv::Mat histMat(hist);
-    
-    // Compute edge density for current image
+    auto hist = computeColorHistogram(image);
     double edgeDensity = computeEdgeDensity(image);
     
-    // Check if image is similar to at least one reference image
     for (size_t i = 0; i < referenceHistograms.size(); i++) {
-        cv::Mat refHistMat(referenceHistograms[i]);
-        
-        // Compare histograms using correlation
-        double histSimilarity = cv::compareHist(histMat, refHistMat, cv::HISTCMP_CORREL);
-        
-        // Compare edge densities
-        double edgeDiff = std::abs(edgeDensity - referenceEdgeDensities[i]) / 
-                       std::max(edgeDensity, referenceEdgeDensities[i]);
+        double histSimilarity = cv::compareHist(cv::Mat(hist), cv::Mat(referenceHistograms[i]), cv::HISTCMP_CORREL);
+        double edgeDiff = std::abs(edgeDensity - referenceEdgeDensities[i]) / std::max(edgeDensity, referenceEdgeDensities[i]);
         double edgeSimilarity = 1.0 - edgeDiff;
         
-        // If image is similar in both aspects, consider it valid
         if (histSimilarity > histThreshold && edgeSimilarity > edgeThreshold) {
             return true;
         }
@@ -87,14 +68,12 @@ calculateReferenceFeatures(const std::vector<cv::Mat>& images, int sampleSize = 
     std::vector<std::vector<float>> referenceHistograms;
     std::vector<double> referenceEdgeDensities;
     
-    // Choose sample images for reference
     std::vector<int> sampleIndices;
     if (images.size() <= static_cast<size_t>(sampleSize)) {
         for (size_t i = 0; i < images.size(); i++) {
             sampleIndices.push_back(i);
         }
     } else {
-        // Randomly select indices
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dist(0, images.size() - 1);
@@ -107,7 +86,6 @@ calculateReferenceFeatures(const std::vector<cv::Mat>& images, int sampleSize = 
         }
     }
     
-    // Calculate features for reference images
     for (int idx : sampleIndices) {
         referenceHistograms.push_back(computeColorHistogram(images[idx]));
         referenceEdgeDensities.push_back(computeEdgeDensity(images[idx]));
@@ -118,10 +96,7 @@ calculateReferenceFeatures(const std::vector<cv::Mat>& images, int sampleSize = 
 
 // Stitch multiple images into a panorama
 cv::Mat stitchImages(const std::vector<cv::Mat>& images) {
-    // Create a stitcher
     cv::Ptr<cv::Stitcher> stitcher = cv::Stitcher::create();
-    
-    // Perform stitching
     cv::Mat result;
     cv::Stitcher::Status status = stitcher->stitch(images, result);
     
@@ -133,7 +108,6 @@ cv::Mat stitchImages(const std::vector<cv::Mat>& images) {
 }
 
 int main(int argc, char** argv) {
-    // Parse command line arguments
     cv::CommandLineParser parser(argc, argv,
         "{help h||show help message}"
         "{i|input|input directory containing images}"
@@ -153,13 +127,11 @@ int main(int argc, char** argv) {
     double histThreshold = parser.get<double>("hist-threshold");
     double edgeThreshold = parser.get<double>("edge-threshold");
     
-    // Check if input directory exists
     if (!fs::exists(inputDir) || !fs::is_directory(inputDir)) {
         std::cerr << "Error: Input directory '" << inputDir << "' does not exist." << std::endl;
         return 1;
     }
     
-    // Load images
     std::vector<cv::Mat> images;
     std::vector<std::string> validExtensions = {".png", ".jpg", ".jpeg", ".bmp", ".tiff"};
     
@@ -186,14 +158,11 @@ int main(int argc, char** argv) {
     
     std::cout << "Found " << images.size() << " images." << std::endl;
     
-    // Calculate reference features
     std::cout << "Calculating reference features..." << std::endl;
     auto [referenceHistograms, referenceEdgeDensities] = calculateReferenceFeatures(images);
     
-    // Validate and filter images
     std::vector<cv::Mat> validImages;
     for (size_t i = 0; i < images.size(); i++) {
-        // First few images are considered valid as they were used for reference
         if (i < referenceHistograms.size()) {
             validImages.push_back(images[i]);
             continue;
@@ -215,7 +184,6 @@ int main(int argc, char** argv) {
         return 1;
     }
     
-    // Perform stitching
     std::cout << "Stitching images..." << std::endl;
     try {
         cv::Mat result = stitchImages(validImages);
