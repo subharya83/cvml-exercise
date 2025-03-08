@@ -20,17 +20,6 @@ Social Media Observatory is an advanced tool designed for machine learning resea
 - Required packages: praw, tweepy, linkedin_api (automatically installed if missing)
 - API credentials for each platform
 
-## 🛠️ Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/social-media-observatory.git
-cd social-media-observatory
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
 ## 📝 Configuration
 
 Create a `config.txt` file with your search parameters:
@@ -75,7 +64,7 @@ Or create a `credentials.json` file:
 ## 🚀 Usage
 
 ```bash
-python social_media_scraper.py -c config.txt -o results.json
+python socMedScraper.py -c config.txt -o results.json
 ```
 
 ## 🧠 Applications for Machine Learning Researchers
