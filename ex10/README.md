@@ -51,6 +51,33 @@ Key Components:
 - Vocabulary: Handles word indexing and vocabulary management
 - Data processing utilities: Image transformation and caption preprocessing
 
+## Computational flow
+```
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|  Image Input      | ----> |  Image Preprocess | ----> |  ResNet50 Feature |
+|  (PIL Image)      |       |  (Resize, Norm)   |       |  Extraction       |
+|                   |       |                   |       |                   |
++-------------------+       +-------------------+       +-------------------+
+        |                                                      |
+        |                                                      |
+        v                                                      v
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|  Linear Layer     | ----> |  LSTM for         | <---- |  Linear Layer     |
+|  (Embedding)      |       |  Sequence Gen     |       |  (Word Prediction)|
+|                   |       |                   |       |                   |
++-------------------+       +-------------------+       +-------------------+
+        |                           |                           |
+        |                           |                           |
+        v                           v                           v
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|  Vocabulary       | <---- |  Caption          | <---- |  LSTM Hidden      |
+|  (idx2word)       |       |  Generation       |       |  States           |
+|                   |       |                   |       |                   |
++-------------------+       +-------------------+       +-------------------+
+```
 ## Test Cases
 
 1. Vocabulary Creation:
