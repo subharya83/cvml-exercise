@@ -69,6 +69,8 @@ Satellite images are often captured at different times, angles, or resolutions. 
 |  Homography       | <---- |  Keypoints        |       |  Translation      |
 |  (RANSAC)         |       |                   |       |  (Phase Shift)    |
 +-------------------+       +-------------------+       +-------------------+
+         |                                                 |
+         +-----------------------------------+             |
                                              |             |
                                              v             v
                                           +-------------------+
@@ -77,15 +79,14 @@ Satellite images are often captured at different times, angles, or resolutions. 
                                           |  Parameters       |
                                           |                   |
                                           +-------------------+
-
-
-+-------------------+       +-------------------+       +-------------------+
-|                   |       |                   |       |                   |
-|  Warp Target      |       |  Save Aligned     |       |  Print Translation|
-|  Image            | ----> |  Image            | ----> |  Parameters       |
-|                   |       |                   |       |                   |
-+-------------------+       +-------------------+       +-------------------+
-
+                                             |
+                                             V
+                                 +-------------------+       +-------------------+
+                                 |                   |       |                   |
+                                 |  Warp Target      |       |  Save Aligned     |
+                                 |  Image            | ----> |  Image            |
+                                 |                   |       |                   |
+                                 +-------------------+       +-------------------+
 ```
 
 ## Python Implementation (`alignImages.py`)
