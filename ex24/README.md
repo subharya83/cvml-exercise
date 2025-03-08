@@ -61,7 +61,7 @@ sudo apt install libopencv-dev g++
 brew install opencv
 
 # Compile the program
-g++ -std=c++17 image_stitcher.cpp -o image_stitcher_cpp `pkg-config --cflags --libs opencv4`
+g++ -std=c++17 imageStitcher.cpp -o imageStitcher `pkg-config --cflags --libs opencv4`
 ```
 
 ## Usage
@@ -76,17 +76,48 @@ python3 imageStitcher.py -i input_directory -o output.jpg [--hist-threshold 0.6]
 ./imageStitcher -i=input_directory -o=output.jpg [--hist-threshold=0.6] [--edge-threshold=0.5]
 ```
 
-## How It Works
+## Workflow
+Basic version: 
 
-The program follows these steps to create high-quality panoramas:
 
-1. **Image Loading**: Loads all images from the specified input directory
-2. **Reference Selection**: Automatically selects a representative subset of images
-3. **Feature Extraction**: Computes color histograms and edge density metrics for all images
-4. **Validation**: Compares each image against the reference set to identify outliers
-5. **Filtering**: Removes images that don't meet the similarity thresholds
-6. **Stitching**: Uses OpenCV's stitcher to create the final panoramic mosaic
 
+Advanced version: 
+```
++------------------------+
+|     Main Function      |
++------------------------+
+            |
+            v
++------------------------+
+|  Load Images from Dir  |
++------------------------+
+            |
+            v
++------------------------+      +------------------------+
+| Optional: Scene        |      | Select Validation     |
+| Classification to      |----->| Algorithm (Histogram, |
+| Filter Images by Scene |      | SIFT, or Deep Learning|
++------------------------+      +------------------------+
+                                           |
+                                           v
+                         +------------------------+
+                         | Calculate Reference    |
+                         | Features Based on      |
+                         | Selected Algorithm     |
+                         +------------------------+
+                                           |
+                                           v
++------------------------+      +------------------------+
+| Save Stitched Panorama |      | Validate Images Using |
+| to Output File         |      | Selected Algorithm    |
++------------------------+      +------------------------+
+            ^                                |
+            |                                v
++------------------------+      +------------------------+
+| Stitch Valid Images    |<-----| Store Valid Images    |
+| Using OpenCV Stitcher  |      | for Stitching         |
++------------------------+      +------------------------+
+```
 ## Parameter Tuning
 
 - **Histogram Threshold** (default: 0.6): Controls how similar the color distribution must be between images. Higher values enforce stricter color consistency.
