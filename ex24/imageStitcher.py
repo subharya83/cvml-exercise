@@ -19,35 +19,17 @@ def compute_color_histogram(image):
 def validate_image(image, reference_histograms, reference_edge_densities, hist_threshold=0.5, edge_threshold=0.5):
     """
     Validate if an image belongs to the set based on color histogram and edge density.
-    
-    Args:
-        image: The image to validate
-        reference_histograms: List of histograms from the reference set
-        reference_edge_densities: List of edge densities from the reference set
-        hist_threshold: Threshold for histogram comparison (0-1)
-        edge_threshold: Threshold for edge density difference (0-1)
-        
-    Returns:
-        True if image is valid, False otherwise
     """
-    # Compute histogram for current image
     hist = compute_color_histogram(image)
-    
-    # Compute edge density for current image
     edge_density = compute_edge_density(image)
     
-    # Check if image is similar to at least one reference image
     for ref_hist, ref_edge_density in zip(reference_histograms, reference_edge_densities):
-        # Compare histograms using correlation
         hist_similarity = cv2.compareHist(np.array(hist, dtype=np.float32), 
                                          np.array(ref_hist, dtype=np.float32), 
                                          cv2.HISTCMP_CORREL)
-        
-        # Compare edge densities
         edge_diff = abs(edge_density - ref_edge_density) / max(edge_density, ref_edge_density)
         edge_similarity = 1 - edge_diff
         
-        # If image is similar in both aspects, consider it valid
         if hist_similarity > hist_threshold and edge_similarity > edge_threshold:
             return True
             
@@ -56,18 +38,10 @@ def validate_image(image, reference_histograms, reference_edge_densities, hist_t
 def calculate_reference_features(images, sample_size=5):
     """
     Calculate reference features from a subset of images.
-    
-    Args:
-        images: List of loaded images
-        sample_size: Number of images to use as reference
-        
-    Returns:
-        Tuple of (reference_histograms, reference_edge_densities)
     """
     if len(images) <= sample_size:
         sample_indices = range(len(images))
     else:
-        # Choose random images as reference
         sample_indices = np.random.choice(len(images), sample_size, replace=False)
     
     reference_histograms = []
@@ -82,17 +56,8 @@ def calculate_reference_features(images, sample_size=5):
 def stitch_images(images):
     """
     Stitch multiple images into a panorama.
-    
-    Args:
-        images: List of images to stitch
-        
-    Returns:
-        Stitched panorama image
     """
-    # Create a stitcher object
     stitcher = cv2.Stitcher_create()
-    
-    # Perform stitching
     status, result = stitcher.stitch(images)
     
     if status != cv2.Stitcher_OK:
@@ -109,12 +74,10 @@ def main():
     
     args = parser.parse_args()
     
-    # Check if input directory exists
     if not os.path.isdir(args.input):
         print(f"Error: Input directory '{args.input}' does not exist.")
         return
     
-    # Load images
     image_files = [f for f in os.listdir(args.input) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff'))]
     
     if not image_files:
@@ -123,7 +86,6 @@ def main():
     
     print(f"Found {len(image_files)} images.")
     
-    # Load all images
     images = []
     for image_file in image_files:
         image_path = os.path.join(args.input, image_file)
@@ -137,14 +99,11 @@ def main():
         print("Error: Need at least 2 valid images for stitching.")
         return
     
-    # Calculate reference features
     print("Calculating reference features...")
     reference_histograms, reference_edge_densities = calculate_reference_features(images)
     
-    # Validate and filter images
     valid_images = []
     for i, img in enumerate(images):
-        # First few images are considered valid as they were used for reference
         if i < len(reference_histograms):
             valid_images.append(img)
             continue
@@ -162,7 +121,6 @@ def main():
         print("Error: Not enough valid images for stitching after filtering.")
         return
     
-    # Perform stitching
     print("Stitching images...")
     try:
         result = stitch_images(valid_images)
