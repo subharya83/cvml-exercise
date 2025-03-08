@@ -37,6 +37,57 @@ Satellite images are often captured at different times, angles, or resolutions. 
 
 ---
 
+## Computational workflow
+```
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|  Command Line     |       |  Load Images      |       |  Check Image      |
+|  Argument Parsing | ----> |  (Reference &     | ----> |  Loading Success  |
+|                   |       |  Target)          |       |                   |
++-------------------+       +-------------------+       +-------------------+
+                                                            |
+                                                            V
+                                          +-------------------+       
+                                          |                   |  
+                                          |  Select Algorithm | 
+                                          |  (0: SIFT, 1:     | 
+                                          | Phase Correlation)|  
+                                          +-------------------+       
+                                             |              |
+                                             v              v
+                           +-------------------+       +-------------------+
+                           |                   |       |                   |
+                           |  SIFT-Based       |       |  Phase Correlation|
+                           |  Alignment        |       |  Alignment        |
+                           |                   |       |                   |
+                           +-------------------+       +-------------------+
+                                |                           |
+                                v                           v
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|  Compute          |       |  Detect & Match   |       |  Compute          |
+|  Homography       | <---- |  Keypoints        |       |  Translation      |
+|  (RANSAC)         |       |                   |       |  (Phase Shift)    |
++-------------------+       +-------------------+       +-------------------+
+                                             |             |
+                                             v             v
+                                          +-------------------+
+                                          |                   |
+                                          |  Print Translation|
+                                          |  Parameters       |
+                                          |                   |
+                                          +-------------------+
+
+
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|  Warp Target      |       |  Save Aligned     |       |  Print Translation|
+|  Image            | ----> |  Image            | ----> |  Parameters       |
+|                   |       |                   |       |                   |
++-------------------+       +-------------------+       +-------------------+
+
+```
+
 ## Python Implementation (`alignImages.py`)
 
 ### Requirements
