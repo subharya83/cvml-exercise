@@ -67,10 +67,10 @@ Raw Audio → Mono Conversion → Normalization → Cross-Correlation → Peak D
                             +-------------------+
                                 |       |  
                                 v       v 
-            +-------------------+       +-------------------+ 
-            |  Input Audio      |       |  Query Audio      | 
-            | Samples Extraction|       | Samples Extraction| 
-            +-------------------+       +-------------------+ 
+                +-------------------+  +-------------------+ 
+                |  Input Audio      |  |  Query Audio      | 
+                | Samples Extraction|  | Samples Extraction| 
+                +-------------------+  +-------------------+ 
                                 |       |  
                                 v       v 
                             +-------------------+
