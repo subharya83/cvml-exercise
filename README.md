@@ -61,11 +61,11 @@ Iterative refinement focusing on:
   - [Screen Capture Video Analysis](./ex03/README.md)
   - [Deduplication of textual content](./ex08/README.md)
   - [Mining Relevant Contents from Social Media](./ex09/README.md)
+  - [Social Media Scraper (Reddit/LinkedIn/X)](./ex25/README.md)
 
 **2D/3D Spatial Understanding**
   - [Single Object 3D Reconstruction](./ex12/README.md)
   - [Outdoor Object dimension estimation](./ex22/README.md)
-
 
 **Language and Vision Model Enhancement**
   - [Automated Question-Answer Pair Generator](./ex04/README.md)
@@ -79,10 +79,11 @@ Iterative refinement focusing on:
 **Software optimization**
   - [Understanding CUDA/PTX for Vision Tasks](./ex18/README.md)
   - [Model conversion](./ex23/README.md)
+  - [Efficient Subwindow Search](./ex19/README.md)
   
-**Geospatial data/Satellite Imagery Analysis**
+**Image Stitching**
   - [Image alignment for Satellite Imagery](./ex21/README.md) 
-
+  - [Intelligent Image stitcher](./ex24/README.md) 
 
 ## Contribution and Exploration
 This repository is more than a collection of exercises—it's a playground for advanced research, inviting graduate students to explore, challenge, and extend the frontiers of computer vision and machine learning.
