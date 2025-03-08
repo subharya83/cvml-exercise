@@ -108,12 +108,27 @@ The validation system uses two complementary metrics:
    - Helps identify out-of-focus images or those with significantly different content
    - Normalized to account for different image sizes
 
+## Key Enhancements 
+
+1. **SIFT Feature Matching**:
+   - SIFT-based image validation using keypoint descriptors
+   - Uses ratio test for robust feature matching
+   - Calculates match percentage to determine image similarity
+
+
+2. **Deep Learning Integration**:
+   - ResNet18 and MobileNet models for feature extraction
+   - cosine similarity metric for comparing deep features
+
+3. **Scene Classification Preprocessing**:
+   - Uses a Places365 dataset-trained model to classify scene types
+   - Filters out images that don't match the dominant scene category
+   - Configurable threshold for determining scene homogeneity
+
 ## Future Improvements
 
 Potential enhancements for research purposes:
 
-- SIFT/SURF-based feature matching for more precise validation
-- Deep learning-based scene classification as a preprocessing step
 - Adaptive threshold selection based on dataset characteristics
 - Multi-band blending for improved seam quality
 - GPU acceleration for large dataset processing
