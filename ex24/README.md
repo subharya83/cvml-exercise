@@ -57,9 +57,6 @@ pip install opencv-python numpy
 # Ubuntu/Debian
 sudo apt install libopencv-dev g++
 
-# macOS
-brew install opencv
-
 # Compile the program
 g++ -std=c++17 imageStitcher.cpp -o imageStitcher `pkg-config --cflags --libs opencv4`
 ```
@@ -77,7 +74,8 @@ python3 imageStitcher.py -i input_directory -o output.jpg [--hist-threshold 0.6]
 ```
 
 ## Workflow
-Basic version: 
+
+***Basic version: 
 ```
 +-----------------------+                       +-----------------------+
 |     Main Function     | --------------------> |  Load Images from Dir |
@@ -100,42 +98,30 @@ Basic version:
 ```
 
 
-Advanced version: 
+***Advanced version: 
+
 ```
-+------------------------+
-|     Main Function      |
-+------------------------+
-            |
-            v
-+------------------------+
-|  Load Images from Dir  |
-+------------------------+
-            |
-            v
-+------------------------+      +------------------------+
-| Optional: Scene        |      | Select Validation     |
-| Classification to      |----->| Algorithm (Histogram, |
-| Filter Images by Scene |      | SIFT, or Deep Learning|
-+------------------------+      +------------------------+
-                                           |
-                                           v
-                         +------------------------+
-                         | Calculate Reference    |
-                         | Features Based on      |
-                         | Selected Algorithm     |
-                         +------------------------+
-                                           |
-                                           v
-+------------------------+      +------------------------+
-| Save Stitched Panorama |      | Validate Images Using |
-| to Output File         |      | Selected Algorithm    |
-+------------------------+      +------------------------+
-            ^                                |
-            |                                v
-+------------------------+      +------------------------+
-| Stitch Valid Images    |<-----| Store Valid Images    |
-| Using OpenCV Stitcher  |      | for Stitching         |
-+------------------------+      +------------------------+
++-------------------+       +-------------------+       +-------------------+
+|  Load Images      | ----> |  Scene            | ----> |  Calculate        |
+|  from Input Dir   |       |  Classification   |       |  Reference        |
+|                   |       |  (Optional)       |       |  Features         |
+|  [load_images]    |       |  [SceneClass]     |       |  [Validator]      |
++-------------------+       +-------------------+       +-------------------+
+                                                                 |
+                                                                 v
++-------------------+       +-------------------+       +-------------------+
+|  Stitch Images    | <---- |  Filter Images    | <---- |  Validate Images  |
+|  into Panorama    |       |  Based on Scene   |       |  using Selected   |
+|  [stitch_images]  |       |  Classification   |       |  Validation Method|
+|                   |       |  [SceneClass]     |       |  [Validator]      |
++-------------------+       +-------------------+       +-------------------+
+            |                                                  
+            v                                                   
++-------------------+       +-------------------+       +-------------------+
+|  Save Stitched    | ----> |  Output Panorama  | ----> |  End              |
+|  Image to Output  |       |  Image            |       |                   |
+|  [cv2.imwrite]    |       |                   |       |                   |
++-------------------+       +-------------------+       +-------------------+
 ```
 ## Parameter Tuning
 
