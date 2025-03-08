@@ -14,6 +14,69 @@ Social Media Observatory is an advanced tool designed for machine learning resea
 - **Rate-limit Safe**: Built-in random delays and error handling to respect platform API limitations
 - **Flexible Authentication**: Support for both environment variables and credential files
 
+## Organization
+```
++---------------------------------------------------+
+|                SocialMediaScraper                 |
+|---------------------------------------------------|
+| - config: dict                                    |
+| - output_file: str                                |
+| - credentials: dict                               |
+| - results: list                                   |
+|---------------------------------------------------|
+| + __init__(config_file, output_file)              |
+| + parse_config(config_file) -> dict               |
+| + load_credentials() -> dict                      |
+| + scrape_reddit()                                 |
+| + scrape_twitter()                                |
+| + scrape_linkedin()                               |
+| + scrape()                                        |
++---------------------------------------------------+
+```
+
+## Workflow
+
+```
++-------------------+       +-------------------+       +-------------------+
+|   Configuration   |       |   Credentials     |       |   Results         |
+|   File (config)   |       |   (env/file)      |       |   (output.json)   |
++-------------------+       +-------------------+       +-------------------+
+          |                         |                         ^
+          v                         v                         |
++-------------------+       +-------------------+             |
+|  parse_config()   |       | load_credentials()|             |
++-------------------+       +-------------------+             |
+          |                         |                         |
+          v                         v                         |
++-------------------------------------------------------------+
+|                SocialMediaScraper Class                     |
+|-------------------------------------------------------------|
+| - config: dict                                              |
+| - output_file: str                                          |
+| - credentials: dict                                         |
+| - results: list                                             |
+|-------------------------------------------------------------|
+| + scrape()                                                  |
+|   |                                                         |
+|   |--> scrape_reddit()                                      |
+|   |       |                                                 |
+|   |       +--> Fetch Reddit posts                           |
+|   |       +--> Store in results                             |
+|   |                                                         |
+|   |--> scrape_twitter()                                     |
+|   |       |                                                 |
+|   |       +--> Fetch Twitter tweets                         |
+|   |       +--> Store in results                             |
+|   |                                                         |
+|   |--> scrape_linkedin()                                    |
+|           |                                                 |
+|           +--> Fetch LinkedIn posts                         |
+|           +--> Store in results                             |
+|                                                             |
+|   +--> Save results to output_file                          |
++-------------------------------------------------------------+
+```
+
 ## 📋 Requirements
 
 - Python 3.7+
