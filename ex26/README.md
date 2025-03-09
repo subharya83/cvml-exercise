@@ -85,6 +85,37 @@ As a computer vision graduate student, you're likely familiar with Python's ease
 
 ---
 
+## Computational workflow
+
+### 
+
+### DETR based
+
+```
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|  Input Video      | -->   |  Frame            | -->   |  DETR Model       |
+|  Frame            |       |  Preprocessing    |       |  Inference        |
+|                   |       |                   |       |                   |
++-------------------+       +-------------------+       +-------------------+
+        |                           |                           |
+        v                           v                           v
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|  Bounding Box     | -->   |  SORT Tracker     | -->   |  Tracked Logo     |
+|  Extraction       |       |  (Tracking)       |       |  Positions        |
+|                   |       |                   |       |                   |
++-------------------+       +-------------------+       +-------------------+
+        |                                                   |
+        v                                                   v
++-------------------+                               +-------------------+
+|                   |                               |                   |
+|  Output Video     | <--                           |  Tracked Logo     |
+|  with Bounding    |                               |  Positions        |
+|  Boxes            |                               |                   |
++-------------------+                               +-------------------+
+```
+
 ## 📊 **Performance Comparison**
 
 | Feature                | Python Version          | C++ Version            |
