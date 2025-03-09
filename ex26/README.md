@@ -47,19 +47,6 @@ The Python implementation is designed for quick prototyping and ease of use, whi
 - **High performance**: Optimized for real-time tracking with efficient memory management.
 - **Minimal dependencies**: Only requires OpenCV and Eigen for matrix operations.
 
----
-
-## 🧠 **Why This Project?**
-
-As a computer vision graduate student, you're likely familiar with Python's ease of use and rapid prototyping capabilities. However, when it comes to deploying real-time systems, C++ is often the language of choice due to its performance and efficiency. This project provides a unique opportunity to:
-- **Compare Python and C++ implementations** of the same computer vision task.
-- **Understand the trade-offs** between ease of development and performance.
-- **Experiment with different tracking algorithms** (e.g., SORT) and detection methods (e.g., ORB, DETR).
-
----
-
-## 🚀 **Getting Started**
-
 ### **Python Version**
 1. **Install dependencies**:
    ```bash
