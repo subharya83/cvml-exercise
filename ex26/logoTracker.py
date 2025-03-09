@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import argparse
 from sort import Sort  # Ensure you have the SORT algorithm implementation
-from transformers import DetrForObjectDetection, DetrImageProcessor  # For DETR implementation
 import torch
+import onnxruntime as ort  # For ONNX inference
 
 # Constants
 ORB_METHOD = "orb"
@@ -58,30 +58,50 @@ class ORBLogoDetector:
         return np.array([])  # No detection
 
 
-class DETRLogoDetector:
-    """DETR-based logo detection and tracking."""
+class LightweightDETRLogoDetector:
+    """Lightweight DETR-based logo detection and tracking."""
 
-    def __init__(self, logo_image):
-        self.logo_image = logo_image
-        self.processor = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50")
-        self.model = DetrForObjectDetection.from_pretrained("facebook/detr-resnet-50")
-        self.logo_tensor = self.processor(images=logo_image, return_tensors="pt")["pixel_values"]
+    def __init__(self, model_path):
+        # Initialize ONNX runtime session
+        self.session = ort.InferenceSession(model_path)
+        self.input_name = self.session.get_inputs()[0].name
 
     def detect(self, frame):
-        """Detect the logo in the frame using DETR."""
-        inputs = self.processor(images=frame, return_tensors="pt")
-        with torch.no_grad():
-            outputs = self.model(**inputs)
+        """Detect the logo in the frame using a lightweight DETR model."""
+        # Preprocess the frame
+        input_tensor = self.preprocess(frame)
 
-        # Process outputs to get bounding boxes
-        logits = outputs.logits
-        bboxes = outputs.pred_boxes
-        # Filter based on confidence and class (customize as needed)
-        # For simplicity, assume the logo is the first detected object
+        # Run inference
+        outputs = self.session.run(None, {self.input_name: input_tensor})
+
+        # Postprocess outputs to get bounding boxes
+        bboxes = self.postprocess(outputs)
         if len(bboxes) > 0:
-            x1, y1, x2, y2 = bboxes[0].tolist()
-            return np.array([[x1, y1, x2, y2, 1.0]])  # Return detection with confidence 1.0
+            return np.array([[bboxes[0][0], bboxes[0][1], bboxes[0][2], bboxes[0][3], 1.0]])  # Return detection with confidence 1.0
         return np.array([])  # No detection
+
+    def preprocess(self, frame):
+        """Preprocess the frame for DETR input."""
+        # Resize and normalize the frame
+        frame = cv2.resize(frame, (800, 800))  # DETR expects 800x800 input
+        frame = frame / 255.0  # Normalize to [0, 1]
+        frame = np.transpose(frame, (2, 0, 1))  # Change to CHW format
+        frame = np.expand_dims(frame, axis=0)  # Add batch dimension
+        frame = frame.astype(np.float32)
+        return frame
+
+    def postprocess(self, outputs):
+        """Postprocess DETR outputs to extract bounding boxes."""
+        # Extract logits and bounding boxes from outputs
+        logits = outputs[0]  # Assume logits are the first output
+        bboxes = outputs[1]  # Assume bounding boxes are the second output
+
+        # Filter based on confidence threshold (customize as needed)
+        confidence_threshold = 0.5
+        if len(logits) > 0 and len(bboxes) > 0:
+            # For simplicity, return the first detected object
+            return bboxes[0]
+        return []
 
 
 def main():
@@ -89,7 +109,9 @@ def main():
     if args.method == ORB_METHOD:
         detector = ORBLogoDetector(logo_image)
     elif args.method == DETR_METHOD:
-        detector = DETRLogoDetector(logo_image)
+        # Load lightweight DETR model
+        model_path = "weights/detr_resnet50.onnx"  # Path to locally saved ONNX model
+        detector = LightweightDETRLogoDetector(model_path)
     else:
         raise ValueError(f"Invalid method: {args.method}")
 
