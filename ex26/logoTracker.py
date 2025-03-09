@@ -5,26 +5,6 @@ from sort import Sort  # Ensure you have the SORT algorithm implementation
 import torch
 import onnxruntime as ort  # For ONNX inference
 
-# Constants
-ORB_METHOD = "orb"
-DETR_METHOD = "detr"
-
-# Initialize argument parser
-parser = argparse.ArgumentParser(description='Track a logo in a video using an input image.')
-parser.add_argument('--video', type=str, required=True, help='Path to the input video file.')
-parser.add_argument('--image', type=str, required=True, help='Path to the input image file containing the logo.')
-parser.add_argument('--output', type=str, required=True, help='Path to save the output video file.')
-parser.add_argument('--method', type=str, default=ORB_METHOD, choices=[ORB_METHOD, DETR_METHOD],
-                    help='Method to use for logo detection and tracking (orb or detr).')
-args = parser.parse_args()
-
-# Load the logo image
-logo_image = cv2.imread(args.image, cv2.IMREAD_COLOR)
-if logo_image is None:
-    print("Error: Could not load logo image.")
-    exit()
-logo_height, logo_width = logo_image.shape[:2]
-
 
 class ORBLogoDetector:
     """ORB-based logo detection and tracking."""
@@ -105,21 +85,36 @@ class LightweightDETRLogoDetector:
 
 
 def main():
+    # Initialize argument parser
+    parser = argparse.ArgumentParser(description='Track a logo in a video using an input image.')
+    parser.add_argument('-v', type=str, required=True, help='Path to the input video file.')
+    parser.add_argument('-i', type=str, required=True, help='Path to the input image file containing the logo.')
+    parser.add_argument('-o', type=str, required=True, help='Path to save the output video file.')
+    parser.add_argument('-a', type=str, default=0, choices=[0, 1],
+                        help='Logo detection/tracking algorithm [orb:0|detr:1].')
+    args = parser.parse_args()
+
+    # Load the logo image
+    logo_image = cv2.imread(args.i, cv2.IMREAD_COLOR)
+    if logo_image is None:
+        print("Error: Could not load logo image.")
+        exit()
+    logo_height, logo_width = logo_image.shape[:2]
     # Initialize detector based on method
-    if args.method == ORB_METHOD:
+    if int(args.a) == 0:
         detector = ORBLogoDetector(logo_image)
-    elif args.method == DETR_METHOD:
+    elif int(args.a) == 1:
         # Load lightweight DETR model
         model_path = "weights/detr_resnet50.onnx"  # Path to locally saved ONNX model
         detector = LightweightDETRLogoDetector(model_path)
     else:
-        raise ValueError(f"Invalid method: {args.method}")
+        raise ValueError(f"Invalid method: {args.a}")
 
     # Initialize SORT tracker
     mot_tracker = Sort()
 
     # Open the video
-    cap = cv2.VideoCapture(args.video)
+    cap = cv2.VideoCapture(args.v)
     if not cap.isOpened():
         print("Error: Could not open video.")
         exit()
@@ -151,15 +146,9 @@ def main():
         # Write the frame into the output video file
         out.write(frame)
 
-        # Display the resulting frame
-        cv2.imshow('Frame', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
     # Release everything if job is finished
     cap.release()
     out.release()
-    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
