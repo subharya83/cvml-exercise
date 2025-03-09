@@ -95,22 +95,22 @@ As a computer vision graduate student, you're likely familiar with Python's ease
 |  Frame            |       |  Detection        |       |  (BFMatcher)      |
 |                   |       |                   |       |                   |
 +-------------------+       +-------------------+       +-------------------+
-        |                           |                           |
-        v                           v                           v
+                                                                |
+                                                                v
 +-------------------+       +-------------------+       +-------------------+
 |                   |       |                   |       |                   |
-|  Homography       | -->   |  Bounding Box     | -->   |  SORT Tracker     |
-|  Calculation      |       |  Estimation       |       |  (Tracking)       |
+|  SORT Tracker     | <--   |  Bounding Box     | <--   |    Homography     |
+|  (Tracking)       |       |  Estimation       |       |    Calculation    |
 |                   |       |                   |       |                   |
 +-------------------+       +-------------------+       +-------------------+
-        |                                                   |
-        v                                                   v
-+-------------------+                               +-------------------+
-|                   |                               |                   |
-|  Output Video     | <--                           |  Tracked Logo     |
-|  with Bounding    |                               |  Positions        |
-|  Boxes            |                               |                   |
-+-------------------+                               +-------------------+
+        |                                                  
+        v                                                  
++-------------------+       +-------------------+ 
+|  Tracked Logo     |       |  Output Video     | 
+|  Positions        | -->   |  with Bounding    | 
+|                   |       |  Boxes            |  
++-------------------+       +-------------------+ 
+
 ```
 ### DETR based
 
