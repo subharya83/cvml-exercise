@@ -87,8 +87,31 @@ As a computer vision graduate student, you're likely familiar with Python's ease
 
 ## Computational workflow
 
-### 
-
+### Classic Feature matching based
+```
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|  Input Video      | -->   |  ORB Feature      | -->   |  Feature Matching |
+|  Frame            |       |  Detection        |       |  (BFMatcher)      |
+|                   |       |                   |       |                   |
++-------------------+       +-------------------+       +-------------------+
+        |                           |                           |
+        v                           v                           v
++-------------------+       +-------------------+       +-------------------+
+|                   |       |                   |       |                   |
+|  Homography       | -->   |  Bounding Box     | -->   |  SORT Tracker     |
+|  Calculation      |       |  Estimation       |       |  (Tracking)       |
+|                   |       |                   |       |                   |
++-------------------+       +-------------------+       +-------------------+
+        |                                                   |
+        v                                                   v
++-------------------+                               +-------------------+
+|                   |                               |                   |
+|  Output Video     | <--                           |  Tracked Logo     |
+|  with Bounding    |                               |  Positions        |
+|  Boxes            |                               |                   |
++-------------------+                               +-------------------+
+```
 ### DETR based
 
 ```
