@@ -109,18 +109,26 @@ The Python implementation is designed for quick prototyping and ease of use, whi
 |                   |       |                   |       |                   |
 +-------------------+       +-------------------+       +-------------------+
         |                           |                           |
-        v                           v                           v
-+-------------------+       +-------------------+       +-------------------+
-|                   |       |                   |       |                   |
-|  Bounding Box     | -->   |  SORT Tracker     | -->   |  Tracked Logo     |
-|  Extraction       |       |  (Tracking)       |       |  Positions        |
-|                   |       |                   |       |                   |
-+-------------------+       +-------------------+       +-------------------+
+        |                           v                           v
+        |                   +-------------------+       +-------------------+
+        |                   |                   |       |                   |
+        |                   |  Bounding Box     | -->   |  SORT Tracker     |
+        |                   |  Extraction       |       |  (Tracking)       |
+        |                   |                   |       |                   |
+        |                   +-------------------+       +-------------------+
+        |                                                   |
+        |                                                   v
+        |                                           +-------------------+
+        |                                           |                   |
+        |                                           |  Tracked Logo     |
+        |                                           |  Positions        |
+        |                                           |                   |
+        |                                           +-------------------+
         |                                                   |
         v                                                   v
 +-------------------+                               +-------------------+
 |                   |                               |                   |
-|  Output Video     | <--                           |  Tracked Logo     |
+|  Output Video     | <---------------------------- |  Tracked Logo     |
 |  with Bounding    |                               |  Positions        |
 |  Boxes            |                               |                   |
 +-------------------+                               +-------------------+
