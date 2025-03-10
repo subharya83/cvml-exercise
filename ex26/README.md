@@ -20,13 +20,14 @@ The Python implementation is designed for quick prototyping and ease of use, whi
 ├── CMakeLists.txt
 ├── download.sh
 ├── input
+├── logoTracker.cpp
 ├── logoTracker.py
-├── main.cpp
 ├── README.md
 ├── sort.cpp
 ├── sort.h
 ├── sort.py
 └── weights
+    ├── detr-resnet50.onnx
     ├── yolov3.cfg
     └── yolov3.weights
 ```
@@ -152,7 +153,7 @@ The Python implementation is designed for quick prototyping and ease of use, whi
    - Which method is faster for real-time tracking?
 
 2. **Optimize the C++ version**:
-   - Can you improve the performance of the C++ implementation by optimizing the Kalman filter or matrix operations?
+   - Improve the performance of the C++ implementation by optimizing the Kalman filter or matrix operations
 
 3. **Extend the SORT tracker**:
    - Implement additional features like occlusion handling or re-identification.
