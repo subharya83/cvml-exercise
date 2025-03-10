@@ -1,7 +1,6 @@
 #include <opencv2/opencv.hpp>
-#include <Eigen/Dense>
-#include "sort.h"
 #include <iostream>
+#include "sort.h"  // Include the SORT tracker implementation
 
 class ORBLogoDetector {
 public:
@@ -11,7 +10,7 @@ public:
         orb->detectAndCompute(logo_image, cv::noArray(), logo_kp, logo_des);
     }
 
-    std::vector<Eigen::VectorXf> detect(const cv::Mat& frame) {
+    std::vector<cv::Rect> detect(const cv::Mat& frame) {
         std::vector<cv::KeyPoint> frame_kp;
         cv::Mat frame_des;
         orb->detectAndCompute(frame, cv::noArray(), frame_kp, frame_des);
@@ -20,6 +19,7 @@ public:
             std::vector<cv::DMatch> matches;
             bf.match(logo_des, frame_des, matches);
 
+            // Sort matches by distance (best matches first)
             std::sort(matches.begin(), matches.end(), [](const cv::DMatch& a, const cv::DMatch& b) {
                 return a.distance < b.distance;
             });
@@ -30,6 +30,7 @@ public:
                 dst_pts.push_back(frame_kp[m.trainIdx].pt);
             }
 
+            // Compute homography
             cv::Mat M = cv::findHomography(src_pts, dst_pts, cv::RANSAC, 5.0);
             if (!M.empty()) {
                 std::vector<cv::Point2f> logo_corners(4);
@@ -40,17 +41,16 @@ public:
                 std::vector<cv::Point2f> transformed_corners(4);
                 cv::perspectiveTransform(logo_corners, transformed_corners, M);
 
+                // Calculate bounding box
                 float x1 = transformed_corners[0].x;
                 float y1 = transformed_corners[0].y;
                 float x2 = transformed_corners[2].x;
                 float y2 = transformed_corners[2].y;
 
-                std::vector<Eigen::VectorXf> detections;
-                detections.push_back((Eigen::VectorXf(5) << x1, y1, x2, y2, 1.0f).finished());
-                return detections;
+                return { cv::Rect(cv::Point(x1, y1), cv::Point(x2, y2)) };
             }
         }
-        return {};
+        return {};  // No detection
     }
 
 private:
@@ -67,28 +67,47 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    // Load the logo image
     cv::Mat logo_image = cv::imread(argv[2], cv::IMREAD_COLOR);
     if (logo_image.empty()) {
         std::cerr << "Error: Could not load logo image." << std::endl;
         return -1;
     }
 
+    // Initialize ORB detector
     ORBLogoDetector detector(logo_image);
+
+    // Initialize SORT tracker
     Sort tracker;
 
+    // Open the video
     cv::VideoCapture cap(argv[1]);
     if (!cap.isOpened()) {
         std::cerr << "Error: Could not open video." << std::endl;
         return -1;
     }
 
-    cv::VideoWriter out(argv[3], cv::VideoWriter::fourcc('M', 'P', '4', 'V'), 20.0, cv::Size(cap.get(cv::CAP_PROP_FRAME_WIDTH), cap.get(cv::CAP_PROP_FRAME_HEIGHT)));
+    // Prepare video writer
+    int frame_width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+    int frame_height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    cv::VideoWriter out(argv[3], cv::VideoWriter::fourcc('M', 'P', '4', 'V'), 20.0, cv::Size(frame_width, frame_height));
 
     cv::Mat frame;
     while (cap.read(frame)) {
+        // Detect the logo
         auto detections = detector.detect(frame);
-        auto tracks = tracker.update(detections);
 
+        // Convert detections to SORT format (x1, y1, x2, y2, confidence)
+        std::vector<std::vector<float>> sort_detections;
+        for (const auto& rect : detections) {
+            sort_detections.push_back({ static_cast<float>(rect.x), static_cast<float>(rect.y),
+                                       static_cast<float>(rect.x + rect.width), static_cast<float>(rect.y + rect.height), 1.0f });
+        }
+
+        // Update SORT tracker
+        auto tracks = tracker.update(sort_detections);
+
+        // Draw tracked bounding boxes
         for (const auto& track : tracks) {
             int x1 = static_cast<int>(track[0]);
             int y1 = static_cast<int>(track[1]);
@@ -100,9 +119,11 @@ int main(int argc, char** argv) {
             cv::putText(frame, "ID " + std::to_string(id), cv::Point(x1, y1 - 10), cv::FONT_HERSHEY_SIMPLEX, 0.9, cv::Scalar(0, 255, 0), 2);
         }
 
+        // Write the frame to the output video
         out.write(frame);
     }
 
+    // Release resources
     cap.release();
     out.release();
 
