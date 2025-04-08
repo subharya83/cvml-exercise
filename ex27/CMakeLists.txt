@@ -4,6 +4,13 @@ project(cv_minimal)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(USE_SIFT "Enable SIFT-specific enhancements" ON)
+
+if(USE_SIFT)
+  add_definitions(-DUSE_SIFT)
+  message(STATUS "Building with SIFT enhancements")
+endif()
+
 # Enable colored compiler output (for readability)
 if(NOT WIN32)
   add_compile_options(-fdiagnostics-color=always)
