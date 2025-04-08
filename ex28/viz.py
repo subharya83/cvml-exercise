@@ -25,7 +25,7 @@ def plot_poses(ax, poses, color, label):
             color=color, label=label, marker='o', markersize=3)
     
     # Draw coordinate axes for key poses
-    for i in range(0, len(poses), max(1, len(poses)//5):
+    for i in range(0, len(poses), max(1, len(poses)//5)):
         pos = poses[i]['position']
         rot = poses[i]['rotation']
         axis_length = 0.1
