@@ -1,15 +1,9 @@
 # Camera Pose Estimation from Video
 
-This project estimates 6DoF (6 Degrees of Freedom) camera poses from video frames using feature-based methods.
-The core theory behind this camera pose estimation is based on the **epipolar geometry** of two views. For a calibrated 
-camera (known intrinsic parameters), the essential matrix \( E \) relates corresponding points \( x \) and \( x' \) in 
-normalized image coordinates through the epipolar constraint:
+This project estimates 6DoF (6 Degrees of Freedom) camera poses from video frames using feature-based methods.The core theory behind this camera pose estimation is based on the **epipolar geometry** of two views. The system estimates camera motion by analyzing how feature points move between consecutive video frames. For a calibrated camera (where its internal optics are known), matching points between two frames reveal geometric constraints about the camera's movement. The key mathematical object is called the essential matrix, which encodes the relationship between the camera's rotation and translation based on these point correspondences. This matrix is computed robustly using RANSAC to handle outliers from incorrect feature matches.
 
-\[
-x'^\top E x = 0
-\]
+From the essential matrix, we decompose it to extract the camera's rotation (as a 3D orientation matrix) and translation (as a 3D direction vector). Since we can't determine the absolute distance traveled from images alone (the scale ambiguity problem), the system includes heuristic methods to maintain consistent scale across frames. The final pose is refined by ensuring the estimated movement aligns well with the observed feature movements in the image, and temporal smoothing is applied to reduce jitter in the estimates. This approach effectively builds up the camera's trajectory frame by frame through visual analysis of how the scene appears to change from different viewpoints.
 
-where \( E = [t]_\times R \) contains the relative rotation \( R \) and translation \( t \) between views (with \( [t]_\times \) being the skew-symmetric matrix of \( t \)). The 8-point algorithm or RANSAC-based methods solve for \( E \) from point correspondences. The pose \( (R, t) \) is then recovered via SVD decomposition of \( E \), enforcing the cheirality constraint to ensure physically valid solutions. For monocular sequences, the translation is recovered only up to scale (\( \|t\| = 1 \)), necessitating heuristic scale estimation (e.g., \( t_{new} = \alpha t \) based on feature motion magnitude). The reprojection error \( \sum_i \|x'_i - K(RX_i + t)\|^2 \) (where \( K \) is the camera matrix) is minimized during refinement, typically via PnP (Perspective-n-Point) algorithms like RANSAC or Levenberg-Marquardt optimization.
 
 ## Key Computational Blocks
 
@@ -70,7 +64,7 @@ recoverPose(E, prevMatchedPoints, matchedPoints, cameraMatrix, R, t, mask);
 - Returns relative camera motion between frames
 - Translation is up to scale for monocular sequences
 
-### 5. Pose Refinement (Enhanced Version Only)
+### 5. Pose Refinement 
 
 **Scale Estimation:**
 ```cpp
@@ -100,3 +94,53 @@ currentPose = poseHistory.getSmoothedPose();
    ```bash
    g++ -std=c++11 cpe.cpp -DENHANCE=ON -o cpe `pkg-config --cflags --libs opencv4`
    ```
+
+## Analysis
+
+### Visualizaion
+#### Comparing given pose files [video_a](output/poses_a.jsonl) and [video_b](output/poses_b.jsonl)
+![](./assets/original.png)
+
+#### Comparing given pose files [video_a](output/poses_a.jsonl) and [basic pose estimation video_b](output/poses_b_basic.jsonl)
+![](./assets/basic.png)
+
+#### Comparing given pose files [video_a](output/poses_a.jsonl) and [enhanced pose estimation video_b](output/poses_b_enhanced.jsonl)
+![](./assets/enhanced.png)
+
+
+### Computational complexity 
+
+The following provide an idea on the runtime of both the basic version and 
+the enhanced version
+
+#### Basic version
+```shell
+$ g++ -std=c++11 cpe.cpp -o cpe `pkg-config --cflags --libs opencv4`
+$ time ./cpe input/video_b.mp4 output/poses_b.jsonl
+Video info:
+  FPS: 6
+  Reported frames: 43
+  Calculated duration: 7.16667s
+  Expected frames (6fps × 7.17s): 43.02
+Processed 43 frames. Results written to output/poses_b.jsonl
+
+real	0m2.819s
+user	0m5.907s
+sys	0m1.022s
+```
+
+#### Enhanced version
+```shell
+$g++ -std=c++11 cpe.cpp -DENHANCE -o cpe `pkg-config --cflags --libs opencv4`
+$./cpe input/video_b.mp4 output/poses_b.jsonl
+Video info:
+  FPS: 6
+  Reported frames: 43
+  Calculated duration: 7.16667s
+  Expected frames (6fps × 7.17s): 43.02
+Processed 43 frames. Results written to output/poses_b.jsonl
+
+real	0m52.435s
+user	6m14.840s
+sys	0m11.409s
+```
