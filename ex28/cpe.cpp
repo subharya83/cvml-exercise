@@ -5,6 +5,7 @@
 #include <vector>
 #include <iomanip>
 #include <cmath>
+#include <fstream>
 
 using namespace cv;
 using namespace std;
@@ -15,7 +16,7 @@ struct Pose {
     double delta;
 };
 
-void printTransformJSON(const Pose& pose) {
+void writeTransformJSON(ofstream& outfile, const Pose& pose, bool isFirstFrame) {
     Mat R;
     Rodrigues(pose.rotation, R);
     
@@ -23,15 +24,16 @@ void printTransformJSON(const Pose& pose) {
     R.copyTo(transform(Rect(0, 0, 3, 3)));
     pose.translation.copyTo(transform(Rect(3, 0, 1, 3)));
     
-    cout << fixed << setprecision(15);
-    cout << "{\"transform\": [";
+    outfile << fixed << setprecision(15);
+    if (!isFirstFrame) outfile << "\n";
+    outfile << "{\"transform\": [";
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            cout << transform.at<double>(i, j);
-            if (i != 3 || j != 3) cout << ", ";
+            outfile << transform.at<double>(i, j);
+            if (i != 3 || j != 3) outfile << ", ";
         }
     }
-    cout << "], \"position_delta\": " << pose.delta << "}" << endl;
+    outfile << "], \"position_delta\": " << pose.delta << "}";
 }
 
 double calculatePositionDelta(const Mat& prev, const Mat& curr) {
@@ -40,8 +42,8 @@ double calculatePositionDelta(const Mat& prev, const Mat& curr) {
 }
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
-        cerr << "Usage: " << argv[0] << " <video_file>" << endl;
+    if (argc < 3) {
+        cerr << "Usage: " << argv[0] << " <video_file> <output_json_file>" << endl;
         return -1;
     }
 
@@ -54,6 +56,12 @@ int main(int argc, char** argv) {
     VideoCapture video(argv[1]);
     if (!video.isOpened()) {
         cerr << "Error opening video file" << endl;
+        return -1;
+    }
+
+    ofstream outfile(argv[2]);
+    if (!outfile.is_open()) {
+        cerr << "Error opening output file" << endl;
         return -1;
     }
 
@@ -76,10 +84,14 @@ int main(int argc, char** argv) {
     Mat prevDescriptors;
     Mat prevTranslation;
     
+    int frameNumber = 0;
+    bool isFirstFrame = true;
+    
     while (true) {
         Mat frame;
         video >> frame;
         if (frame.empty()) break;
+        frameNumber++;
 
         Mat gray;
         cvtColor(frame, gray, COLOR_BGR2GRAY);
@@ -88,6 +100,8 @@ int main(int argc, char** argv) {
         Mat descriptors;
         orb->detectAndCompute(gray, noArray(), keypoints, descriptors);
 
+        Pose currentPose;
+        
         if (!prevFrame.empty() && !prevDescriptors.empty() && !descriptors.empty()) {
             vector<DMatch> matches;
             matcher.match(prevDescriptors, descriptors, matches);
@@ -115,21 +129,25 @@ int main(int argc, char** argv) {
                 Mat rvec;
                 Rodrigues(R, rvec);
                 
-                Pose pose;
-                pose.rotation = rvec;
-                pose.translation = t;
-                pose.delta = calculatePositionDelta(prevTranslation, t);
-                printTransformJSON(pose);
+                currentPose.rotation = rvec;
+                currentPose.translation = t;
+                currentPose.delta = calculatePositionDelta(prevTranslation, t);
                 
                 prevTranslation = t.clone();
             } else {
-                Pose pose;
-                pose.rotation = Mat::zeros(3, 1, CV_64F);
-                pose.translation = Mat::zeros(3, 1, CV_64F);
-                pose.delta = 0.0;
-                printTransformJSON(pose);
+                currentPose.rotation = Mat::zeros(3, 1, CV_64F);
+                currentPose.translation = Mat::zeros(3, 1, CV_64F);
+                currentPose.delta = 0.0;
             }
+        } else {
+            // First frame or no descriptors case
+            currentPose.rotation = Mat::zeros(3, 1, CV_64F);
+            currentPose.translation = Mat::zeros(3, 1, CV_64F);
+            currentPose.delta = 0.0;
         }
+
+        writeTransformJSON(outfile, currentPose, isFirstFrame);
+        isFirstFrame = false;
 
         prevFrame = frame.clone();
         prevGray = gray.clone();
@@ -137,5 +155,7 @@ int main(int argc, char** argv) {
         prevDescriptors = descriptors.clone();
     }
 
+    outfile.close();
+    cout << "Processed " << frameNumber << " frames. Results written to " << argv[2] << endl;
     return 0;
 }
