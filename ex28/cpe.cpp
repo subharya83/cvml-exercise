@@ -57,6 +57,17 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    // Debug Frame level discrepancies
+    double fps = video.get(CAP_PROP_FPS);
+    double frame_count = video.get(CAP_PROP_FRAME_COUNT);
+    double duration = frame_count / fps;
+
+    cout << "Video info:\n"
+     << "  FPS: " << fps << "\n"
+     << "  Reported frames: " << frame_count << "\n"
+     << "  Calculated duration: " << duration << "s\n"
+     << "  Expected frames (6fps × 7.17s): " << 6 * 7.17 << endl;
+
     Ptr<ORB> orb = ORB::create();
     BFMatcher matcher(NORM_HAMMING);
 
