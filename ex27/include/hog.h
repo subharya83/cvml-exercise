@@ -27,3 +27,12 @@ std::vector<float> compute_hog(const Image& img, int cell_size = 8, int bin_coun
     }
     return hog_features;
 }
+
+#ifdef USE_SIFT
+// Compute gradient orientation at a point
+float get_gradient_orientation(const Image& Ix, const Image& Iy, int x, int y) {
+    int idx = y * Ix.width + x;
+    float gx = Ix.data[idx], gy = Iy.data[idx];
+    return std::atan2(gy, gx); // Returns angle in radians
+}
+#endif

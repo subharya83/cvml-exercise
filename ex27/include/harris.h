@@ -29,3 +29,34 @@ std::vector<std::pair<int, int>> detect_harris_corners(const Image& img, float k
     }
     return corners;
 }
+
+#ifdef USE_SIFT
+// Multi-scale Harris corner detection
+std::vector<std::pair<int, int>> detect_harris_corners_multiscale(const Image& img, 
+                                                                const std::vector<float>& scales = {0.5f, 1.0f, 2.0f}) {
+    std::vector<std::pair<int, int>> all_corners;
+    for (float scale : scales) {
+        // Downsample image
+        int new_w = static_cast<int>(img.width * scale);
+        int new_h = static_cast<int>(img.height * scale);
+        Image resized{new_w, new_h, std::vector<uint8_t>(new_w * new_h)};
+        
+        // Simple nearest-neighbor resize
+        for (int y = 0; y < new_h; ++y) {
+            for (int x = 0; x < new_w; ++x) {
+                int orig_x = static_cast<int>(x / scale);
+                int orig_y = static_cast<int>(y / scale);
+                resized.data[y * new_w + x] = img.data[orig_y * img.width + orig_x];
+            }
+        }
+        
+        // Detect corners at this scale
+        auto corners = detect_harris_corners(resized);
+        for (auto& [x, y] : corners) {
+            all_corners.emplace_back(static_cast<int>(x / scale), 
+                                   static_cast<int>(y / scale));
+        }
+    }
+    return all_corners;
+}
+#endif
