@@ -7,9 +7,32 @@ From the essential matrix, we decompose it to extract the camera's rotation (as 
 ## Input data preparation
 (Optional STEP: if input videos are missing)
 ```shell
-$ffmpeg -i ../ex12/input/coupe.mp4 -an -c:v libx264 -vf "scale=1920:1440,setdar=4/3,setsar=1/1,format=yuvj420p" -r 6 -video_track_timescale 12288 -b:v 9415k -coder ac -flags +loop-cmp+chroma+trellis -movflags +faststart input/video_a.mp4
-$ffmpeg -i ../ex12/input/hummer.mp4 -an -c:v libx264 -vf "scale=1920:1440,setdar=4/3,setsar=1/1,format=yuvj420p" -r 6 -video_track_timescale 12288 -b:v 9415k -coder ac -flags +loop-cmp+chroma+trellis -movflags +faststart input/video_b.mp4
-```
+ffmpeg -i ../ex12/input/coupe.mp4 -an \
+-c:v libx264 \
+-vf "scale=1920:1440,setdar=4/3,setsar=1/1,format=yuvj420p" \
+-r 6 \
+-video_track_timescale 12288 \
+-b:v 9415k \
+-coder ac \
+-flags +loop \
+-x264-params "cmp=+chroma+trellis" \
+-movflags +faststart \
+-crf 24 \
+input/v_c.mp4
+
+ffmpeg -i ../ex13/input/hummer.mp4 -an \
+-c:v libx264 \
+-vf "scale=1920:1440,setdar=4/3,setsar=1/1,format=yuvj420p" \
+-r 6 \
+-video_track_timescale 12288 \
+-b:v 9415k \
+-coder ac \
+-flags +loop \
+-x264-params "cmp=+chroma+trellis" \
+-movflags +faststart \
+-crf 24
+input/v_h.mp4
+``
 ## Key Computational Blocks
 
 ### 1. Feature Detection and Extraction
