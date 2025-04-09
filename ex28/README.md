@@ -30,7 +30,7 @@ ffmpeg -i ../ex13/input/hummer.mp4 -an \
 -flags +loop \
 -x264-params "cmp=+chroma+trellis" \
 -movflags +faststart \
--crf 24
+-crf 24 \
 input/v_h.mp4
 ``
 ## Key Computational Blocks
