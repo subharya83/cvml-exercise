@@ -4,7 +4,12 @@ This project estimates 6DoF (6 Degrees of Freedom) camera poses from video frame
 
 From the essential matrix, we decompose it to extract the camera's rotation (as a 3D orientation matrix) and translation (as a 3D direction vector). Since we can't determine the absolute distance traveled from images alone (the scale ambiguity problem), the system includes heuristic methods to maintain consistent scale across frames. The final pose is refined by ensuring the estimated movement aligns well with the observed feature movements in the image, and temporal smoothing is applied to reduce jitter in the estimates. This approach effectively builds up the camera's trajectory frame by frame through visual analysis of how the scene appears to change from different viewpoints.
 
-
+## Input data preparation
+(Optional STEP: if input videos are missing)
+```shell
+$ffmpeg -i ../ex12/input/coupe.mp4 -an -c:v libx264 -vf "scale=1920:1440,setdar=4/3,setsar=1/1,format=yuvj420p" -r 6 -video_track_timescale 12288 -b:v 9415k -coder ac -flags +loop-cmp+chroma+trellis -movflags +faststart input/video_a.mp4
+$ffmpeg -i ../ex12/input/hummer.mp4 -an -c:v libx264 -vf "scale=1920:1440,setdar=4/3,setsar=1/1,format=yuvj420p" -r 6 -video_track_timescale 12288 -b:v 9415k -coder ac -flags +loop-cmp+chroma+trellis -movflags +faststart input/video_b.mp4
+```
 ## Key Computational Blocks
 
 ### 1. Feature Detection and Extraction
