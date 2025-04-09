@@ -144,31 +144,51 @@ the enhanced version
 #### Basic version
 ```shell
 $ g++ -std=c++11 cpe.cpp -o cpe `pkg-config --cflags --libs opencv4`
-$ time ./cpe input/video_b.mp4 output/poses_b.jsonl
+$ time ./cpe input/v_c.mp4 output/v_c_basic.json
 Video info:
   FPS: 6
-  Reported frames: 43
-  Calculated duration: 7.16667s
-  Expected frames (6fps × 7.17s): 43.02
-Processed 43 frames. Results written to output/poses_b.jsonl
+  Reported frames: 69
+  Calculated duration: 11.5
+Processed 69 frames. Results written to output/v_c_basic.json
 
-real	0m2.819s
-user	0m5.907s
-sys	0m1.022s
+real	0m4.673s
+user	0m8.492s
+sys	0m1.200s
+
+$ time ./cpe input/v_h.mp4 output/v_h_basic.json
+Video info:
+  FPS: 6
+  Reported frames: 72
+  Calculated duration: 12
+Processed 72 frames. Results written to output/v_h_basic.json
+
+real	0m4.767s
+user	0m8.769s
+sys	0m1.089s
 ```
 
 #### Enhanced version
+
 ```shell
-$g++ -std=c++11 cpe.cpp -DENHANCE -o cpe `pkg-config --cflags --libs opencv4`
-$./cpe input/video_b.mp4 output/poses_b.jsonl
+$ g++ -std=c++11 cpe.cpp -DENHANCE -o cpe `pkg-config --cflags --libs opencv4`
+$ time ./cpe input/v_c.mp4 output/v_c_enhanced.json
 Video info:
   FPS: 6
-  Reported frames: 43
-  Calculated duration: 7.16667s
-  Expected frames (6fps × 7.17s): 43.02
-Processed 43 frames. Results written to output/poses_b.jsonl
+  Reported frames: 69
+  Calculated duration: 11.5
+Processed 69 frames. Results written to output/v_c_enhanced.json
 
-real	0m52.435s
-user	6m14.840s
-sys	0m11.409s
+real	0m42.278s
+user	1m17.763s
+sys	0m18.097s
+
+$ time ./cpe input/v_h.mp4 output/v_h_enhanced.json
+Video info:
+  FPS: 6
+  Reported frames: 72
+  Calculated duration: 12
+Processed 72 frames. Results written to output/v_h_enhanced.json
+
+real	0m4.750s
+user	0m8.708s
 ```
