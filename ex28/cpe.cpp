@@ -122,8 +122,7 @@ int main(int argc, char** argv) {
     cout << "Video info:\n"
      << "  FPS: " << fps << "\n"
      << "  Reported frames: " << frame_count << "\n"
-     << "  Calculated duration: " << duration << "s\n"
-     << "  Expected frames (6fps × 7.17s): " << 6 * 7.17 << endl;
+     << "  Calculated duration: " << duration << endl;
 
 #ifdef ENHANCE
     Ptr<Feature2D> detector = createEnhancedDetector();
