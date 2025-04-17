@@ -128,12 +128,10 @@ currentPose = poseHistory.getSmoothedPose();
 
 ### Visualizaion
 
-#### Comparing pose estimation files for video c [basic](output/v_c_basic.json) and [enhanced](output/v_c_enhanced.json)
-![](./assets/ex28-vc.png)
-
-#### Comparing pose estimation files for video h [basic](output/v_h_basic.json) and [enhanced](output/v_h_enhanced.json)
-![](./assets/ex28-vh.png)
-
+Input Video                |  Basic Estimation              | Enhanced Estimation                |
+------------------|-----------------------------------------|------------------------------------|
+![Coupe](./assets/v_c.gif) | ![Basic](./assets/ex28-cb.png) | ![Enhanced](./assets/ex28-ce.png)  | 
+![Coupe](./assets/v_h.gif) | ![Basic](./assets/ex28-hb.png) | ![Enhanced](./assets/ex28-he.png)  | 
 
 ### Computational complexity 
 
