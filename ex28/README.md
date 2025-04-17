@@ -186,6 +186,7 @@ Video info:
   Calculated duration: 12
 Processed 72 frames. Results written to output/v_h_enhanced.json
 
-real	0m4.750s
-user	0m8.708s
+real	0m45.321s
+user	1m24.791s
+sys	0m19.514s
 ```
