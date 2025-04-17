@@ -33,6 +33,19 @@ ffmpeg -i ../ex13/input/hummer.mp4 -an \
 -crf 24 \
 input/v_h.mp4
 ```
+(Optional STEP: for visualization)
+
+```shell
+OPTS="fps=25000/10001,scale=1080:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse"
+ffmpeg -i ../ex28/input/v_c.mp4 -vf $OPTS -loop 0 assets/v_c.gif
+ffmpeg -i ../ex28/input/v_h.mp4 -vf $OPTS -loop 0 assets/v_h.gif
+```
+
+Input Video  Coupe         |  Input Video Hummer            |
+------------------|-----------------------------------------|
+![Coupe](./assets/v_c.gif) | ![Hummer](./assets/v_c.gif)    |
+
+
 
 ## Key Computational Blocks
 
