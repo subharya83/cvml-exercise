@@ -32,7 +32,8 @@ ffmpeg -i ../ex13/input/hummer.mp4 -an \
 -movflags +faststart \
 -crf 24 \
 input/v_h.mp4
-``
+```
+
 ## Key Computational Blocks
 
 ### 1. Feature Detection and Extraction
@@ -126,14 +127,12 @@ currentPose = poseHistory.getSmoothedPose();
 ## Analysis
 
 ### Visualizaion
-#### Comparing given pose files [video_a](output/poses_a.jsonl) and [video_b](output/poses_b.jsonl)
-![](./assets/original.png)
 
-#### Comparing given pose files [video_a](output/poses_a.jsonl) and [basic pose estimation video_b](output/poses_b_basic.jsonl)
-![](./assets/basic.png)
+#### Comparing pose estimation files for video c [basic](output/v_c_basic.json) and [enhanced](output/v_c_enhanced.json)
+![](./assets/ex28-vc.png)
 
-#### Comparing given pose files [video_a](output/poses_a.jsonl) and [enhanced pose estimation video_b](output/poses_b_enhanced.jsonl)
-![](./assets/enhanced.png)
+#### Comparing pose estimation files for video h [basic](output/v_h_basic.json) and [enhanced](output/v_h_enhanced.json)
+![](./assets/ex28-vh.png)
 
 
 ### Computational complexity 
