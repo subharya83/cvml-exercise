@@ -43,7 +43,7 @@ ffmpeg -i ../ex28/input/v_h.mp4 -vf $OPTS -loop 0 assets/v_h.gif
 
 Input Video  Coupe         |  Input Video Hummer            |
 ------------------|-----------------------------------------|
-![Coupe](./assets/v_c.gif) | ![Hummer](./assets/v_c.gif)    |
+![Coupe](./assets/v_c.gif) | ![Hummer](./assets/v_h.gif)    |
 
 
 
