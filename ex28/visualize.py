@@ -32,10 +32,7 @@ def extract_camera_positions(transforms):
     return np.array(positions)
 
 # Visualize the camera path
-def visualize_camera_path(positions):
-    fig = plt.figure(figsize=(10, 8))
-    ax = fig.add_subplot(111, projection='3d')
-    
+def visualize_camera_path(positions, ax):
     # Plot the camera path
     ax.plot(positions[:, 0], positions[:, 1], positions[:, 2], 'b-', linewidth=2)
     ax.scatter(positions[0, 0], positions[0, 1], positions[0, 2], c='g', marker='o', s=100, label='Start')
@@ -48,11 +45,11 @@ def visualize_camera_path(positions):
             ax.scatter(positions[i, 0], positions[i, 1], positions[i, 2], c='black', marker='.', s=30)
     
     # Set labels and title
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    ax.set_title('Camera Path')
-    ax.legend()
+    ax.set_xlabel('X', fontsize=10)
+    ax.set_ylabel('Y', fontsize=10)
+    ax.set_zlabel('Z', fontsize=10)
+    ax.set_title('3D Camera Path Visualization', fontsize=12)
+    ax.legend(fontsize=9)
     
     # Set equal aspect ratio
     max_range = np.max([
@@ -66,22 +63,17 @@ def visualize_camera_path(positions):
     ax.set_xlim(mid_x - max_range/2, mid_x + max_range/2)
     ax.set_ylim(mid_y - max_range/2, mid_y + max_range/2)
     ax.set_zlim(mid_z - max_range/2, mid_z + max_range/2)
-    
-    return fig
 
 # Visualize the position deltas
-def visualize_position_deltas(transforms):
+def visualize_position_deltas(transforms, ax):
     deltas = [t['position_delta'] for t in transforms]
     
-    plt.figure(figsize=(10, 6))
-    plt.plot(deltas)
-    plt.title('Camera Position Delta Over Time')
-    plt.xlabel('Frame')
-    plt.ylabel('Position Delta')
-    plt.grid(True)
-    
-    return plt.gcf()
-
+    ax.plot(deltas, linewidth=2)
+    ax.set_title('Camera Position Delta Over Frames', fontsize=12)
+    ax.set_xlabel('Frame Number', fontsize=10)
+    ax.set_ylabel('Position Delta', fontsize=10)
+    ax.grid(True)
+    ax.tick_params(axis='both', which='major', labelsize=9)
 
 def main():
     parser = argparse.ArgumentParser(description='Visualize camera poses from json files')
@@ -92,14 +84,22 @@ def main():
     transforms = load_transforms(args.i)
     positions = extract_camera_positions(transforms)
     
-    # Visualize camera path
-    path_fig = visualize_camera_path(positions)
-    path_fig.savefig('camera_path.png')
+    # Create a single figure with two subplots
+    plt.figure(figsize=(14, 6))
     
-    # Visualize position deltas
-    delta_fig = visualize_position_deltas(transforms)
-    delta_fig.savefig('position_deltas.png')
+    # First subplot for 3D camera path
+    ax1 = plt.subplot(121, projection='3d')
+    visualize_camera_path(positions, ax1)
+    
+    # Second subplot for position deltas
+    ax2 = plt.subplot(122)
+    visualize_position_deltas(transforms, ax2)
+    
+    # Adjust layout and save
+    plt.tight_layout()
+    plt.savefig(args.o, dpi=150)
+    plt.close()
     
 if __name__ == "__main__":
     main()
-
+    
