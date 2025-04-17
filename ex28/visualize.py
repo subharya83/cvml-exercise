@@ -1,3 +1,4 @@
+import argparse
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -81,9 +82,14 @@ def visualize_position_deltas(transforms):
     
     return plt.gcf()
 
-# Main function
-def main(json_file):
-    transforms = load_transforms(json_file)
+
+def main():
+    parser = argparse.ArgumentParser(description='Visualize camera poses from json files')
+    parser.add_argument('-i', required=True, help='Input pose file')
+    parser.add_argument('-o', required=True, help='Path to the output image file')
+    args = parser.parse_args()
+
+    transforms = load_transforms(args.i)
     positions = extract_camera_positions(transforms)
     
     # Visualize camera path
@@ -94,12 +100,6 @@ def main(json_file):
     delta_fig = visualize_position_deltas(transforms)
     delta_fig.savefig('position_deltas.png')
     
-    plt.show()
-
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 2:
-        print("Usage: python visualize.py <json_file>")
-        sys.exit(1)
-    
-    main(sys.argv[1])
+    main()
+
