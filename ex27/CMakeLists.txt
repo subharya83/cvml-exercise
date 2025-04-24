@@ -41,11 +41,18 @@ foreach(SOURCE ${SOURCES})
   target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 endforeach()
 
-# Optional: Install stb_image if not present
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/stb_image.h")
   message(STATUS "Downloading stb_image.h...")
   file(DOWNLOAD 
     https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/stb_image.h
+  )
+endif()
+
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/stb_image_write.h")
+  message(STATUS "Downloading stb_image_write.h...")
+  file(DOWNLOAD 
+    https://raw.githubusercontent.com/nothings/stb/master/stb_image_write.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/stb_image_write.h
   )
 endif()

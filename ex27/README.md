@@ -98,3 +98,6 @@ A list of problems in computer vision that can be explicitly solved leveraging s
      - Compare using SSD/SAD or cosine distance.
 
 ---
+
+## Compiling/Building instructions
+
