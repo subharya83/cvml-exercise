@@ -1,3 +1,4 @@
+#include <iostream>  // Required for std::cerr
 #include "connected_components.h"
 
 int main(int argc, char** argv) {
@@ -8,4 +9,5 @@ int main(int argc, char** argv) {
     Image img = load_image(argv[1]);
     Image labels = connected_components(img);
     save_image(labels, argv[2]);
+    return 0;  // Explicit return for main()
 }
