@@ -5,6 +5,8 @@
 #include <cmath>
 #include <algorithm>
 #include <utility>       // for std::pair
+#include <iostream>
+#include <fstream>
 
 // Forward declaration (if needed for other headers)
 std::vector<std::pair<int, int>> detect_harris_corners(const Image& img, float k = 0.04, float threshold = 0.01);

@@ -1,5 +1,7 @@
 #include "harris.h"
 #include "convolution.h"
+#include <iostream>
+#include <fstream>
 
 std::vector<std::pair<int, int>> detect_harris_corners(const Image& img, float k, float threshold) {
     Image Ix = convolve(img, {-1, 0, 1, -2, 0, 2, -1, 0, 1}, 3); // Sobel X
@@ -53,3 +55,20 @@ std::vector<std::pair<int, int>> detect_harris_corners_multiscale(const Image& i
     return all_corners;
 }
 #endif
+
+int main(int argc, char** argv) {
+    if (argc != 3) {
+        std::cerr << "Usage: ./harris input.png output_corners.txt\n";
+        return 1;
+    }
+    
+    Image img = load_image(argv[1]);
+    auto corners = detect_harris_corners(img);
+    
+    std::ofstream out(argv[2]);
+    for (const auto& [x, y] : corners) {
+        out << x << " " << y << "\n";
+    }
+    
+    return 0;
+}
