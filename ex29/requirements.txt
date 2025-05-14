@@ -1,0 +1,13 @@
+numpy>=1.21.0
+pandas>=1.3.0
+scikit-learn>=0.24.2
+scikit-image>=0.18.0
+rasterio>=1.2.0
+sentinelsat>=1.1.1
+matplotlib>=3.4.0
+seaborn>=0.11.0
+tqdm>=4.62.0
+pyproj>=3.1.0
+geopandas>=0.9.0
+shapely>=1.7.0
+pyyaml>=5.4.0 

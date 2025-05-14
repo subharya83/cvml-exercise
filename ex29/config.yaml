@@ -1,0 +1,34 @@
+# Configuration pour l'analyse géospatiale
+
+# Paramètres d'accès aux données Sentinel
+sentinel:
+  username: "test_user"
+  password: "test_pass"
+  api_url: "https://scihub.copernicus.eu/dhus"
+
+# Paramètres de traitement
+processing:
+  region:
+    name: "paris"
+    bbox: [2.2241, 48.8156, 2.4697, 48.9022]  # [xmin, ymin, xmax, ymax]
+  dates:
+    start: "2023-01-01"
+    end: "2023-12-31"
+  resolution: 10  # mètres
+
+# Paramètres de classification
+classification:
+  model: "random_forest"
+  n_estimators: 100
+  random_state: 42
+  classes:
+    - "bâtiments"
+    - "terrains_vacants"
+    - "terres_agricoles"
+    - "zones_forestières"
+
+# Paramètres de visualisation
+visualization:
+  colormap: "viridis"
+  dpi: 300
+  figure_size: [12, 8] 

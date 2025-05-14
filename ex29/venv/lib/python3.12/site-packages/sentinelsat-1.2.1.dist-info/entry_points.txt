@@ -1,0 +1,2 @@
+[console_scripts]
+sentinelsat = sentinelsat.scripts.cli:cli
