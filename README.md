@@ -66,6 +66,7 @@ Iterative refinement focusing on:
 **2D/3D Spatial Understanding**
   - [Single Object 3D Reconstruction](./ex12/README.md)
   - [Outdoor Object dimension estimation](./ex22/README.md)
+  - [Geospatial analysis with multi-spectral imagery](./ex29/README.md)
 
 **Language and Vision Model Enhancement**
   - [Automated Question-Answer Pair Generator](./ex04/README.md)
