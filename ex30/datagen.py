@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import argparse
+import csv
 
 def generate_polygon(n_points, z_tolerance=0.05, radius=1.0, center=(0, 0, 0)):
     """
@@ -37,51 +39,57 @@ def generate_polygon(n_points, z_tolerance=0.05, radius=1.0, center=(0, 0, 0)):
     
     return points
 
-def generate_planar_contours():
-    """Generate two closed polygonal contours roughly on the same plane"""
-    # First contour: 5-sided polygon with slight z-variation
-    set1 = generate_polygon(n_points=5, z_tolerance=0.02, radius=1.5, center=(-1, -1, 0))
-    
-    # Second contour: 7-sided polygon with more z-variation
-    set2 = generate_polygon(n_points=7, z_tolerance=0.1, radius=1.2, center=(1, 1, 0.1))
-    
-    return set1, set2
+def export_to_csv(points, filename):
+    """Export point set to CSV file"""
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['x', 'y', 'z'])  # Write header
+        writer.writerows(points)
+    print(f"Saved {len(points)} points to {filename}")
 
-def plot_3d_contours(set1, set2):
-    """Plot the two sets of points in 3D space"""
-    fig = plt.figure(figsize=(10, 8))
-    ax = fig.add_subplot(111, projection='3d')
+def main():
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Generate two planar polygonal contours in 3D space and export to CSV')
+    parser.add_argument('n_points1', type=int, help='Number of points in first contour')
+    parser.add_argument('n_points2', type=int, help='Number of points in second contour')
+    parser.add_argument('z_tolerance', type=float, help='Maximum z-deviation as fraction of radius')
+    parser.add_argument('output1', help='Output filename for first contour')
+    parser.add_argument('output2', help='Output filename for second contour')
+    parser.add_argument('--plot', action='store_true', help='Show 3D plot of contours')
     
-    # Plot the first set
-    ax.plot(set1[:, 0], set1[:, 1], set1[:, 2], 'b-', label='5-sided polygon', linewidth=2)
-    ax.scatter(set1[:, 0], set1[:, 1], set1[:, 2], c='b', s=50)
+    args = parser.parse_args()
     
-    # Plot the second set
-    ax.plot(set2[:, 0], set2[:, 1], set2[:, 2], 'r-', label='7-sided polygon', linewidth=2)
-    ax.scatter(set2[:, 0], set2[:, 1], set2[:, 2], c='r', s=50)
+    # Generate contours
+    set1 = generate_polygon(n_points=args.n_points1, z_tolerance=args.z_tolerance, 
+                           radius=1.5, center=(-1, -1, 0))
+    set2 = generate_polygon(n_points=args.n_points2, z_tolerance=args.z_tolerance, 
+                           radius=1.2, center=(1, 1, 0.1))
     
-    # Set equal aspect ratio
-    ax.set_box_aspect([1, 1, 0.2])  # Flatten the z-axis
+    # Export to CSV
+    export_to_csv(set1, args.output1)
+    export_to_csv(set2, args.output2)
     
-    # Add labels and title
-    ax.set_xlabel('X axis')
-    ax.set_ylabel('Y axis')
-    ax.set_zlabel('Z axis')
-    ax.set_title('Two Planar Polygonal Contours in 3D Space')
-    ax.legend()
-    
-    # Set view to emphasize planarity
-    ax.view_init(elev=30, azim=45)
-    
-    plt.tight_layout()
-    plt.show()
+    # Optional plotting
+    if args.plot:
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        ax.plot(set1[:, 0], set1[:, 1], set1[:, 2], 'b-', label=f'Contour 1 ({args.n_points1} points)')
+        ax.scatter(set1[:, 0], set1[:, 1], set1[:, 2], c='b', s=50)
+        
+        ax.plot(set2[:, 0], set2[:, 1], set2[:, 2], 'r-', label=f'Contour 2 ({args.n_points2} points)')
+        ax.scatter(set2[:, 0], set2[:, 1], set2[:, 2], c='r', s=50)
+        
+        ax.set_box_aspect([1, 1, 0.2])
+        ax.set_xlabel('X axis')
+        ax.set_ylabel('Y axis')
+        ax.set_zlabel('Z axis')
+        ax.set_title('Two Planar Polygonal Contours in 3D Space')
+        ax.legend()
+        ax.view_init(elev=30, azim=45)
+        
+        plt.tight_layout()
+        plt.show()
 
-# Generate and plot the contours
-set1, set2 = generate_planar_contours()
-plot_3d_contours(set1, set2)
-
-# Print the first few points of each set
-print("Points of 5-sided polygon:")
-print(set1)
-print("\nPoints of 7-sided polygon:")
-print(set2)
+if __name__ == "__main__":
+    main()
