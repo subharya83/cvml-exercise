@@ -89,9 +89,4 @@ else
 fi
 
 hr
-echo "Recommendation for this lecture's tiny VLM:"
-echo "  - CPU-only is fine: the decoder is ~15M params, batch size 8-16."
-echo "  - Apple Silicon (MPS) or any CUDA GPU speeds up the projector-only run"
-echo "    from minutes to seconds per 100 steps, but is NOT required."
-echo "  - Budget ~2 GB disk for Flickr8k + ~60 MB for the stories15M weights."
 
