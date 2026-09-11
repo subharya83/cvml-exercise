@@ -1,0 +1,126 @@
+# -----------------------------------------------------------------------------
+# tinyVLM DEMO config  ---  the exact profile used throughout the lecture
+# -----------------------------------------------------------------------------
+# This is the config referenced by every command shown in the slides. It
+# trains on a FIXED 1,500-IMAGE SUBSET of the official ~6,000-image train
+# split (see data.train_subset_size below), not the full split -- on
+# purpose. At batch_size=16, that's 1500 / 16 ~ 94 iterations per epoch, so
+# 350 steps is ~3.7 passes over the SAME 1,500 images. That matters for two
+# honest reasons:
+#   1. It's the only way the CLIP feature cache actually pays off inside a
+#      350-step lecture run. Over the full ~6,000-image split, 350 steps at
+#      batch 16 touches ~5,600 largely-DIFFERENT images -- almost every
+#      lookup is a cache miss, so caching would buy nothing until a second
+#      epoch that never arrives. Over a 1,500-image subset, the cache is
+#      fully warm by ~step 94 (the end of the first pass), and the
+#      remaining ~256 steps mostly reuse cached CLIP features.
+#   2. Students actually see multiple effective epochs over the same data
+#      in one sitting, rather than a single fraction-of-an-epoch pass.
+# config.full.yaml, by contrast, trains on the full official split -- use
+# that outside the lecture. Any field here can still be overridden from the
+# command line, e.g. `--max-iters 200` for a shorter demo.
+
+run_name: tinyvlm_demo
+
+data:
+  # HuggingFace dataset id for images + captions. jxie/flickr8k ships its
+  # own official, image-level train / validation / test splits (~6,000 /
+  # ~1,000 / ~1,000 images, 5 caption columns each) -- we use those directly
+  # rather than re-splitting, so held-out images never leak in via a sibling
+  # caption of the same photo.
+  dataset: jxie/flickr8k
+  cache_dir: ./data/flickr8k
+  image_size: 224
+  max_caption_len: 40      # tokens, including BOS/EOS
+  seed: 1337
+  # THE lecture-specific choice: train on this many images (shuffled with
+  # `seed` above, chosen once) instead of the full official train split.
+  # See the file-level comment above for why. Set to 0/blank/omit to use
+  # the full split (config.full.yaml does this).
+  train_subset_size: 1500
+  # Exports a small, fixed on-disk holdout demo set from the TEST split
+  # (images + reference captions + manifest.json) so inferVLM.py has a
+  # concrete, reproducible "unseen image" to run on, independent of any
+  # particular training process's memory.
+  export_holdout: true
+  holdout_dir: ./demo
+  holdout_n: 5
+
+vision_encoder:
+  # Frozen, pretrained -- we never update these weights. This is the "eyes".
+  # ~88M parameters (the ViT-B/32 vision tower; the full CLIP checkpoint,
+  # including the unused text tower, is larger on disk but only the vision
+  # side and its projection head are ever called).
+  name: openai/clip-vit-base-patch32
+  freeze: true
+  feature: pooled
+
+decoder:
+  # Tiny Llama-style transformer (RMSNorm + RoPE + SwiGLU, tied input/output
+  # embeddings), trained from random init, end to end, jointly with the
+  # projector, on (image, caption) pairs. With the default character-level
+  # tokenizer this is ~6.0M parameters; NOTE vocab_size below is NOT read at
+  # startup -- it is always replaced by the active tokenizer's real
+  # vocabulary size (see build_tokenizer() in trainVLM.py), so it is left
+  # out here rather than shown as a fixed, misleading number.
+  dim: 288
+  n_layers: 6
+  n_heads: 6
+  n_kv_heads: 6
+  max_seq_len: 256
+  multiple_of: 32
+  dropout: 0.0
+  # Left blank: default is random init. EXPERIMENTAL / opt-in (see README
+  # "A note on stories15M"): point this at a llama2.c stories15M.bin to
+  # compare a text-pretrained decoder against random init. Requires the
+  # `tokenizer` field below to point at a matching 32k-vocab SentencePiece
+  # model (llama2.c's tokenizer.model -- NOT its tokenizer.bin).
+  init_checkpoint: ""
+  tokenizer: ""             # e.g. ./weights/tokenizer.model for the stories15M experiment
+  fallback_tokenizer: char  # used whenever `tokenizer` above is blank or missing
+
+projector:
+  # The only piece with no pretraining at all: maps one CLIP image
+  # embedding into the decoder's token-embedding space, as a learned prefix
+  # token. 410,400 parameters exactly (512 -> 512 -> 288 MLP with biases).
+  hidden_dim: 512
+
+train:
+  freeze_decoder: false     # false (default) = decoder + projector train jointly
+                            # from scratch. true only makes sense once the decoder
+                            # already has a meaningful language prior (text-pretrained
+                            # via init_checkpoint, or multimodal) -- with the default
+                            # random-init decoder, freezing it prevents the model from
+                            # learning language at all.
+  batch_size: 16
+  epochs: 4                  # upper bound; max_iters below is what actually stops the run
+  max_iters: 350             # THE tested lecture run: ~3.7 passes over the 1,500-image subset
+  lr: 3.0e-4
+  weight_decay: 0.01
+  grad_clip: 1.0
+  warmup_iters: 30
+  log_every: 10
+  eval_every: 50
+  ckpt_every: 100
+  out_dir: ./checkpoints
+  device: auto               # auto | cpu | cuda | mps
+  dtype: float32
+  num_workers: 2
+  # Frozen CLIP produces an identical embedding for a given image every
+  # time -- cache it per image (separate caches for train/validation; see
+  # trainVLM.py) so repeat encounters skip CLIP's forward pass entirely.
+  # This ONLY pays off because of train_subset_size above: over the full
+  # ~6,000-image split, 350 steps at batch 16 would touch ~5,600 mostly-new
+  # images and the cache would sit almost empty the whole run.
+  cache_clip_features: true
+
+infer:
+  max_new_tokens: 40
+  # Greedy is the DEFAULT decoding strategy for the live demo, on purpose:
+  # it is deterministic, so re-running the exact same command in front of a
+  # class reproduces the exact same caption. Pass --sample on the CLI (with
+  # --gen-seed for reproducible sampling) to demonstrate temperature/top-k
+  # sampling as a separate, optional comparison.
+  decoding: greedy
+  temperature: 0.8
+  top_k: 40

@@ -1,0 +1,64 @@
+# -----------------------------------------------------------------------------
+# tinyVLM FULL config  ---  a longer, non-lecture training run
+# -----------------------------------------------------------------------------
+# Same architecture and data as config.demo.yaml, but not capped at one
+# lecture's step budget: max_iters is left at 0, so training runs the full
+# `epochs` over the official train split (10 epochs x 375 iterations/epoch
+# = 3,750 steps at batch_size=16). Use this after class, not during it --
+# it was not the run timed and shown in the slides.
+
+run_name: tinyvlm_full
+
+data:
+  dataset: jxie/flickr8k
+  cache_dir: ./data/flickr8k
+  image_size: 224
+  max_caption_len: 40
+  seed: 1337
+  export_holdout: true
+  holdout_dir: ./demo
+  holdout_n: 5
+
+vision_encoder:
+  name: openai/clip-vit-base-patch32
+  freeze: true
+  feature: pooled
+
+decoder:
+  dim: 288
+  n_layers: 6
+  n_heads: 6
+  n_kv_heads: 6
+  max_seq_len: 256
+  multiple_of: 32
+  dropout: 0.0
+  init_checkpoint: ""
+  tokenizer: ""
+  fallback_tokenizer: char
+
+projector:
+  hidden_dim: 512
+
+train:
+  freeze_decoder: false
+  batch_size: 16
+  epochs: 10
+  max_iters: 0               # 0 = run all `epochs`, not capped for a lecture slot
+  lr: 3.0e-4
+  weight_decay: 0.01
+  grad_clip: 1.0
+  warmup_iters: 100
+  log_every: 25
+  eval_every: 200
+  ckpt_every: 375            # once per epoch
+  out_dir: ./checkpoints_full
+  device: auto
+  dtype: float32
+  num_workers: 2
+  cache_clip_features: true
+
+infer:
+  max_new_tokens: 40
+  decoding: greedy
+  temperature: 0.8
+  top_k: 40
