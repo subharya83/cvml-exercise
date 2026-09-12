@@ -20,6 +20,7 @@ Run `python trainVLM.py --help` for the full list of overridable flags.
 from __future__ import annotations
 
 import argparse
+import csv
 import math
 import random
 import time
@@ -277,6 +278,26 @@ def get_clip_features(model, pixel_values, row_indices, feat_cache, device):
     return feat_cache.assemble(hits, miss_pos, computed, device)
 
 
+CSV_FIELDS = ["step", "split", "loss", "lr", "examples_per_sec", "elapsed_s", "best_val_loss"]
+
+
+def log_metric(csv_path: Path, **fields):
+    """Appends one row to the metrics CSV, writing the header first if the
+    file doesn't exist yet. Opened and closed on every call (rather than
+    kept open for the whole run) and flushed immediately -- this is a
+    lecture-scale run (hundreds of rows, logged every few seconds), so the
+    per-call overhead doesn't matter, and it means `visualize.py` can tail
+    a fully-flushed, valid CSV WHILE training is still running in another
+    terminal, not just after it exits."""
+    is_new = not csv_path.exists()
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(csv_path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+        if is_new:
+            writer.writeheader()
+        writer.writerow({k: fields.get(k, "") for k in CSV_FIELDS})
+
+
 @torch.no_grad()
 def evaluate(model, loader, device, pad_id, feat_cache, max_batches=20):
     model.eval()
@@ -384,6 +405,14 @@ def main():
     max_iters = cfg["train"]["max_iters"] or cfg["train"]["epochs"] * len(train_loader)
     out_dir = Path(cfg["train"]["out_dir"])
     out_dir.mkdir(parents=True, exist_ok=True)
+    metrics_csv = Path(cfg["train"].get("metrics_csv") or (out_dir / "metrics.csv"))
+    if metrics_csv.exists() and not args.resume:
+        # Starting fresh (not resuming): clear any old CSV so visualize.py
+        # doesn't splice a new run's curve onto a previous one's.
+        metrics_csv.unlink()
+    print(f"[train] metrics CSV: {metrics_csv} -- run "
+          f"`python visualize.py --csv {metrics_csv} --watch` in another terminal "
+          f"to plot the curve live")
 
     start_step = 0
     best_val_loss = float("inf")
@@ -440,6 +469,8 @@ def main():
             eta_s = (max_iters - step) * (dt / max(step, 1)) if step > 0 else float("nan")
             print(f"step {step:5d}/{max_iters} | loss {loss.item():.4f} | lr {lr:.2e} | "
                   f"{eps:.1f} examples/s | {dt:.1f}s elapsed | ETA {eta_s:.0f}s")
+            log_metric(metrics_csv, step=step, split="train", loss=loss.item(), lr=lr,
+                       examples_per_sec=eps, elapsed_s=dt)
 
         completed_steps = step + 1  # `step` is this iteration's 0-indexed label;
                                      # by this point in the loop body, `completed_steps`
@@ -451,8 +482,12 @@ def main():
             val_loss = evaluate(model, val_loader, device, pad_id, val_feat_cache)
             print(f"          [eval] val_loss {val_loss:.4f} "
                   f"(val feature cache: {len(val_feat_cache) if val_feat_cache else 0} images cached)")
-            if val_loss < best_val_loss:
+            is_best = val_loss < best_val_loss
+            if is_best:
                 best_val_loss = val_loss
+            log_metric(metrics_csv, step=step, split="val", loss=val_loss,
+                       best_val_loss=best_val_loss)
+            if is_best:
                 save_checkpoint(model, optim, cfg, tokenizer, train_ds, completed_steps,
                                  best_val_loss, out_dir / "best.pt")
                 print(f"          [ckpt] new best -- saved {out_dir / 'best.pt'}")
