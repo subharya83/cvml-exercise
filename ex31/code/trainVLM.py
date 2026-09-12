@@ -417,7 +417,11 @@ def main():
     start_step = 0
     best_val_loss = float("inf")
     if args.resume:
-        ckpt = torch.load(args.resume, map_location=device)
+        # weights_only=False: this checkpoint's rng_snapshot carries NumPy
+        # RNG-state arrays/tuples that PyTorch >= 2.6's default (restricted)
+        # unpickler rejects. Safe because --resume only ever points at a
+        # checkpoint this same trainVLM.py wrote.
+        ckpt = torch.load(args.resume, map_location=device, weights_only=False)
         model.projector.load_state_dict(ckpt["projector"])
         if "decoder" in ckpt:
             model.decoder.load_state_dict(ckpt["decoder"])

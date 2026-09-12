@@ -450,6 +450,19 @@ where to add it back if you extend the code in that direction.
 - **`FileNotFoundError` on `demo/manifest.json`**: run `trainVLM.py` at
   least once first (it exports the holdout set by default), or pass
   `--image` instead of `--holdout-index` to `inferVLM.py`.
+- **`_pickle.UnpicklingError: Weights only load failed` / mentions
+  `numpy._core.multiarray._reconstruct`**: you're on PyTorch >= 2.6, which
+  changed `torch.load`'s default from `weights_only=False` to
+  `weights_only=True` -- a restricted unpickler that only allows plain
+  tensors. Our checkpoints also carry a `rng_snapshot` (NumPy RNG state
+  arrays/tuples; see "Resume: what's actually reproducible" above), which
+  that restricted mode rejects. Both `trainVLM.py` (`--resume`) and
+  `inferVLM.py` already pass `weights_only=False` explicitly for exactly
+  this reason -- if you still hit this, you're likely running an older
+  copy of one of those two files; re-copy them from this package rather
+  than patching the error away yourself. (`weights_only=False` is only
+  safe because these checkpoints are ones this same code produced --
+  never load a `.pt` file from an untrusted source that way.)
 - **Checkpoint loads but generates garbage / empty captions**: run
   `python trainVLM.py --config config.demo.yaml --smoke-test` first. If
   loss doesn't fall toward ~0 on 8 overfit examples, the bug is in the

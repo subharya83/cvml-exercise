@@ -96,7 +96,14 @@ def main():
     print(f"[setup] device = {device}")
     if not Path(args.checkpoint).exists():
         raise FileNotFoundError(f"checkpoint not found: {args.checkpoint}")
-    ckpt = torch.load(args.checkpoint, map_location=device)
+    # weights_only=False: PyTorch >= 2.6 defaults torch.load to a restricted
+    # unpickler that only allows plain tensors, rejecting the NumPy RNG-state
+    # arrays/tuples this checkpoint's rng_snapshot carries (see
+    # get_rng_snapshot() in trainVLM.py). Safe here because this checkpoint
+    # was produced by THIS package's own trainVLM.py, not downloaded from a
+    # third party -- never pass weights_only=False for a .pt file you didn't
+    # create yourself or otherwise don't trust.
+    ckpt = torch.load(args.checkpoint, map_location=device, weights_only=False)
     if "decoder" not in ckpt and "char_tokenizer_itos" not in ckpt:
         # Ambiguous state -- fail loudly rather than silently falling back to
         # an uninitialized/mismatched decoder.
