@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # hardware.sh -- print the hardware and software facts relevant to training
-# a tiny VLM, on either Linux or macOS. Meant to be run live at the start of
-# the talk, right before kicking off trainVLM.py in another terminal tab.
-#
+# a tiny VLM, on either Linux or macOS.
 # Usage: ./hardware.sh
 
 set -u
@@ -92,7 +90,7 @@ if command -v python3 >/dev/null 2>&1; then
     echo "Python        : $(python3 --version 2>&1)"
     python3 - <<'PYEOF' 2>/dev/null
 import importlib
-required = ["torch", "transformers", "datasets", "sentencepiece", "yaml", "PIL"]
+required = ["torch", "transformers", "datasets", "sentencepiece", "yaml", "PIL", "matplotlib"]
 missing = []
 for mod in required:
     try:
@@ -102,9 +100,10 @@ for mod in required:
 if missing:
     print(f"Packages      : MISSING -> {', '.join(missing)}")
     print("                install with: pip install torch torchvision transformers "
-          "datasets sentencepiece pyyaml pillow")
+          "datasets sentencepiece pyyaml pillow matplotlib")
 else:
-    print("Packages      : torch, transformers, datasets, sentencepiece, pyyaml, pillow -- all present")
+    print("Packages      : torch, transformers, datasets, sentencepiece, pyyaml, pillow, "
+          "matplotlib -- all present")
 
 try:
     import torch
@@ -191,10 +190,3 @@ else
 fi
 
 hr
-echo "Notes for this lecture's tiny VLM:"
-echo "  - CPU model: ${CPU_BRAND:-${CPU_MODEL:-unknown}}"
-echo "  - CPU-only is fine and is what config.demo.yaml's 350-step run was timed on"
-echo "    (see the benchmark above for this specific machine's per-image timing)."
-echo "  - Apple Silicon (MPS) or any CUDA GPU speeds things up but is not required."
-echo "  - The decoder + projector train from random init by default (see README) --"
-echo "    this is NOT a 'projector-only, frozen-decoder' run."

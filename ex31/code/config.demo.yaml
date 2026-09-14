@@ -94,15 +94,20 @@ train:
                             # learning language at all.
   batch_size: 16
   epochs: 4                  # upper bound; max_iters below is what actually stops the run
-  max_iters: 350             # THE tested lecture run: ~3.7 passes over the 1,500-image subset
+  max_iters: 800             # THE tested lecture run: ~3.7 passes over the 1,500-image subset
   lr: 3.0e-4
   weight_decay: 0.01
   grad_clip: 1.0
   warmup_iters: 30
   log_every: 10
-  eval_every: 50
+  eval_every: 20
   ckpt_every: 100
   out_dir: ./checkpoints
+  # Every log_every training step and every eval_every validation pass gets
+  # appended here (flushed immediately), so visualize.py can plot it live
+  # in a second terminal while this is still running. Left blank = defaults
+  # to <out_dir>/metrics.csv.
+  metrics_csv: ""
   device: auto               # auto | cpu | cuda | mps
   dtype: float32
   num_workers: 2
